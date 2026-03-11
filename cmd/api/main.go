@@ -13,6 +13,8 @@ import (
 	"booking_cinema_golang/internal/database"
 	"booking_cinema_golang/internal/handler"
 	"booking_cinema_golang/internal/middleware"
+	"booking_cinema_golang/internal/repository/postgres"
+	"booking_cinema_golang/internal/service"
 	"booking_cinema_golang/internal/utils"
 	"go.uber.org/zap"
 
@@ -41,8 +43,10 @@ func main() {
 	}
 	defer db.Close()
 
-	// Handlers (inject repos/services when implemented)
-	authHandler := &handler.AuthHandler{}
+	userRepo := postgres.NewUserRepository(db)
+	authService := service.NewAuthService(userRepo, cfg)
+
+	authHandler := handler.NewAuthHandler(authService)
 	cinemaHandler := &handler.CinemaHandler{}
 	bookingHandler := &handler.BookingHandler{}
 	paymentHandler := &handler.PaymentHandler{}

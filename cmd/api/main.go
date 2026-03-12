@@ -14,6 +14,7 @@ import (
 	"booking_cinema_golang/internal/handler"
 	"booking_cinema_golang/internal/middleware"
 	"booking_cinema_golang/internal/utils"
+
 	"go.uber.org/zap"
 
 	"github.com/go-chi/chi/v5"
@@ -60,6 +61,11 @@ func main() {
 	})
 
 	r.Route("/api", func(r chi.Router) {
+		r.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"message":"hello"}`))
+		})
+
 		// Auth (public)
 		r.Post("/auth/register", authHandler.Register)
 		r.Post("/auth/login", authHandler.Login)

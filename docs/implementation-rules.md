@@ -226,3 +226,94 @@ To keep consistency for auth and future modules:
 Ownership: all contributors
 
 Review cadence: update this document whenever architecture, API standards, or cross-cutting conventions change.
+
+Comment for document
+1) Architecture overview section
+Change 1 – Explicitly list all internal packages as first‑class layers
+Where: In the “Architecture” / “Layered architecture” section, where you list the core packages (currently likely mentioning handler, service, repository, domain, utils).
+Edit: Expand the bullet list to include middleware, config, and database:
+Add/ensure bullets like:
+``internal/handler`` – HTTP endpoints (controllers) for the API.
+``internal/service`` – business logic and use cases, depending on repositories and domain.
+``internal/repository`` – data access interfaces for each aggregate.
+``internal/domain`` – core domain models and simple domain helpers.
+``internal/utils`` – shared helpers for JWT, OTP, JSON responses, validation, logging, etc.
+internal/middleware – HTTP middleware (auth, logging) built on top of handlers/utils.
+internal/config – application configuration (env/.env) and structured config types.
+internal/database – database connection and migrations (e.g., PostgreSQL pool + schema.sql).
+Why: These packages already exist and are used as distinct layers (middleware, config, database); the rules doc should treat them as first‑class parts of the architecture, not implicit add‑ons.
+Change 2 – Clarify allowed dependencies between these layers
+Where: In the “Dependencies between layers” / “Allowed imports” section.
+Edit: Add a short dependency statement such as:
+- Handlers depend on services, utils, middleware, and config (for wiring), but never on repositories or database directly.
+
+- Services depend on repositories, domain, and utils, but never on HTTP, middleware, or database.
+
+- Repositories depend on database and domain, but never on handlers, services, or middleware.
+
+- Middleware depends on utils, config, and (optionally) services, but never on repositories or database.
+Why: This aligns the rules with how your packages are structured today and makes the allowed dependency directions explicit.
+2) Handler / service / repository responsibilities
+Change 3 – Handlers must use shared JSON response helpers
+Where: In the section describing handler responsibilities.
+Edit: Add/adjust a bullet:
+- Handlers must use the JSON response helpers from internal/utils/response.go (JSONSuccess, JSONError, JSONBadRequest, JSONUnauthorized, JSONNotFound, JSONInternal) instead of manually setting status codes or encoding JSON.
+Why: utils/response.go already defines a standard Response envelope and helpers; the rules should encode that contract.
+Change 4 – Handlers should use shared validation helpers
+Where: Same handler section or a “Validation” subsection.
+Edit: Add:
+- Request body validation should be done via shared helpers from internal/utils/validator.go (NewValidator, ValidateStruct) rather than ad‑hoc validation logic in each handler.
+Why: This matches utils/validator.go and keeps validation consistent across handlers.
+Change 5 – Services and repositories interact only through domain models
+Where: In service and repository sections.
+Edit: Make explicit that:
+- Service interfaces in internal/service operate on internal/domain types (e.g., User, Booking, Cinema, Payment) and must not depend on HTTP or DB packages.
+
+- Repository interfaces in internal/repository accept context.Context and domain types and must not depend on HTTP or handler code.
+Why: This mirrors the current interfaces and enforces the clean separation you already have.
+3) Security / JWT / auth rules
+Change 6 – Centralize JWT usage through internal/utils/jwt
+Where: In the “Security”, “Auth”, or “JWT” section.
+Edit: Add a rule like:
+- JWT tokens must be generated and parsed via internal/utils/jwt.go (GenerateToken, ParseToken) and the Claims type. Handlers, services, and middleware must not use github.com/golang-jwt/jwt/v5 directly.
+Why: The code already wraps JWT usage in utils/jwt.go, and auth_middleware.go depends on that; the rules should require all JWT usage to go through this wrapper.
+Change 7 – Document the auth middleware pattern
+Where: Either under “Security” or a new “Middleware – Auth” subsection.
+Edit: Add a short description:
+ Authentication is enforced via internal/middleware/AuthMiddleware(jwtSecret string), which:
+ - Reads the Authorization: Bearer <token> header.
+ - Uses utils.ParseToken to validate the token and extract utils.Claims.
+ - Stores claims in context under a dedicated key (e.g., UserClaimsKey) for downstream handlers.
+ - Uses utils.JSONUnauthorized for missing/invalid tokens.
+
+> Handlers that require authentication should be wrapped with this middleware instead of re‑implementing JWT checks.
+Why: This matches auth_middleware.go and encourages a single, consistent auth path.
+4) Domain and pagination rules
+Change 8 – Allow simple domain helpers (e.g., pagination)
+Where: In the “Domain” / “Entities” section.
+Edit: Add a note:
+- The internal/domain package can include small, pure helper methods that encapsulate domain behavior, such as pagination helpers on Page (e.g., Page.Offset()) and result metadata via PageResult. These helpers must remain side‑effect free and not depend on external layers.
+Why: Page.Offset() and PageResult already exist; the rules should explicitly allow this pattern so it doesn’t look like a violation of “domain is just structs”.
+5) Middleware and logging rules
+Change 9 – Add a “Middleware” subsection
+Where: Under architecture or logging sections.
+Edit: Add a subsection like:
+- Middleware
+
+- Lives in internal/middleware.
+- Stays thin: focuses on cross‑cutting concerns (auth, logging) and delegates business decisions to services.
+- Auth middleware uses internal/utils/jwt and internal/utils/response for token parsing and error responses.
+- Logging middleware uses go.uber.org/zap via a logger created in internal/utils/logger.go and should not introduce business logic.
+Why: This reflects auth_middleware.go, logger_middleware.go, and utils/logger.go, and makes the expectations for middleware explicit.
+6) Config and database rules
+Change 10 – Describe config loading via config.Load
+Where: In a “Configuration” section.
+Edit: Add:
+- Configuration is loaded via internal/config.Load(), which reads environment variables (and optional .env) into a strongly typed Config struct. Other layers should depend on config.Config (or its nested structs like ServerConfig, DatabaseConfig, JWTConfig, OTPConfig, SMTPConfig) rather than reading environment variables directly.
+Why: This matches config/config.go and enforces a single config entry point.
+Change 11 – Describe DB access via database.Connect
+Where: In “Database” or infrastructure rules.
+Edit: Add:
+- Database connections are created via internal/database.Connect(ctx, cfg.Database.DSN()), which returns a DB wrapper around a pgxpool.Pool. Repository implementations should depend on this wrapper (or the pool it exposes) instead of creating their own connections.
+Why: This reflects database/postgres.go and keeps DB access centralized.
+

@@ -11,4 +11,6 @@ type PaymentRepository interface {
 	FindByID(ctx context.Context, id string) (*domain.Payment, error)
 	FindByBookingID(ctx context.Context, bookingID string) (*domain.Payment, error)
 	Create(ctx context.Context, payment *domain.Payment) error
+	Update(ctx context.Context, payment *domain.Payment) error
+	UpdateStatus(ctx context.Context, id, status string) error
 }

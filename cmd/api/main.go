@@ -13,6 +13,8 @@ import (
 	"booking_cinema_golang/internal/database"
 	"booking_cinema_golang/internal/handler"
 	"booking_cinema_golang/internal/middleware"
+	"booking_cinema_golang/internal/repository"
+	"booking_cinema_golang/internal/service"
 	"booking_cinema_golang/internal/utils"
 
 	"go.uber.org/zap"
@@ -42,8 +44,17 @@ func main() {
 	}
 	defer db.Close()
 
-	// Handlers (inject repos/services when implemented)
-	authHandler := &handler.AuthHandler{}
+	// Wire dependencies
+	userRepo := repository.NewUserRepository(db.Pool)
+	emailSvc := service.NewEmailService(
+		cfg.SMTP.Host, cfg.SMTP.Port,
+		cfg.SMTP.User, cfg.SMTP.Password, cfg.SMTP.From,
+	)
+	authSvc := service.NewAuthService(
+		userRepo, emailSvc,
+		cfg.JWT.Secret, cfg.JWT.ExpiryHours, cfg.OTP.ExpiryMinutes,
+	)
+	authHandler := handler.NewAuthHandler(authSvc)
 	cinemaHandler := &handler.CinemaHandler{}
 	bookingHandler := &handler.BookingHandler{}
 	paymentHandler := &handler.PaymentHandler{}
@@ -69,6 +80,8 @@ func main() {
 		// Auth (public)
 		r.Post("/auth/register", authHandler.Register)
 		r.Post("/auth/login", authHandler.Login)
+		r.Post("/auth/verify-otp", authHandler.VerifyOTP)
+		r.Post("/auth/resend-verification", authHandler.ResendVerification)
 
 		// Cinema & showtimes (public for listing)
 		r.Get("/cinemas", cinemaHandler.ListCinemas)

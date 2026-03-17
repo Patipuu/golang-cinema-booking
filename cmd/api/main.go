@@ -13,9 +13,8 @@ import (
 	"booking_cinema_golang/internal/database"
 	"booking_cinema_golang/internal/handler"
 	"booking_cinema_golang/internal/middleware"
-	"booking_cinema_golang/internal/repository/postgres"
-	"booking_cinema_golang/internal/service"
 	"booking_cinema_golang/internal/utils"
+
 	"go.uber.org/zap"
 
 	"github.com/go-chi/chi/v5"
@@ -43,10 +42,8 @@ func main() {
 	}
 	defer db.Close()
 
-	userRepo := postgres.NewUserRepository(db)
-	authService := service.NewAuthService(userRepo, cfg)
-
-	authHandler := handler.NewAuthHandler(authService)
+	// Handlers (inject repos/services when implemented)
+	authHandler := &handler.AuthHandler{}
 	cinemaHandler := &handler.CinemaHandler{}
 	bookingHandler := &handler.BookingHandler{}
 	paymentHandler := &handler.PaymentHandler{}
@@ -64,6 +61,11 @@ func main() {
 	})
 
 	r.Route("/api", func(r chi.Router) {
+		r.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"message":"hello"}`))
+		})
+
 		// Auth (public)
 		r.Post("/auth/register", authHandler.Register)
 		r.Post("/auth/login", authHandler.Login)

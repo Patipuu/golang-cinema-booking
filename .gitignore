@@ -1,0 +1,6 @@
+.env
+.env.*
+
+# Keep sample configs in repo (if present)
+!.env.example
+

@@ -13,6 +13,8 @@ import (
 	"booking_cinema_golang/internal/database"
 	"booking_cinema_golang/internal/handler"
 	"booking_cinema_golang/internal/middleware"
+	"booking_cinema_golang/internal/repository"
+	"booking_cinema_golang/internal/service"
 	"booking_cinema_golang/internal/utils"
 
 	"go.uber.org/zap"
@@ -45,7 +47,9 @@ func main() {
 	// Handlers (inject repos/services when implemented)
 	authHandler := &handler.AuthHandler{}
 	cinemaHandler := &handler.CinemaHandler{}
-	bookingHandler := &handler.BookingHandler{}
+	bookingRepo := repository.NewBookingRepository(db)
+	bookingSvc := service.NewBookingService(bookingRepo)
+	bookingHandler := handler.NewBookingHandler(bookingSvc)
 	paymentHandler := &handler.PaymentHandler{}
 
 	r := chi.NewRouter()

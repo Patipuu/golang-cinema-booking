@@ -50,12 +50,12 @@ type Movie struct {
 
 // Showtime.
 type Showtime struct {
-	ID       string
-	CinemaID string
-	MovieID  string
-	ShowDate time.Time
-	ShowTime string // or use time.Time; DB TIME maps to string easily
-	Price    float64
+	ID        string
+	CinemaID  string
+	MovieID   string
+	ShowDate  time.Time
+	ShowTime  string // or use time.Time; DB TIME maps to string easily
+	Price     float64
 	CreatedAt time.Time
 }
 
@@ -91,10 +91,10 @@ type Payment struct {
 
 // PaymentMethod (reference).
 type PaymentMethod struct {
-	ID       string
-	Name     string
-	Code     string
-	IsActive bool
+	ID        string
+	Name      string
+	Code      string
+	IsActive  bool
 	CreatedAt time.Time
 }
 

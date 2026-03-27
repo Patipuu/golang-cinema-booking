@@ -11,7 +11,8 @@ import (
 type UserRepository interface {
 	FindByID(ctx context.Context, id string) (*domain.User, error)
 	FindByEmail(ctx context.Context, email string) (*domain.User, error)
+	FindByUsername(ctx context.Context, username string) (*domain.User, error)
 	Create(ctx context.Context, user *domain.User) error
 	UpdateOTP(ctx context.Context, userID, otpCode string, expiry time.Time) error
-	SetVerified(ctx context.Context, userID string, verified bool) error
+	SetVerified(ctx context.Context, userID string) error
 }

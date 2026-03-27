@@ -60,6 +60,8 @@ func main() {
 	bookingSvc := service.NewBookingService(bookingRepo)
 	bookingHandler := handler.NewBookingHandler(bookingSvc)
 	paymentHandler := &handler.PaymentHandler{}
+	userSvc := service.NewUserService(userRepo, cfg)
+	userHandler := handler.NewUserHandler(userSvc)
 
 	r := chi.NewRouter()
 	r.Use(chimiddleware.RequestID)
@@ -94,6 +96,11 @@ func main() {
 		// Protected: booking & payment (require JWT)
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.AuthMiddleware(cfg.JWT.Secret))
+
+			r.Get("/users/me", userHandler.GetProfile)
+			r.Put("/users/me", userHandler.UpdateProfile)
+			r.Put("/users/me/password", userHandler.ChangePassword)
+
 			r.Post("/bookings", bookingHandler.CreateBooking)
 			r.Get("/bookings/{id}", bookingHandler.GetBooking)
 			r.Post("/payments", paymentHandler.CreatePayment)

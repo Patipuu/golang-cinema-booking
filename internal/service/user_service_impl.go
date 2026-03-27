@@ -125,3 +125,56 @@ func (s *userService) CreateUser(user *domain.User) error {
 	return nil
 }
 
+func (s *userService) GetProfile(ctx context.Context, userID string) (*domain.User, error) {
+	if userID == "" {
+		return nil, fmt.Errorf("user id is required")
+	}
+
+	u, err := s.userRepo.FindByID(ctx, userID)
+	if errors.Is(err, repository.ErrNotFound) {
+		return nil, ErrUserNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("find profile: %w", err)
+	}
+
+	return u, nil
+}
+
+func (s *userService) UpdateProfile(ctx context.Context, userID, fullName, phone string) (*domain.User, error) {
+	u, err := s.GetProfile(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	u.FullName = strings.TrimSpace(fullName)
+	u.Phone = strings.TrimSpace(phone)
+
+	if err := s.userRepo.Update(ctx, u); err != nil {
+		return nil, fmt.Errorf("update profile: %w", err)
+	}
+
+	return u, nil
+}
+
+func (s *userService) ChangePassword(ctx context.Context, userID, oldPassword, newPassword string) error {
+	u, err := s.GetProfile(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(oldPassword)); err != nil {
+		return errors.New("incorrect old password")
+	}
+
+	newHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), 12)
+	if err != nil {
+		return fmt.Errorf("hash new password: %w", err)
+	}
+
+	if err := s.userRepo.UpdatePassword(ctx, userID, string(newHash)); err != nil {
+		return fmt.Errorf("update password: %w", err)
+	}
+
+	return nil
+}

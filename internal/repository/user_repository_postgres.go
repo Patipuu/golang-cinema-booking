@@ -98,3 +98,23 @@ func (r *postgresUserRepo) SetVerified(ctx context.Context, userID string) error
 	)
 	return err
 }
+
+func (r *postgresUserRepo) Update(ctx context.Context, user *domain.User) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE users
+		 SET full_name = $2, phone = $3, updated_at = NOW()
+		 WHERE id = $1`,
+		user.ID, user.FullName, user.Phone,
+	)
+	return err
+}
+
+func (r *postgresUserRepo) UpdatePassword(ctx context.Context, userID, newHash string) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE users
+		 SET password_hash = $2, updated_at = NOW()
+		 WHERE id = $1`,
+		userID, newHash,
+	)
+	return err
+}

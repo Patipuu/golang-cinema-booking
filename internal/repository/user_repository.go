@@ -15,4 +15,6 @@ type UserRepository interface {
 	Create(ctx context.Context, user *domain.User) error
 	UpdateOTP(ctx context.Context, userID, otpCode string, expiry time.Time) error
 	SetVerified(ctx context.Context, userID string) error
+	Update(ctx context.Context, user *domain.User) error
+	UpdatePassword(ctx context.Context, userID, newHash string) error
 }

@@ -111,7 +111,7 @@ func main() {
 			r.Post("/bookings", bookingHandler.CreateBooking)
 			r.Get("/bookings/{id}", bookingHandler.GetBooking)
 			//r.Post("/payments", paymentHandler.CreatePayment)  Tạm thời không cần token jwt để test api trước
-			r.Get("/payments/{id}", paymentHandler.GetPayment)
+			// r.Get("/payments/{id}", paymentHandler.GetPayment)
 		})
 		r.Post("/payments", paymentHandler.CreatePayment)
 

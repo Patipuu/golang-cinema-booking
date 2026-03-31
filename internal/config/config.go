@@ -15,6 +15,8 @@ type Config struct {
 	JWT      JWTConfig
 	OTP      OTPConfig
 	SMTP     SMTPConfig
+	Redis    RedisConfig
+	VNPay    VNPayConfig
 }
 
 type ServerConfig struct {
@@ -46,6 +48,21 @@ type JWTConfig struct {
 
 type OTPConfig struct {
 	ExpiryMinutes int
+}
+
+// RedisConfig lưu cấu hình kết nối Redis (dùng cho cache, idempotency, rate limit)
+type RedisConfig struct {
+	Addr     string `mapstructure:"addr"`     // Địa chỉ Redis (ví dụ: localhost:6379)
+	Password string `mapstructure:"password"` // Mật khẩu Redis (nếu có)
+	DB       int    `mapstructure:"db"`       // Số DB (thường là 0)
+}
+
+// VNPayConfig lưu thông tin kết nối VNPay sandbox/production
+type VNPayConfig struct {
+	PayURL     string `mapstructure:"pay_url"`     // URL thanh toán (sandbox: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html)
+	TmnCode    string `mapstructure:"tmn_code"`    // Mã TMN từ VNPay
+	HashSecret string `mapstructure:"hash_secret"` // Khóa hash (Hash Secret) từ VNPay
+	ReturnURL  string `mapstructure:"return_url"`  // URL callback sau thanh toán (ví dụ: http://localhost:8080/api/payments/callback)
 }
 
 type SMTPConfig struct {
@@ -91,6 +108,17 @@ func Load() (*Config, error) {
 			User:     getStr(v, "SMTP_USER", ""),
 			Password: getStr(v, "SMTP_PASSWORD", ""),
 			From:     getStr(v, "SMTP_FROM", "noreply@booking-cinema.local"),
+		},
+		Redis: RedisConfig{
+			Addr:     getStr(v, "REDIS_ADDR", "localhost:6379"),
+			Password: getStr(v, "REDIS_PASSWORD", ""),
+			DB:       getInt(v, "REDIS_DB", 0),
+		},
+		VNPay: VNPayConfig{
+			PayURL:    getStr(v, "VNPAY_PAY_URL", "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"),
+			TmnCode:   getStr(v, "VNPAY_TMN_CODE", "GJQAO3Y6"),
+			HashSecret: getStr(v, "VNPAY_HASH_SECRET", "FVN21HE81C05RF4FIBIH8HIZZ4EMTU6D"),
+			ReturnURL: getStr(v, "VNPAY_RETURN_URL", "http://localhost:8080/api/payments/callback"),
 		},
 	}
 	return cfg, nil

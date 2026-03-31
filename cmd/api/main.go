@@ -21,6 +21,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/redis/go-redis/v9"
 )
 
 func main() {
@@ -44,6 +45,37 @@ func main() {
 	}
 	defer db.Close()
 
+	// Kết nối Redis (bắt buộc cho idempotency)
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     cfg.Redis.Addr,     // ví dụ: "localhost:6379"
+		Password: cfg.Redis.Password, // nếu có
+		DB:       cfg.Redis.DB,
+	})
+	if err := rdb.Ping(ctx).Err(); err != nil {
+		logger.Fatal("redis connect failed", zap.Error(err))
+	}
+	defer rdb.Close()
+
+	// Khởi tạo repositories
+	paymentRepo := repository.NewPaymentRepository(db)
+	bookingRepo := repository.NewBookingRepository(db) 
+
+	// Khởi tạo PaymentService với config VNPay từ cfg
+	svc := service.NewPaymentService(
+		paymentRepo,
+		bookingRepo,
+		rdb,
+		cfg.VNPay.PayURL,    // "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
+		cfg.VNPay.TmnCode,   // ví dụ: "YOURTMN00"
+		cfg.VNPay.HashSecret, // secret từ VNPay
+		cfg.VNPay.ReturnURL, // "http://localhost:8080/api/payments/callback"
+	)
+
+	// Handlers (inject repos/services when implemented)
+	// authHandler := &handler.AuthHandler{}
+	// cinemaHandler := &handler.CinemaHandler{}
+	// bookingHandler := &handler.BookingHandler{}
+	paymentHandler := handler.NewPaymentHandler(svc)
 	// Wire dependencies
 	userRepo := repository.NewUserRepository(db.Pool)
 	emailSvc := service.NewEmailService(
@@ -56,10 +88,10 @@ func main() {
 	)
 	authHandler := handler.NewAuthHandler(authSvc)
 	cinemaHandler := &handler.CinemaHandler{}
-	bookingRepo := repository.NewBookingRepository(db)
+	// bookingRepo := repository.NewBookingRepository(db)
 	bookingSvc := service.NewBookingService(bookingRepo)
 	bookingHandler := handler.NewBookingHandler(bookingSvc)
-	paymentHandler := &handler.PaymentHandler{}
+	// paymentHandler := &handler.PaymentHandler{}
 
 	r := chi.NewRouter()
 	r.Use(chimiddleware.RequestID)
@@ -96,9 +128,11 @@ func main() {
 			r.Use(middleware.AuthMiddleware(cfg.JWT.Secret))
 			r.Post("/bookings", bookingHandler.CreateBooking)
 			r.Get("/bookings/{id}", bookingHandler.GetBooking)
-			r.Post("/payments", paymentHandler.CreatePayment)
-			r.Get("/payments/{id}", paymentHandler.GetPayment)
+			//r.Post("/payments", paymentHandler.CreatePayment)  Tạm thời không cần token jwt để test api trước
+			// r.Get("/payments/{id}", paymentHandler.GetPayment)
 		})
+		r.Post("/payments", paymentHandler.CreatePayment)
+
 	})
 
 	addr := ":" + cfg.Server.Port

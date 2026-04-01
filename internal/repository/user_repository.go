@@ -9,6 +9,7 @@ import (
 
 // UserRepository defines data access methods for users.
 type UserRepository interface {
+	FindAll(ctx context.Context, page, limit int, search string) ([]*domain.User, int, error)
 	FindByID(ctx context.Context, id string) (*domain.User, error)
 	FindByEmail(ctx context.Context, email string) (*domain.User, error)
 	FindByUsername(ctx context.Context, username string) (*domain.User, error)
@@ -17,4 +18,6 @@ type UserRepository interface {
 	SetVerified(ctx context.Context, userID string) error
 	Update(ctx context.Context, user *domain.User) error
 	UpdatePassword(ctx context.Context, userID, newHash string) error
+	UpdateStatus(ctx context.Context, userID string, isActive bool) error
+	UpdateRole(ctx context.Context, userID string, role string) error
 }

@@ -45,8 +45,9 @@ func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 
 // UpdateProfileRequest defines the allowed fields to update.
 type UpdateProfileRequest struct {
-	FullName string `json:"full_name"`
-	Phone    string `json:"phone"`
+	FullName  string `json:"full_name"`
+	Phone     string `json:"phone"`
+	AvatarURL string `json:"avatar_url"`
 }
 
 // UpdateProfile handles PUT /api/v1/users/me
@@ -63,7 +64,7 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.userSvc.UpdateProfile(r.Context(), claims.UserID, req.FullName, req.Phone)
+	user, err := h.userSvc.UpdateProfile(r.Context(), claims.UserID, req.FullName, req.Phone, req.AvatarURL)
 	if err != nil {
 		if err == service.ErrUserNotFound {
 			utils.JSONNotFound(w, "user not found")

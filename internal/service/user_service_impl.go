@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"booking_cinema_golang/internal/config"
@@ -34,14 +33,12 @@ func NewUserService(userRepo repository.UserRepository, cfg *config.Config) User
 	}
 }
 
-func (s *userService) GetUserByID(id int64) (*domain.User, error) {
-	ctx := context.Background()
-
-	if id <= 0 {
+func (s *userService) GetUserByID(ctx context.Context, id string) (*domain.User, error) {
+	if id == "" {
 		return nil, fmt.Errorf("invalid user id")
 	}
 
-	u, err := s.userRepo.FindByID(ctx, strconv.FormatInt(id, 10))
+	u, err := s.userRepo.FindByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -51,9 +48,7 @@ func (s *userService) GetUserByID(id int64) (*domain.User, error) {
 	return u, nil
 }
 
-func (s *userService) GetUserByEmail(email string) (*domain.User, error) {
-	ctx := context.Background()
-
+func (s *userService) GetUserByEmail(ctx context.Context, email string) (*domain.User, error) {
 	email = strings.TrimSpace(strings.ToLower(email))
 	if email == "" {
 		return nil, fmt.Errorf("email is required")
@@ -69,9 +64,7 @@ func (s *userService) GetUserByEmail(email string) (*domain.User, error) {
 	return u, nil
 }
 
-func (s *userService) CreateUser(user *domain.User) error {
-	ctx := context.Background()
-
+func (s *userService) CreateUser(ctx context.Context, user *domain.User) error {
 	if user == nil {
 		return fmt.Errorf("user is required")
 	}
@@ -141,7 +134,7 @@ func (s *userService) GetProfile(ctx context.Context, userID string) (*domain.Us
 	return u, nil
 }
 
-func (s *userService) UpdateProfile(ctx context.Context, userID, fullName, phone string) (*domain.User, error) {
+func (s *userService) UpdateProfile(ctx context.Context, userID, fullName, phone, avatarURL string) (*domain.User, error) {
 	u, err := s.GetProfile(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -149,6 +142,7 @@ func (s *userService) UpdateProfile(ctx context.Context, userID, fullName, phone
 
 	u.FullName = strings.TrimSpace(fullName)
 	u.Phone = strings.TrimSpace(phone)
+	u.AvatarURL = strings.TrimSpace(avatarURL)
 
 	if err := s.userRepo.Update(ctx, u); err != nil {
 		return nil, fmt.Errorf("update profile: %w", err)
@@ -176,5 +170,51 @@ func (s *userService) ChangePassword(ctx context.Context, userID, oldPassword, n
 		return fmt.Errorf("update password: %w", err)
 	}
 
+	return nil
+}
+
+func (s *userService) FindAllUsers(ctx context.Context, page, limit int, search string) ([]*domain.User, *domain.PageResult, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 10
+	}
+
+	users, total, err := s.userRepo.FindAll(ctx, page, limit, search)
+	if err != nil {
+		return nil, nil, fmt.Errorf("find all users: %w", err)
+	}
+
+	pageResult := &domain.PageResult{
+		Page:       page,
+		Limit:      limit,
+		TotalCount: total,
+	}
+
+	return users, pageResult, nil
+}
+
+func (s *userService) UpdateUserStatus(ctx context.Context, userID string, isActive bool) error {
+	if userID == "" {
+		return fmt.Errorf("user id is required")
+	}
+	if err := s.userRepo.UpdateStatus(ctx, userID, isActive); err != nil {
+		return fmt.Errorf("update user status: %w", err)
+	}
+	return nil
+}
+
+func (s *userService) UpdateUserRole(ctx context.Context, userID, role string) error {
+	if userID == "" {
+		return fmt.Errorf("user id is required")
+	}
+	role = strings.ToLower(strings.TrimSpace(role))
+	if role != "admin" && role != "customer" && role != "staff" {
+		return fmt.Errorf("invalid role")
+	}
+	if err := s.userRepo.UpdateRole(ctx, userID, role); err != nil {
+		return fmt.Errorf("update user role: %w", err)
+	}
 	return nil
 }

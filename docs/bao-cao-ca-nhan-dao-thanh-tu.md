@@ -29,7 +29,7 @@
 
 ### 1.1 Giới thiệu
 
-Cinema Booking System là một hệ thống đặt vé xem phim trực tuyến được phát triển theo mô hình kiến trúc phân tầng (Clean Architecture), sử dụng Golang làm ngôn ngữ backend chính. Hệ thống cho phép người dùng tìm kiếm phim đang chiếu, chọn suất chiếu theo ngày, chọn ghế ngồi và thanh toán trực tuyến qua cổng VNPay.
+Cinema Booking System là một hệ thống đặt vé xem phim trực tuyến được phát triển theo mô hình kiến trúc phân tầng (Clean Architecture), sử dụng Golang làm ngôn ngữ backend chính. Hệ thống cho phép người dùng tìm kiếm phim đang chiếu, chọn suất chiếu theo ngày và chọn ghế ngồi để đặt vé.
 
 Điểm nổi bật của dự án là việc áp dụng một cách nghiêm ngặt nguyên tắc **phân tách mối quan tâm (Separation of Concerns)**: mỗi layer chỉ chịu trách nhiệm đúng phạm vi của nó — handler xử lý HTTP, service chứa business logic, repository truy cập database — đảm bảo codebase dễ bảo trì, dễ test và dễ mở rộng.
 
@@ -40,7 +40,6 @@ Hệ thống bao gồm các mô-đun chức năng chính sau:
 - **Xác thực người dùng (Auth):** Đăng ký, đăng nhập, xác thực tài khoản qua OTP email, phát hành JWT, bảo vệ endpoint bằng middleware.
 - **Quản lý rạp và suất chiếu:** Danh sách rạp, tìm kiếm suất chiếu theo ngày và rạp, quản lý phòng chiếu và ghế ngồi.
 - **Đặt vé trực tuyến:** Xem trạng thái ghế, chọn ghế, tạo booking, xử lý race condition khi nhiều user cùng đặt một ghế.
-- **Hệ thống thanh toán:** Tích hợp cổng thanh toán VNPay với cơ chế Idempotency Key chống trùng giao dịch, lưu trạng thái thanh toán.
 - **Thông báo thời gian thực:** WebSocket Hub broadcast trạng thái ghế tức thì tới tất cả người dùng cùng xem suất chiếu.
 - **Quản trị Admin:** Bảng điều khiển thống kê, quản lý người dùng, quản lý suất chiếu và theo dõi doanh thu.
 
@@ -51,7 +50,7 @@ Hệ thống bao gồm các mô-đun chức năng chính sau:
 | Ngôn ngữ Backend | Go (Golang) 1.22+ | Hiệu năng cao, concurrency tốt |
 | HTTP Router | `github.com/go-chi/chi/v5` | Lightweight, middleware-first |
 | Database | PostgreSQL 17 với `pgx/v5` driver | Connection pool, type-safe queries |
-| Cache & Lock | Redis (`redis/go-redis/v9`) | Idempotency key, seat locking |
+| Cache & Lock | Redis (`redis/go-redis/v9`) | Seat locking |
 | Xác thực | JWT (`golang-jwt/jwt/v5`) | HS256, configurable expiry |
 | Mật khẩu | `golang.org/x/crypto/bcrypt` | cost=12 |
 | Logging | `go.uber.org/zap` | Structured logging, dev/prod modes |
@@ -151,19 +150,17 @@ golang-cinema-booking/
 │   │   ├── user_repository.go           # Interface
 │   │   ├── user_repository_postgres.go  # Postgres impl (Auth)
 │   │   ├── errors.go                    # Sentinel errors
-│   │   ├── booking_repository.go
-│   │   └── payment_repository*.go
+│   │   └── booking_repository.go
 │   ├── service/
 │   │   ├── auth_service.go       # Interface
 │   │   ├── auth_service_impl.go  # Business logic (Auth)
 │   │   ├── email_service.go      # Interface
 │   │   ├── email_service_impl.go # SMTP implementation
-│   │   └── booking/payment service files
+│   │   └── booking_service*.go
 │   ├── handler/
 │   │   ├── auth_handler.go       # 4 auth HTTP endpoints
 │   │   ├── booking_handler.go
-│   │   ├── cinema_handler.go
-│   │   └── payment_handler.go
+│   │   └── cinema_handler.go
 │   ├── middleware/
 │   │   ├── auth_middleware.go    # JWT validation
 │   │   └── logger_middleware.go  # Request logging (Zap)
@@ -209,7 +206,7 @@ Các phụ thuộc bị cấm (ví dụ: repository gọi service, service impor
 #### Mục 3–5: Trách nhiệm từng layer
 
 - **Handler:** Chỉ decode/validate request, gọi service, map lỗi sang HTTP status, trả DTO an toàn. Không được hash password, generate JWT, hay viết SQL.
-- **Service:** Chỉ chứa business rules, orchestrate repository, gọi tích hợp bên ngoài (email, payment). Không được import `net/http`.
+- **Service:** Chỉ chứa business rules, orchestrate repository, gọi tích hợp bên ngoài (email). Không được import `net/http`.
 - **Repository:** Chỉ CRUD, map database errors, xử lý transaction. Không được gửi email hay thực hiện network calls.
 
 #### Mục 6: Hợp đồng xử lý lỗi
@@ -820,9 +817,7 @@ config.Load()
     │
     └── handler.NewAuthHandler(authSvc) → authHandler
 
-    redis.NewClient(Redis config) → rdb
-        └── repository.NewPaymentRepository(db) + service.NewPaymentService(..., rdb, VNPay config)
-            └── handler.NewPaymentHandler(svc) → paymentHandler
+    redis.NewClient(Redis config) → rdb  # seat locking
 ```
 
 #### Router setup
@@ -1105,7 +1100,6 @@ type Config struct {
     OTP      OTPConfig       // OTP_EXPIRY_MINUTES
     SMTP     SMTPConfig      // SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM
     Redis    RedisConfig     // REDIS_ADDR, REDIS_PASSWORD, REDIS_DB
-    VNPay    VNPayConfig     // VNPAY_PAY_URL, VNPAY_TMN_CODE, VNPAY_HASH_SECRET, VNPAY_RETURN_URL
 }
 ```
 

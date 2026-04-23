@@ -10,6 +10,9 @@ type User struct {
 	PasswordHash string
 	FullName     string
 	Phone        string
+	AvatarURL    string
+	Role         string
+	IsActive     bool
 	IsVerified   bool
 	OTPCode      string
 	OTPExpiry    *time.Time

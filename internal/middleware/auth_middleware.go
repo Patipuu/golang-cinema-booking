@@ -37,6 +37,24 @@ func AuthMiddleware(jwtSecret string) func(next http.Handler) http.Handler {
 	}
 }
 
+// AdminMiddleware checks if the authenticated user has admin role.
+func AdminMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		claims := GetClaims(r.Context())
+		if claims == nil {
+			utils.JSONUnauthorized(w, "authentication required")
+			return
+		}
+
+		if claims.Role != "admin" {
+			utils.JSONForbidden(w, "admin access required")
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 // GetClaims returns Claims from request context (nil if not set).
 func GetClaims(ctx context.Context) *utils.Claims {
 	c, _ := ctx.Value(UserClaimsKey).(*utils.Claims)

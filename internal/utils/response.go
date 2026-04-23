@@ -45,6 +45,11 @@ func JSONNotFound(w http.ResponseWriter, message string) {
 	JSONError(w, message, http.StatusNotFound)
 }
 
+// JSONForbidden sends 403.
+func JSONForbidden(w http.ResponseWriter, message string) {
+	JSONError(w, message, http.StatusForbidden)
+}
+
 // JSONInternal sends 500.
 func JSONInternal(w http.ResponseWriter, message string) {
 	JSONError(w, message, http.StatusInternalServerError)

@@ -111,7 +111,7 @@ func (s *authServiceImpl) Login(ctx context.Context, email, password string) (*d
 		return nil, "", ErrAccountNotVerified
 	}
 
-	token, err := utils.GenerateToken(s.jwtSecret, user.ID, user.Email, user.Username, s.expiryHours)
+	token, err := utils.GenerateToken(s.jwtSecret, user.ID, user.Email, user.Username, user.Role, s.expiryHours)
 	if err != nil {
 		return nil, "", fmt.Errorf("generate token: %w", err)
 	}

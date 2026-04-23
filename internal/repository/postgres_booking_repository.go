@@ -164,7 +164,7 @@ func (r *PostgresBookingRepository) Create(ctx context.Context, booking *domain.
 	//    ORDER BY ensures a deterministic lock acquisition order.
 	//    NOWAIT makes request fail fast if another tx holds the lock.
 	type seatRow struct {
-		seatID    string
+		seatID     string
 		seatNumber string
 	}
 	seatIDByCode := make(map[string]seatRow, len(seatCodes))
@@ -262,3 +262,44 @@ func (r *PostgresBookingRepository) Create(ctx context.Context, booking *domain.
 	return nil
 }
 
+func (r *PostgresBookingRepository) ListAll(ctx context.Context, page, limit int) ([]domain.Booking, error) {
+	offset := (page - 1) * limit
+	rows, err := r.db.Pool.Query(ctx, `
+		SELECT id::text, user_id::text, showtime_id::text, status, total_price::float8, created_at, updated_at
+		FROM bookings
+		ORDER BY created_at DESC
+		LIMIT $1 OFFSET $2
+	`, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("booking: list all: %w", err)
+	}
+	defer rows.Close()
+
+	var bookings []domain.Booking
+	for rows.Next() {
+		var b domain.Booking
+		if err := rows.Scan(&b.ID, &b.UserID, &b.ShowtimeID, &b.Status, &b.TotalPrice, &b.CreatedAt, &b.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("booking: scan: %w", err)
+		}
+		bookings = append(bookings, b)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("booking: rows: %w", err)
+	}
+	return bookings, nil
+}
+
+func (r *PostgresBookingRepository) Cancel(ctx context.Context, id string) error {
+	result, err := r.db.Pool.Exec(ctx, `
+		UPDATE bookings
+		SET status = 'cancelled', updated_at = NOW()
+		WHERE id = $1 AND status = 'pending'
+	`, id)
+	if err != nil {
+		return fmt.Errorf("booking: cancel: %w", err)
+	}
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("booking: not found or not cancellable")
+	}
+	return nil
+}

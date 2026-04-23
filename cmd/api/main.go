@@ -24,6 +24,30 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+func corsMiddleware(next http.Handler) http.Handler {
+	allowedOrigins := map[string]bool{
+		"http://localhost:5173": true,
+		"http://localhost:5174": true,
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		if allowedOrigins[origin] {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		}
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
@@ -94,7 +118,12 @@ func main() {
 	userSvc := service.NewUserService(userRepo, cfg)
 	userHandler := handler.NewUserHandler(userSvc)
 
+	// Initialize Cinema Service (assuming it exists or needs to be created)
+	cinemaSvc := service.NewCinemaService(repository.NewCinemaRepository(db))
+	adminHandler := handler.NewAdminHandler(cinemaSvc, bookingSvc, userSvc, logger)
+
 	r := chi.NewRouter()
+	r.Use(corsMiddleware)
 	r.Use(chimiddleware.RequestID)
 	r.Use(chimiddleware.RealIP)
 	r.Use(middleware.LoggerMiddleware(logger))
@@ -137,6 +166,43 @@ func main() {
 			//r.Post("/payments", paymentHandler.CreatePayment)  Tạm thời không cần token jwt để test api trước
 			// r.Get("/payments/{id}", paymentHandler.GetPayment)
 		})
+
+		// Admin routes (require admin role)
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.AuthMiddleware(cfg.JWT.Secret))
+			r.Use(middleware.AdminMiddleware)
+
+			// Dashboard
+			r.Get("/admin/dashboard", adminHandler.GetDashboardStats)
+
+			// Cinema Management
+			r.Post("/admin/cinemas", adminHandler.CreateCinema)
+			r.Put("/admin/cinemas/{id}", adminHandler.UpdateCinema)
+			r.Delete("/admin/cinemas/{id}", adminHandler.DeleteCinema)
+
+			// Movie Management
+			r.Get("/admin/movies", adminHandler.ListMovies)
+			r.Post("/admin/movies", adminHandler.CreateMovie)
+			r.Put("/admin/movies/{id}", adminHandler.UpdateMovie)
+			r.Delete("/admin/movies/{id}", adminHandler.DeleteMovie)
+
+			// Showtime Management
+			r.Get("/admin/showtimes", adminHandler.ListShowtimesAdmin)
+			r.Post("/admin/showtimes", adminHandler.CreateShowtime)
+			r.Put("/admin/showtimes/{id}", adminHandler.UpdateShowtime)
+			r.Delete("/admin/showtimes/{id}", adminHandler.DeleteShowtime)
+
+			// Booking Management
+			r.Get("/admin/bookings", adminHandler.ListBookings)
+			r.Get("/admin/bookings/{id}", adminHandler.GetBookingDetails)
+			r.Put("/admin/bookings/{id}/cancel", adminHandler.CancelBooking)
+
+			// User Management
+			r.Get("/admin/users", adminHandler.ListUsers)
+			r.Get("/admin/users/{id}", adminHandler.GetUserDetails)
+			r.Put("/admin/users/{id}/status", adminHandler.UpdateUserStatus)
+		})
+
 		r.Post("/payments", paymentHandler.CreatePayment)
 
 	})

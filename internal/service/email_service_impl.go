@@ -16,10 +16,28 @@ type smtpEmailService struct {
 	from     string
 }
 
-// NewEmailService creates an SMTP-backed EmailService.
-// Supports port 465 (direct TLS) and port 587 (STARTTLS).
+type consoleEmailService struct {
+	from string
+}
+
+// NewEmailService creates an EmailService.
+// If SMTP credentials are not configured, it falls back to console logging for local OTP testing.
 func NewEmailService(host string, port int, user, password, from string) EmailService {
+	if host == "" || user == "" || password == "" {
+		return &consoleEmailService{from: from}
+	}
 	return &smtpEmailService{host: host, port: port, user: user, password: password, from: from}
+}
+
+func (s *consoleEmailService) SendVerificationEmail(to, fullName, otpCode string, expiresInMinutes int) error {
+	fmt.Printf("[OTP EMAIL] To=%s From=%s Subject=Verify Your Email — Cinema Booking\n", to, s.from)
+	fmt.Printf("Hello %s,\nYour verification code is: %s\nIt expires in %d minutes.\n\n", fullName, otpCode, expiresInMinutes)
+	return nil
+}
+
+func (s *consoleEmailService) SendBookingConfirmation(to string) error {
+	fmt.Printf("[BOOKING EMAIL] To=%s From=%s\n", to, s.from)
+	return nil
 }
 
 func (s *smtpEmailService) SendVerificationEmail(to, fullName, otpCode string, expiresInMinutes int) error {

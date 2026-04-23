@@ -12,4 +12,6 @@ type BookingRepository interface {
 	Create(ctx context.Context, booking *domain.Booking, seatIDs []string) error
 	ListByUserID(ctx context.Context, userID string, page domain.Page) ([]domain.Booking, domain.PageResult, error)
 	GetTakenSeatIDsForShowtime(ctx context.Context, showtimeID string) ([]string, error)
+	ListAll(ctx context.Context, page, limit int) ([]domain.Booking, error)
+	Cancel(ctx context.Context, id string) error
 }

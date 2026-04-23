@@ -12,4 +12,6 @@ type BookingService interface {
 	GetBooking(ctx context.Context, id string) (*domain.Booking, error)
 	ListByUserID(ctx context.Context, userID string, page domain.Page) ([]domain.Booking, domain.PageResult, error)
 	GetTakenSeatIDsForShowtime(ctx context.Context, showtimeID string) ([]string, error)
+	ListBookings(ctx context.Context, page, limit int) ([]domain.Booking, error)
+	CancelBooking(ctx context.Context, id string) error
 }

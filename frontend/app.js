@@ -1,6 +1,6 @@
 const { useState, useEffect } = React;
 
-const API_BASE = "/api"; // chỉnh lại nếu backend của bạn dùng prefix khác
+const API_BASE = "http://localhost:8080/api"; // chỉnh lại nếu backend của bạn dùng prefix khác
 
 async function apiRequest(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -34,11 +34,17 @@ function AuthPanel({ user, onAuthChange }) {
   const [mode, setMode] = useState("login"); // "login" | "register"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const disabled = loading || !email || !password || (mode === "register" && !fullName);
+  const disabled =
+    loading ||
+    !email ||
+    !password ||
+    (mode === "register" && (!username || !fullName || !phone));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -55,7 +61,13 @@ function AuthPanel({ user, onAuthChange }) {
       } else {
         const data = await apiRequest("/auth/register", {
           method: "POST",
-          body: JSON.stringify({ email, password, full_name: fullName }),
+          body: JSON.stringify({
+            email,
+            password,
+            username,
+            full_name: fullName,
+            phone,
+          }),
         });
         onAuthChange(data.user || data);
         setStatus({ type: "success", message: "Đăng ký thành công." });
@@ -124,18 +136,39 @@ function AuthPanel({ user, onAuthChange }) {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
+                    minLength={8}
                   />
                 </div>
                 {mode === "register" && (
-                  <div className="field">
-                    <label>Họ tên</label>
-                    <input
-                      type="text"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Nguyễn Văn A"
-                    />
-                  </div>
+                  <>
+                    <div className="field">
+                      <label>Username</label>
+                      <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder="vietnguyen"
+                      />
+                    </div>
+                    <div className="field">
+                      <label>Họ tên</label>
+                      <input
+                        type="text"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="Nguyễn Văn A"
+                      />
+                    </div>
+                    <div className="field">
+                      <label>Phone</label>
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="0123456789"
+                      />
+                    </div>
+                  </>
                 )}
               </div>
               <div className="spacer" />
@@ -572,6 +605,8 @@ function App() {
   const [date, setDate] = useState("");
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [pricePerSeat] = useState(75000); // có thể mapping từ showtime.price nếu backend trả về
+  const [adminMode, setAdminMode] = useState(false);
+  const [adminTab, setAdminTab] = useState('dashboard');
 
   useEffect(() => {
     // Reset showtime & seats khi đổi rạp hoặc ngày
@@ -584,6 +619,30 @@ function App() {
     setSelectedSeats([]);
   }, [selectedShowtime]);
 
+  useEffect(() => {
+    // Check if user is admin
+    if (user && (user.role === 'admin' || user.Role === 'admin')) {
+      setAdminMode(true);
+    } else {
+      setAdminMode(false);
+    }
+  }, [user]);
+
+  const renderAdminContent = () => {
+    switch (adminTab) {
+      case 'dashboard':
+        return <AdminDashboard user={user} onAuthChange={setUser} />;
+      case 'cinemas':
+        return <AdminCinemas user={user} onAuthChange={setUser} />;
+      case 'bookings':
+        return <AdminBookings user={user} onAuthChange={setUser} />;
+      case 'users':
+        return <AdminUsers user={user} onAuthChange={setUser} />;
+      default:
+        return <AdminDashboard user={user} onAuthChange={setUser} />;
+    }
+  };
+
   return (
     <div className="app">
       <header className="app-header">
@@ -592,46 +651,503 @@ function App() {
           <span>CINEMA BOOKING</span>
         </div>
         <div className="header-actions">
+          {adminMode && (
+            <div className="admin-toggle">
+              <button
+                className={`mode-btn ${!adminMode ? 'active' : ''}`}
+                onClick={() => setAdminMode(false)}
+              >
+                User Mode
+              </button>
+              <button
+                className={`mode-btn ${adminMode ? 'active' : ''}`}
+                onClick={() => setAdminMode(true)}
+              >
+                Admin Mode
+              </button>
+            </div>
+          )}
           <span className="hint">
-            {user ? "Sẵn sàng đặt vé 🎬" : "Đăng nhập để lưu vé theo tài khoản."}
+            {user ? (adminMode ? "Admin Panel 🎭" : "Sẵn sàng đặt vé 🎬") : "Đăng nhập để lưu vé theo tài khoản."}
           </span>
         </div>
       </header>
       <main className="app-body">
-        <div className="app-shell">
-          <div>
-            <CinemaAndShowtimePanel
-              selectedCinema={selectedCinema}
-              onSelectCinema={setSelectedCinema}
-              selectedShowtime={selectedShowtime}
-              onSelectShowtime={setSelectedShowtime}
-              date={date}
-              setDate={setDate}
-            />
-            <div className="spacer" />
-            <SeatPanel
-              selectedShowtime={selectedShowtime}
-              selectedSeats={selectedSeats}
-              setSelectedSeats={setSelectedSeats}
-              pricePerSeat={pricePerSeat}
-            />
+        {adminMode ? (
+          <div className="admin-layout">
+            <div className="admin-sidebar">
+              <div className="admin-nav">
+                <button
+                  className={`admin-nav-item ${adminTab === 'dashboard' ? 'active' : ''}`}
+                  onClick={() => setAdminTab('dashboard')}
+                >
+                  Dashboard
+                </button>
+                <button
+                  className={`admin-nav-item ${adminTab === 'cinemas' ? 'active' : ''}`}
+                  onClick={() => setAdminTab('cinemas')}
+                >
+                  Cinemas
+                </button>
+                <button
+                  className={`admin-nav-item ${adminTab === 'bookings' ? 'active' : ''}`}
+                  onClick={() => setAdminTab('bookings')}
+                >
+                  Bookings
+                </button>
+                <button
+                  className={`admin-nav-item ${adminTab === 'users' ? 'active' : ''}`}
+                  onClick={() => setAdminTab('users')}
+                >
+                  Users
+                </button>
+              </div>
+            </div>
+            <div className="admin-content">
+              {renderAdminContent()}
+            </div>
           </div>
-          <div>
-            <AuthPanel user={user} onAuthChange={setUser} />
-            <div className="spacer" />
-            <SummaryAndPaymentPanel
-              user={user}
-              selectedCinema={selectedCinema}
-              selectedShowtime={selectedShowtime}
-              selectedSeats={selectedSeats}
-              pricePerSeat={pricePerSeat}
-            />
+        ) : (
+          <div className="app-shell">
+            <div>
+              <CinemaAndShowtimePanel
+                selectedCinema={selectedCinema}
+                onSelectCinema={setSelectedCinema}
+                selectedShowtime={selectedShowtime}
+                onSelectShowtime={setSelectedShowtime}
+                date={date}
+                setDate={setDate}
+              />
+              <div className="spacer" />
+              <SeatPanel
+                selectedShowtime={selectedShowtime}
+                selectedSeats={selectedSeats}
+                setSelectedSeats={setSelectedSeats}
+                pricePerSeat={pricePerSeat}
+              />
+            </div>
+            <div>
+              <AuthPanel user={user} onAuthChange={setUser} />
+              <div className="spacer" />
+              <SummaryAndPaymentPanel
+                user={user}
+                selectedCinema={selectedCinema}
+                selectedShowtime={selectedShowtime}
+                selectedSeats={selectedSeats}
+                pricePerSeat={pricePerSeat}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </main>
     </div>
   );
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
+// Admin Components
+function AdminDashboard({ user, onAuthChange }) {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const data = await apiRequest("/admin/dashboard");
+        setStats(data);
+      } catch (err) {
+        console.error("Failed to load dashboard stats:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadStats();
+  }, []);
+
+  if (loading) {
+    return <div className="panel"><div className="panel-body">Loading dashboard...</div></div>;
+  }
+
+  return (
+    <div className="panel">
+      <div className="panel-header">
+        <div className="panel-title">
+          <span>Admin Dashboard</span>
+        </div>
+        <span className="badge">Admin</span>
+      </div>
+      <div className="panel-body">
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-value">{stats?.total_users || 0}</div>
+            <div className="stat-label">Total Users</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-value">{stats?.total_bookings || 0}</div>
+            <div className="stat-label">Total Bookings</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-value">{(stats?.total_revenue || 0).toLocaleString('vi-VN')} đ</div>
+            <div className="stat-label">Total Revenue</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-value">{stats?.active_cinemas || 0}</div>
+            <div className="stat-label">Active Cinemas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminCinemas({ user, onAuthChange }) {
+  const [cinemas, setCinemas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingCinema, setEditingCinema] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    location: '',
+    city: '',
+    total_seats: 100
+  });
+
+  useEffect(() => {
+    loadCinemas();
+  }, []);
+
+  const loadCinemas = async () => {
+    try {
+      const data = await apiRequest("/cinemas");
+      setCinemas(data || []);
+    } catch (err) {
+      console.error("Failed to load cinemas:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingCinema) {
+        await apiRequest(`/admin/cinemas/${editingCinema.id || editingCinema.ID}`, {
+          method: 'PUT',
+          body: JSON.stringify(formData)
+        });
+      } else {
+        await apiRequest('/admin/cinemas', {
+          method: 'POST',
+          body: JSON.stringify(formData)
+        });
+      }
+      setShowForm(false);
+      setEditingCinema(null);
+      setFormData({ name: '', location: '', city: '', total_seats: 100 });
+      loadCinemas();
+    } catch (err) {
+      console.error("Failed to save cinema:", err);
+    }
+  };
+
+  const handleEdit = (cinema) => {
+    setEditingCinema(cinema);
+    setFormData({
+      name: cinema.name || cinema.Name,
+      location: cinema.location || cinema.Location,
+      city: cinema.city || cinema.City,
+      total_seats: cinema.total_seats || cinema.TotalSeats
+    });
+    setShowForm(true);
+  };
+
+  const handleDelete = async (cinema) => {
+    if (!confirm(`Delete cinema "${cinema.name || cinema.Name}"?`)) return;
+    try {
+      await apiRequest(`/admin/cinemas/${cinema.id || cinema.ID}`, {
+        method: 'DELETE'
+      });
+      loadCinemas();
+    } catch (err) {
+      console.error("Failed to delete cinema:", err);
+    }
+  };
+
+  return (
+    <div className="panel">
+      <div className="panel-header">
+        <div className="panel-title">
+          <span>Cinema Management</span>
+        </div>
+        <span className="badge">Admin</span>
+      </div>
+      <div className="panel-body">
+        <div className="admin-actions">
+          <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>
+            Add Cinema
+          </button>
+        </div>
+
+        {showForm && (
+          <form onSubmit={handleSubmit} className="admin-form">
+            <div className="fields-grid">
+              <div className="field">
+                <label>Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="field">
+                <label>Location</label>
+                <input
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) => setFormData({...formData, location: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="field">
+                <label>City</label>
+                <input
+                  type="text"
+                  value={formData.city}
+                  onChange={(e) => setFormData({...formData, city: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="field">
+                <label>Total Seats</label>
+                <input
+                  type="number"
+                  value={formData.total_seats}
+                  onChange={(e) => setFormData({...formData, total_seats: parseInt(e.target.value)})}
+                  min="1"
+                  required
+                />
+              </div>
+            </div>
+            <div className="form-actions">
+              <button type="submit" className="btn btn-primary btn-sm">
+                {editingCinema ? 'Update' : 'Create'}
+              </button>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => {
+                setShowForm(false);
+                setEditingCinema(null);
+                setFormData({ name: '', location: '', city: '', total_seats: 100 });
+              }}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+
+        <div className="admin-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Location</th>
+                <th>City</th>
+                <th>Seats</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cinemas.map((cinema) => (
+                <tr key={cinema.id || cinema.ID}>
+                  <td>{cinema.name || cinema.Name}</td>
+                  <td>{cinema.location || cinema.Location}</td>
+                  <td>{cinema.city || cinema.City}</td>
+                  <td>{cinema.total_seats || cinema.TotalSeats}</td>
+                  <td>
+                    <button className="btn btn-ghost btn-xs" onClick={() => handleEdit(cinema)}>
+                      Edit
+                    </button>
+                    <button className="btn btn-danger btn-xs" onClick={() => handleDelete(cinema)}>
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminBookings({ user, onAuthChange }) {
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadBookings();
+  }, []);
+
+  const loadBookings = async () => {
+    try {
+      const data = await apiRequest("/admin/bookings?page=1&limit=50");
+      setBookings(data || []);
+    } catch (err) {
+      console.error("Failed to load bookings:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = async (booking) => {
+    if (!confirm(`Cancel booking ${booking.id || booking.ID}?`)) return;
+    try {
+      await apiRequest(`/admin/bookings/${booking.id || booking.ID}/cancel`, {
+        method: 'PUT'
+      });
+      loadBookings();
+    } catch (err) {
+      console.error("Failed to cancel booking:", err);
+    }
+  };
+
+  if (loading) {
+    return <div className="panel"><div className="panel-body">Loading bookings...</div></div>;
+  }
+
+  return (
+    <div className="panel">
+      <div className="panel-header">
+        <div className="panel-title">
+          <span>Booking Management</span>
+        </div>
+        <span className="badge">Admin</span>
+      </div>
+      <div className="panel-body">
+        <div className="admin-table">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Showtime</th>
+                <th>Status</th>
+                <th>Total Price</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bookings.map((booking) => (
+                <tr key={booking.id || booking.ID}>
+                  <td>{(booking.id || booking.ID).substring(0, 8)}...</td>
+                  <td>{booking.user_id || booking.UserID}</td>
+                  <td>{booking.showtime_id || booking.ShowtimeID}</td>
+                  <td>
+                    <span className={`status-${booking.status || booking.Status}`}>
+                      {booking.status || booking.Status}
+                    </span>
+                  </td>
+                  <td>{(booking.total_price || booking.TotalPrice || 0).toLocaleString('vi-VN')} đ</td>
+                  <td>{new Date(booking.created_at || booking.CreatedAt).toLocaleDateString()}</td>
+                  <td>
+                    {(booking.status || booking.Status) === 'pending' && (
+                      <button className="btn btn-danger btn-xs" onClick={() => handleCancel(booking)}>
+                        Cancel
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminUsers({ user, onAuthChange }) {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      const data = await apiRequest("/admin/users?page=1&limit=50");
+      setUsers(data.users || data || []);
+    } catch (err) {
+      console.error("Failed to load users:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleStatus = async (user) => {
+    try {
+      await apiRequest(`/admin/users/${user.id || user.ID}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ is_active: !(user.is_active || user.IsActive) })
+      });
+      loadUsers();
+    } catch (err) {
+      console.error("Failed to update user status:", err);
+    }
+  };
+
+  if (loading) {
+    return <div className="panel"><div className="panel-body">Loading users...</div></div>;
+  }
+
+  return (
+    <div className="panel">
+      <div className="panel-header">
+        <div className="panel-title">
+          <span>User Management</span>
+        </div>
+        <span className="badge">Admin</span>
+      </div>
+      <div className="panel-body">
+        <div className="admin-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Full Name</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u.id || u.ID}>
+                  <td>{u.username || u.Username}</td>
+                  <td>{u.email || u.Email}</td>
+                  <td>{u.full_name || u.FullName}</td>
+                  <td>{u.role || u.Role}</td>
+                  <td>
+                    <span className={`status-${(u.is_active || u.IsActive) ? 'active' : 'inactive'}`}>
+                      {(u.is_active || u.IsActive) ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td>
+                    <button className="btn btn-ghost btn-xs" onClick={() => handleToggleStatus(u)}>
+                      {(u.is_active || u.IsActive) ? 'Deactivate' : 'Activate'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
 

@@ -39,3 +39,11 @@ func (s *bookingService) GetTakenSeatIDsForShowtime(ctx context.Context, showtim
 	return s.repo.GetTakenSeatIDsForShowtime(ctx, showtimeID)
 }
 
+func (s *bookingService) ListBookings(ctx context.Context, page, limit int) ([]domain.Booking, error) {
+	// TODO: Implement pagination in repository
+	return s.repo.ListAll(ctx, page, limit)
+}
+
+func (s *bookingService) CancelBooking(ctx context.Context, id string) error {
+	return s.repo.Cancel(ctx, id)
+}

@@ -153,6 +153,7 @@ func main() {
 		
 		r.Get("/payments/methods", paymentHandler.GetPaymentMethods)
 		r.Post("/payments", paymentHandler.CreatePayment)
+		r.Get("/payments/callback", paymentHandler.HandleVNPayCallback)
 
 	})
 

@@ -15,6 +15,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+    "log"
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
@@ -124,7 +125,7 @@ func (p *VNPayProvider) CreatePayment(ctx context.Context, booking *domain.Booki
         Amount:        booking.TotalPrice,
         Status:        "pending",
         TransactionID: transactionID,
-        CreatedAt:     time.Now(),
+        CreatedAt:     time.Now(),  
         UpdatedAt:     time.Now(),
     }
     
@@ -365,9 +366,11 @@ func (s *paymentService) CreatePayment(
     paymentDetails map[string]interface{},
 ) (*domain.Payment, string, error) {
     
-    // Kiểm tra idempotency
+    // Kiểm tra idempotency: key gồm cả bookingID để chỉ chặn trùng với cùng booking
+    idemKey := idempotencyKey
     if idempotencyKey != "" {
-        payment, redirectURL, err := s.checkIdempotency(ctx, idempotencyKey)
+        idemKey = fmt.Sprintf("%s:%s", idempotencyKey, bookingID)
+        payment, redirectURL, err := s.checkIdempotency(ctx, idemKey)
         if err == nil && payment != nil {
             return payment, redirectURL, nil
         }
@@ -384,7 +387,7 @@ func (s *paymentService) CreatePayment(
 
     // Acquire lock để tránh race condition
     if idempotencyKey != "" {
-        lockKey := constants.IdempotencyLock.BuildKey(idempotencyKey)
+        lockKey := constants.IdempotencyLock.BuildKey(idemKey)
         locked, err := s.redis.SetNX(ctx, lockKey, "1", time.Duration(constants.IdempotencyLockTTL)*time.Second).Result()
         if err != nil {
             return nil, "", fmt.Errorf("không thể acquire lock: %w", err)
@@ -392,7 +395,7 @@ func (s *paymentService) CreatePayment(
         if !locked {
             // Retry sau 100ms nếu không lock được
             time.Sleep(100 * time.Millisecond)
-            return s.checkIdempotency(ctx, idempotencyKey)
+            return s.checkIdempotency(ctx, idemKey)
         }
         defer s.redis.Del(ctx, lockKey)
     }
@@ -442,7 +445,7 @@ func (s *paymentService) CreatePayment(
 
     // Cache kết quả nếu có idempotency key
     if idempotencyKey != "" {
-        s.cacheResult(ctx, idempotencyKey, payment, redirectURL)
+        s.cacheResult(ctx, idemKey, payment, redirectURL)
     }
 
     return payment, redirectURL, nil
@@ -604,30 +607,50 @@ func (s *paymentService) BuildVNPayRedirectURL(payment *domain.Payment, clientIP
 
 // HandleVNPayCallback - API: xử lý callback CODE THÊM SAU!!!!
 func (s *paymentService) HandleVNPayCallback(ctx context.Context, query url.Values) (*domain.Payment, error) {
+    // 1. Kiểm tra chữ ký hợp lệ
     if !s.VerifyVNPaySignature(query) {
-        return nil, errors.New("invalid signature")
+        return nil, errors.New("Chữ ký VNPay không hợp lệ")
     }
 
-    // transactionID := query.Get("vnp_TxnRef")
+    // 2. Lấy transactionID từ vnp_TxnRef
+    transactionID := query.Get("vnp_TxnRef")
+    if transactionID == "" {
+        return nil, errors.New("Thiếu transactionID (vnp_TxnRef)")
+    }
+
+    // 3. Tìm payment theo transactionID
+    payment, err := s.paymentRepo.FindByTransactionID(ctx, transactionID)
+    if err != nil || payment == nil {
+        return nil, errors.New("Không tìm thấy payment với transactionID")
+    }
+
+    // 4. Kiểm tra response code
     responseCode := query.Get("vnp_ResponseCode")
-    
-    // Tìm payment theo transactionID
-    // TODO: Cần thêm method FindByTransactionID
-    
     if responseCode == "00" {
-        // Thanh toán thành công
-        // Update payment status
+        // Thành công, cập nhật trạng thái payment
+        if payment.Status != "paid" {
+            _ = s.UpdatePaymentStatus(ctx, payment.ID, "paid")
+            payment.Status = "paid"
+        }
     } else {
-        // Thanh toán thất bại
+        // Thất bại, cập nhật trạng thái payment
+        if payment.Status != "failed" {
+            _ = s.UpdatePaymentStatus(ctx, payment.ID, "failed")
+            payment.Status = "failed"
+        }
+        return payment, errors.New("Thanh toán thất bại (" + responseCode + ")")
     }
 
-    return nil, errors.New("chưa triển khai callback")
+    return payment, nil
 }
 
 // VerifyVNPaySignature - API: kiểm tra chữ ký
 func (s *paymentService) VerifyVNPaySignature(query url.Values) bool {
     secureHash := query.Get("vnp_SecureHash")
-
+    log.Printf("[VNPay] SecureHash: %s", secureHash)
+    log.Printf("[VNPay] Raw query: %s", query.Encode())
+    log.Printf("[VNPay] Params: %+v", query)
+    log.Printf("[VNPay] SecretKey: %s", s.vnp.SecretKey)
     params := map[string]string{}
     for k, v := range query {
         if k == "vnp_SecureHash" || k == "vnp_SecureHashType" {
@@ -644,18 +667,23 @@ func (s *paymentService) VerifyVNPaySignature(query url.Values) bool {
 
     var hashData strings.Builder
     for i, k := range keys {
-        value := url.QueryEscape(params[k])
+        // Giải mã trước, rồi encode lại đúng chuẩn
+        rawValue, _ := url.QueryUnescape(params[k])
+        value := url.QueryEscape(rawValue)
         if i > 0 {
             hashData.WriteString("&")
         }
         hashData.WriteString(k + "=" + value)
     }
-
+    log.Printf("[VNPay] hashData: %s", hashData.String())
+    
+    log.Printf("[VNPay] received: %s", secureHash)
     h := hmac.New(sha512.New, []byte(s.vnp.SecretKey))
     h.Write([]byte(hashData.String()))
     expected := strings.ToUpper(hex.EncodeToString(h.Sum(nil)))
+    log.Printf("[VNPay] expected: %s", expected)
 
-    return expected == secureHash
+    return strings.EqualFold(expected, secureHash)
 }
 
 // Helper methods

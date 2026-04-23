@@ -11,7 +11,7 @@ import (
 // PaymentService định nghĩa các thao tác thanh toán
 type PaymentService interface {
     // Lấy danh sách cổng thanh toán
-    GetPaymentMethods(ctx context.Context) ([]domain.PaymentMethod, error)
+    GetPaymentMethods(ctx context.Context, id string) ([]domain.PaymentMethod, error)
     
     // ProcessPayment tạo payment trạng thái pending khi booking còn hợp lệ (API cũ)
     ProcessPayment(ctx context.Context, bookingID, paymentMethod string, amount float64) (*domain.Payment, error)

@@ -1,0 +1,138 @@
+{
+  "info": {
+    "name": "Cinema Booking API (Full)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.1.0"
+  },
+  "item": [
+    {
+      "name": "Auth - Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"username\": \"user1\",\n  \"full_name\": \"User One\",\n  \"phone\": \"0123456789\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Cinema - List Cinemas",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/api/cinemas", "host": ["{{baseUrl}}"], "path": ["api", "cinemas"] }
+      }
+    },
+    {
+      "name": "Cinema - Get Cinema",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/api/cinemas/:id", "host": ["{{baseUrl}}"], "path": ["api", "cinemas", ":id"] }
+      }
+    },
+    {
+      "name": "Showtime - List Showtimes By Cinema",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/showtimes?cinema_id=cinema1&date=2024-04-20",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "showtimes"],
+          "query": [
+            { "key": "cinema_id", "value": "cinema1" },
+            { "key": "date", "value": "2024-04-20" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Showtime - Get Showtime",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/api/showtimes/:id", "host": ["{{baseUrl}}"], "path": ["api", "showtimes", ":id"] }
+      }
+    },
+    {
+      "name": "Showtime - Create Showtime",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{baseUrl}}/api/showtimes", "host": ["{{baseUrl}}"], "path": ["api", "showtimes"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cinema_id\": \"cinema1\",\n  \"movie_id\": \"movie1\",\n  \"show_date\": \"2024-04-20T00:00:00Z\",\n  \"show_time\": \"19:00\",\n  \"price\": 100000\n}"
+        }
+      }
+    },
+    {
+      "name": "Showtime - Update Showtime",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{baseUrl}}/api/showtimes/:id", "host": ["{{baseUrl}}"], "path": ["api", "showtimes", ":id"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cinema_id\": \"cinema1\",\n  \"movie_id\": \"movie1\",\n  \"show_date\": \"2024-04-20T00:00:00Z\",\n  \"show_time\": \"20:00\",\n  \"price\": 120000\n}"
+        }
+      }
+    },
+    {
+      "name": "Showtime - Delete Showtime",
+      "request": {
+        "method": "DELETE",
+        "url": { "raw": "{{baseUrl}}/api/showtimes/:id", "host": ["{{baseUrl}}"], "path": ["api", "showtimes", ":id"] }
+      }
+    },
+    {
+      "name": "Payment - Get Payment Methods",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/methods",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "payments", "methods"]
+        }
+      }
+    },
+    {
+      "name": "Payment - Create Payment",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Idempotency-Key", "value": "test-key-123" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "payments"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"booking_id\": \"booking1\",\n  \"payment_method\": \"momo\",\n  \"amount\": 100000,\n  \"payment_details\": {\"phone\": \"0123456789\"}\n}"
+        }
+      }
+    }
+  ]
+}

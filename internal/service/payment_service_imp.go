@@ -1,33 +1,34 @@
 package service
 
 import (
-    "context"
-    "crypto/hmac"
-    "crypto/sha512"
-    "encoding/hex"
-    "encoding/json"
-    "errors"
-    "fmt"
-    "net/http"
-    "net/url"
-    "sort"
-    "strconv"
-    "strings"
-    "sync"
-    "time"
+	"context"
+	"crypto/hmac"
+	"crypto/sha512"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"net/url"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
 
-    "github.com/google/uuid"
-    "github.com/redis/go-redis/v9"
-    "golang.org/x/sync/singleflight"
+	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
+	"golang.org/x/sync/singleflight"
 
-    "booking_cinema_golang/internal/domain"
-    "booking_cinema_golang/internal/repository"
-    "booking_cinema_golang/internal/utils/constants"
+	"booking_cinema_golang/internal/domain"
+	"booking_cinema_golang/internal/repository"
+	"booking_cinema_golang/internal/utils/constants"
 )
 
 // paymentService triển khai PaymentService
 type paymentService struct {
     paymentRepo repository.PaymentRepository
+    paymentMethodRepo repository.PaymentMethodRepository
     bookingRepo repository.BookingRepository
     redis       *redis.Client
 
@@ -231,6 +232,7 @@ func (p *VNPayProvider) HandleWebhook(ctx context.Context, headers http.Header, 
 // NewPaymentService tạo service mới
 func NewPaymentService(
     paymentRepo repository.PaymentRepository,
+    paymentMethodRepo repository.PaymentMethodRepository,
     bookingRepo repository.BookingRepository,
     redis *redis.Client,
     vnpPayURL, vnpTmnCode, vnpSecret, vnpReturn string,
@@ -241,6 +243,7 @@ func NewPaymentService(
 
     s := &paymentService{
         paymentRepo: paymentRepo,
+        paymentMethodRepo: paymentMethodRepo,
         bookingRepo: bookingRepo,
         redis:       redis,
         providers:   make(map[string]PaymentProvider),
@@ -322,49 +325,34 @@ func (s *paymentService) ProcessPayment(ctx context.Context, bookingID, paymentM
 }
 
 // GetPaymentMethods lấy danh sách cổng thanh toán với cache
-func (s *paymentService) GetPaymentMethods(ctx context.Context) ([]domain.PaymentMethod, error) {
+func (s *paymentService) GetPaymentMethods(ctx context.Context, id string) ([]domain.PaymentMethod, error) {
+    // Không cache khi lọc theo id
+    if id != "" {
+        return s.paymentMethodRepo.FindAll(ctx, id)
+    }
     // Sử dụng single flight để tránh duplicate requests
     v, err, _ := s.requestGroup.Do("payment_methods", func() (interface{}, error) {
-        // Kiểm tra cache
         cacheKey := constants.PaymentMethodsKey
         var methods []domain.PaymentMethod
-        
         cached, err := s.redis.Get(ctx, cacheKey).Bytes()
         if err == nil {
             if json.Unmarshal(cached, &methods) == nil {
                 return methods, nil
             }
         }
-
-        // Tạo danh sách methods từ providers
-        s.mu.RLock()
-        methods = make([]domain.PaymentMethod, 0, len(s.providers))
-        for name, provider := range s.providers {
-            if provider.IsActive() {
-                methods = append(methods, domain.PaymentMethod{
-                    ID:        uuid.New().String(),
-                    Name:      name,
-                    Code:      strings.ToLower(name),
-                    IsActive:  true,
-                    CreatedAt: time.Now(),
-                })
-            }
+        methods, err = s.paymentMethodRepo.FindAll(ctx, "")
+        if err != nil {
+            return nil, err
         }
-        s.mu.RUnlock()
-
-        // Cache kết quả
         if len(methods) > 0 {
             jsonData, _ := json.Marshal(methods)
             s.redis.Set(ctx, cacheKey, jsonData, time.Duration(constants.PaymentMethodsTTL)*time.Second)
         }
-
         return methods, nil
     })
-
     if err != nil {
         return nil, err
     }
-
     return v.([]domain.PaymentMethod), nil
 }
 

@@ -25,14 +25,15 @@ func NewPaymentHandler(svc service.PaymentService) *PaymentHandler {
 }
 
 // GetPaymentMethods xử lý GET /api/payments/methods
-// Lấy danh sách cổng thanh toán đang hoạt động
+// Lấy danh sách cổng thanh toán từ database
 func (h *PaymentHandler) GetPaymentMethods(w http.ResponseWriter, r *http.Request) {
-    methods, err := h.svc.GetPaymentMethods(r.Context())
+    // Lấy param id từ query nếu có
+    id := r.URL.Query().Get("id")
+    methods, err := h.svc.GetPaymentMethods(r.Context(), id)
     if err != nil {
         helpers.WriteError(w, err)
         return
     }
-
     helpers.WriteJSON(w, http.StatusOK, true, "Danh sách cổng thanh toán", methods)
 }
 

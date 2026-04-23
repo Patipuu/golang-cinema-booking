@@ -59,10 +59,11 @@ func main() {
 	// Khởi tạo repositories
 	paymentRepo := repository.NewPaymentRepository(db)
 	bookingRepo := repository.NewBookingRepository(db) 
-
+	paymentMethodRepo := repository.NewPaymentMethodRepository(db)
 	// Khởi tạo PaymentService với config VNPay từ cfg
 	svc := service.NewPaymentService(
 		paymentRepo,
+		paymentMethodRepo,
 		bookingRepo,
 		rdb,
 		cfg.VNPay.PayURL,    // "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
@@ -87,7 +88,9 @@ func main() {
 		cfg.JWT.Secret, cfg.JWT.ExpiryHours, cfg.OTP.ExpiryMinutes,
 	)
 	authHandler := handler.NewAuthHandler(authSvc)
-	cinemaHandler := &handler.CinemaHandler{}
+	cinemaRepo := repository.NewCinemaRepository(db)
+	cinemaSvc := service.NewCinemaService(cinemaRepo)
+	cinemaHandler := handler.NewCinemaHandler(cinemaSvc)
 	// bookingRepo := repository.NewBookingRepository(db)
 	bookingSvc := service.NewBookingService(bookingRepo)
 	bookingHandler := handler.NewBookingHandler(bookingSvc)
@@ -117,10 +120,26 @@ func main() {
 		r.Post("/auth/verify-otp", authHandler.VerifyOTP)
 		r.Post("/auth/resend-verification", authHandler.ResendVerification)
 
-		// Cinema & showtimes (public for listing)
+		// Cinema (public for listing)
 		r.Get("/cinemas", cinemaHandler.ListCinemas)
 		r.Get("/cinemas/{id}", cinemaHandler.GetCinema)
-		r.Get("/showtimes", cinemaHandler.ListShowtimes)
+
+		// Showtime (public for listing & CRUD)
+		showtimeRepo := repository.NewShowtimeRepository(db)
+		showtimeSvc := service.NewShowtimeService(showtimeRepo)
+		showtimeHandler := handler.NewShowtimeHandler(showtimeSvc)
+
+		r.Get("/showtimes", showtimeHandler.ListShowtimesByCinema)
+		r.Get("/showtimes/search", showtimeHandler.SearchShowtimes)
+		r.Get("/showtimes/{id}", showtimeHandler.GetShowtime)
+		r.Post("/showtimes", showtimeHandler.CreateShowtime)
+		r.Put("/showtimes/{id}", showtimeHandler.UpdateShowtime)
+		r.Delete("/showtimes/{id}", showtimeHandler.DeleteShowtime)
+
+		// Nếu có lấy theo cinemaId:
+		r.Get("/showtimes/cinema/{cinemaId}", showtimeHandler.ListShowtimesByCinema)
+
+		// Ghế đã đặt
 		r.Get("/showtimes/{id}/seats", bookingHandler.GetTakenSeats)
 
 		// Protected: booking & payment (require JWT)
@@ -131,6 +150,8 @@ func main() {
 			//r.Post("/payments", paymentHandler.CreatePayment)  Tạm thời không cần token jwt để test api trước
 			// r.Get("/payments/{id}", paymentHandler.GetPayment)
 		})
+		
+		r.Get("/payments/methods", paymentHandler.GetPaymentMethods)
 		r.Post("/payments", paymentHandler.CreatePayment)
 
 	})

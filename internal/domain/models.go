@@ -127,3 +127,9 @@ type PageResult struct {
 	Limit      int
 	TotalCount int
 }
+
+// ShowtimeWithMovie dùng cho API trả về showtime kèm thông tin movie
+type ShowtimeWithMovie struct {
+	Showtime
+	Movie Movie `json:"movie"`
+}

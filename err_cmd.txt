@@ -1,0 +1,6 @@
+2026-04-01T08:57:47.875+0700	[31mFATAL[0m	api/main.go:43	database connect	{"error": "database: ping: failed to connect to `user=postgres database=booking_cinema`: [::1]:5432 (localhost): failed SASL auth: FATAL: password authentication failed for user \"postgres\" (SQLSTATE 28P01)"}
+main.main
+	D:/Golang Project/golang-cinema-booking/cmd/api/main.go:43
+runtime.main
+	C:/Program Files/Go/src/runtime/proc.go:285
+exit status 1

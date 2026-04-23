@@ -66,10 +66,10 @@ func main() {
 		paymentMethodRepo,
 		bookingRepo,
 		rdb,
-		cfg.VNPay.PayURL,    // "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
-		cfg.VNPay.TmnCode,   // ví dụ: "YOURTMN00"
+		cfg.VNPay.PayURL,     // "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
+		cfg.VNPay.TmnCode,    // ví dụ: "YOURTMN00"
 		cfg.VNPay.HashSecret, // secret từ VNPay
-		cfg.VNPay.ReturnURL, // "http://localhost:8080/api/payments/callback"
+		cfg.VNPay.ReturnURL,  // "http://localhost:8080/api/payments/callback"
 	)
 
 	// Handlers (inject repos/services when implemented)
@@ -94,7 +94,8 @@ func main() {
 	// bookingRepo := repository.NewBookingRepository(db)
 	bookingSvc := service.NewBookingService(bookingRepo)
 	bookingHandler := handler.NewBookingHandler(bookingSvc)
-	// paymentHandler := &handler.PaymentHandler{}
+	userSvc := service.NewUserService(userRepo, cfg)
+	userHandler := handler.NewUserHandler(userSvc)
 
 	r := chi.NewRouter()
 	r.Use(chimiddleware.RequestID)
@@ -145,6 +146,11 @@ func main() {
 		// Protected: booking & payment (require JWT)
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.AuthMiddleware(cfg.JWT.Secret))
+
+			r.Get("/users/me", userHandler.GetProfile)
+			r.Put("/users/me", userHandler.UpdateProfile)
+			r.Put("/users/me/password", userHandler.ChangePassword)
+
 			r.Post("/bookings", bookingHandler.CreateBooking)
 			r.Get("/bookings/{id}", bookingHandler.GetBooking)
 			//r.Post("/payments", paymentHandler.CreatePayment)  Tạm thời không cần token jwt để test api trước

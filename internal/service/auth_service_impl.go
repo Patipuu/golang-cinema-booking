@@ -22,7 +22,6 @@ var (
 	ErrInvalidOTP         = errors.New("invalid OTP code")
 	ErrExpiredOTP         = errors.New("OTP code has expired")
 	ErrAlreadyVerified    = errors.New("account is already verified")
-	ErrUserNotFound       = errors.New("user not found")
 )
 
 type authServiceImpl struct {

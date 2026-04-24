@@ -1,0 +1,4029 @@
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+TRƯỜNG ĐẠI HỌC SÀI GÒN  
+KHOA CÔNG NGHỆ THÔNG TIN  
+BÁO CÁO MÔN: CÁC CÔNG NGHỆ LẬP TRÌNH 
+HIỆN ĐẠI  
+ĐỀ TÀI: NGHIÊN CỨU NGÔN NGỮ GO  
+ 
+ 
+ 
+ 
+ 
+ 
+  
+ 
+  
+Giảng viên hướng dẫn:  
+Nhóm sinh viên thực hiện:  
+ Ths. Phạm Thi Vương  
+Phạm Thiên Ph ú - 3122560059  
+Nguy ễn Qu ốc Tuấn - 3122560087 
+Phạm Thanh Sự - 3122560065 
+Đào Thanh Tú - 3122560085 
+ 
+TP.HCM tháng 04/2026 
+2 
+ Mục lục 
+CHƯƠNG 1: GI ỚI THI ỆU VỀ NGÔN NG Ữ LẬP TRÌNH GO  ............................................ 4 
+1.1. L ịch sử hình thành và đặ c điể m ngôn ng ữ ................................................................... 4 
+1.2. Sứ c mạnh của Go trong x ử lý đồ ng th ời (Concurrency)  ............................................ 10 
+1.3. Lý do lự a chọn Go - Phân tích t ừ góc đ ộ đặc điểm ngôn ng ữ ..................................... 16 
+CHƯƠNG 2: CƠ H ỘI NGHỀ NGHI ỆP VÀ NHU C ẦU TH Ị TRƯ ỜNG ............................. 23 
+2.1. Nhu c ầu tuy ển dụ ng lập trình viên Backend Go:  ....................................................... 23 
+2.2. Mứ c lương và l ộ trình phát triể n: ............................................................................. 24 
+2.3. L ợi thế cạnh tranh:  .................................................................................................. 25 
+CHƯƠNG 3: THIẾT LẬP MÔI TRƯỜNG VÀ CẤU TRÚC DỰ ÁN  .................................. 27 
+3.1. Thiế t lập môi trườ ng phát triể n ................................................................................ 27 
+3.2. Quả n lý dependency v ới Go Modules  ........................................................................ 33 
+3.3. Xây dự ng cấu trúc thư m ục theo Clean Architecture  ................................................ 35 
+CHƯƠNG 4: CÁC KHÁI NIỆM N ỀN TẢNG - MIDDLEWARE TRONG GO  ................... 50 
+4.1. Middleware là gì? Phân tích t ừ góc đ ộ ngôn ng ữ học ................................................ 50 
+4.2. Phân tích chuyên sâu ba Middleware c ốt lõi ............................................................. 56 
+4.3. T ổ chức Middleware trong kiế n trúc Clean Architecture c ủa CinemaBooking  .......... 75 
+4.4. Rate Limiting Middleware - Kết hợp Goroutine và Channel ..................................... 78 
+CHƯƠNG 5: CÁC K Ỹ THU ẬT NÂNG CAO VÀ T ỐI ƯU HÓA ........................................ 82 
+5.1 X ử Lý Đ ồng Thờ i - Bài Toán Đ ặt Gh ế Trùng Nhau (Double Booking)  ....................... 82 
+5.2. Connection pool Postgres (t ối ưu kế t nối DB)  ............................................................ 86 
+5.3 T ối Ưu API Response - Phân Trang Danh Sách Phim  ................................................ 88 
+5.4 B ảo Mật Với JWT  ..................................................................................................... 90 
+5.5 Idempotency Cho Booking & Payment  ...................................................................... 93 
+CHƯƠNG 6. PHÂN TÍCH VÀ THI ẾT KẾ HỆ THỐNG .................................................... 97 
+6.1. Thu thậ p và đặ c tả yêu c ầu ....................................................................................... 97 
+6.4. Thiế t kế RESTful API (API Contract)  .................................................................... 101 
+6.5. Sơ đồ  ERD  ............................................................................................................. 104 
+CHƯƠNG 7: TRIỂ N KHAI VÀ KIỂ M TH Ử API ............................................................ 105 
+7.1. Công C ụ Kiểm Th ử - Postman  ................................................................................ 105 
+7.2. Tích H ợp Swagger - Tài Li ệu API T ự Động ............................................................ 109 
+7.3. B ảng Ki ểm Th ử Tổng H ợp ..................................................................................... 111 
+7.4. Tổng K ết Kết Qu ả Kiểm Th ử ................................................................................. 122 
+ 
+ 
+3 
+ CHƯƠNG 8: ỨNG D ỤNG NGÔN NGỮ  GOLANG THỰ C HI ỆN WEB BOOKING 
+CINEMA  ......................................................................................................................... 123 
+8.1. Xác Thự c Và Phân Quy ền Ngườ i Dùng (Jwt + Middleware Pattern)  ....................... 123 
+8.2. X ử Lý Đ ồng Thờ i Và Race Condition (Concurrency Control)  .................................  127 
+8.3. H ệ Thống Real -Time Và Broadcast Trạ ng Thái Ghế  (Websocket)  .......................... 131 
+8.4. Kiế n Trúc Phầ n Mề m (Clean Architecture & Depend  ............................................. 135 
+ency Injection)  .............................................................................................................. 135 
+8.5. Tích H ợp Cổng Thanh Toán & Idempote ncy (Payment Safety)  ............................... 137 
+8.6. X ử Lý Webhook B ất Đồng B ộ (Async Processing)  ................................................... 141 
+8.7. Domain Modeling Và Struct Tags  ........................................................................... 143 
+8.8. Graceful Shutdown Và Quả n Lý Vòng Đ ời Ứng D ụng ............................................ 145 
+8.9. C ẤU TRÚC L ỖI VÀ STATE MACHINE TR ẠNG THÁI Đ ẶT VÉ  ........................ 148 
+CHƯƠNG 9:  KẾT QU Ả ĐẠT ĐƯ ỢC .............................................................................. 151 
+9.1 Mức Độ  Hoàn Thành Các Chứ c Năng  ..................................................................... 151 
+9.2. H ệ Thống Đáp Ứ ng Ki ến Trúc Clean MVC  ............................................................ 152 
+9.3. Đánh Giá Quá Trình Làm Việ c Nhóm  .................................................................... 155 
+9.4. Khó Khăn Và Cách Khắ c Phụ c .............................................................................. 158 
+CHƯƠNG 10: HƯ ỚNG PHÁT TRI ỂN ............................................................................ 162 
+10.1. Nâng C ấp Tính Năng Ứ ng D ụng ........................................................................... 162 
+10.2. Nâng C ấp Kiế n Trúc Phầ n Mề m ........................................................................... 164 
+ 
+ 
+  
+4 
+ CHƯƠNG 1: GIỚ I THI ỆU VỀ  NGÔN NG Ữ LẬP TRÌNH GO 
+1.1. L ịch sử hình thành và đặc điểm ngôn ngữ  
+1.1.1. B ối cảnh ra đ ời 
+Ngôn ngữ lập trình Go (tên chính thức) hay Golang (tên thông dụng để phân biệt khi 
+tìm kiếm) được khởi xướng nội bộ tại Google vào năm 2007 bởi ba kỹ sư: Robert 
+Griesemer, Rob Pike và Ken Thompson -  trong đó Ken Thompson là đồng tác giả của 
+ngôn ngữ C và hệ điều hành Unix. Go được công bố mã nguồn mở vào năm 2009 và 
+phát hành phiên bản ổn định đầu tiên (Go 1.0) vào tháng 3 năm 2012. 
+Sự ra đời của Go không xuất phát từ mục tiêu học thuật thuần túy, mà từ một vấn đề 
+kỹ thuật thực tế: cơ sở hạ tầng phần mềm tạ i Google vào cuối những năm 2000 đang 
+phải vận hành các hệ thống quy mô cực lớn với hàng triệu dòng code C++ và Java. Ba 
+điểm đau chính được xác định là:  
+• Thời gian biên dịch quá chậm với C++, làm giảm năng suất lập trình viên.  
+• Mô hình concurrency phức tạp và dễ lỗi với Thread/Mutex truyền thống trong 
+Java và C++. 
+• Thiếu một ngôn ngữ hệ thống hiện đại kết hợp được tốc độ của C với sự an toàn và năng suất của các ngôn ngữ hiện đại hơn.  
+Go được thiết kế để giải quyết đồng thời cả ba vấn đề trên, với triết lý th iết kế cốt lõi: 
+"Make it simple, but not simpler.”  
+1.1.2. Đ ặc điểm ngôn ngữ  học cơ b ản 
+Từ góc độ phân loại ngôn ngữ lập trình, Go sở hữu một tập hợp đặc điểm khá độc đáo, 
+không hoàn toàn thuộc về một trường phái nào:  
+ 
+ 
+ 
+5 
+ a) Kiểu tĩnh biên dịch tĩnh (Statically Typed, Compiled) 
+Go là ngôn ngữ kiểu tĩnh (statically typed ): kiểu dữ liệu của mọi biến phải được xác 
+định tại thời điểm biên dịch (compile time ), không phải lúc chạy (runtime). Điều này 
+khác biệt cơ bản với Python hay JavaScript (kiểu động -  dynamically typed ). 
+Tuy nhiên, Go bổ sung cơ chế type inference thông qua toán tử :=, cho phép trình biên 
+dịch tự suy luận kiểu từ giá trị khởi tạo, giúp code ngắn gọn hơn mà không mất đi sự 
+an toàn kiểu:  
+ 
+ 
+b) Biên dịch ra mã máy độc lập (Statically Linked Binary)  
+Go biên dịch thẳng ra file nhị phân mã máy (native binary ), không yêu cầu máy ảo 
+(JVM của Java) hay trình thông dịch (Python interpreter). Toàn bộ dependencies được 
+liên kết tĩnh (static linking ) vào một file thực thi duy nhất. Đ iều này tạo ra lợi thế triển 
+khai (deployment ) đáng kể: chỉ cần copy một file binary là có thể chạy trên bất kỳ máy 
+nào cùng kiến trúc CPU. 
+ 
+Tiêu chí  Go Java  Python  C++ 
+Kiểu hệ thống  Tĩnh  Tĩnh  Động  Tĩnh  
+Thực thi  Native binary  JVM 
+bytecode  Interpreter  Native binary  
+
+6 
+ Thời gian biên dịch  Rất nhanh  Trung bình  N/A Chậm  
+Quản lý bộ nhớ  GC tự động  GC tự động  GC tự động  Thủ công  
+Concurrency built -
+in Goroutine/Channel  Thread/Lock  GIL (hạn 
+chế) Thread/std::async  
+c) Garbage Collection thế hệ mới  
+Go sử dụng bộ thu gom rác (Garbage Collector -  GC) với thuật toán tri -color mark -
+and-sweep không dừng toàn bộ chương trình (concurrent GC ). Kể từ Go 1.5, thời gian 
+dừng của GC (stop -the-world pause) được giảm xuống dưới mức mili giây, khắc phục 
+điểm yếu lớ n nhất của các ngôn ngữ GC truyền thống trong các hệ thống yêu cầu độ 
+trễ thấp. 
+d) Không có kế thừa -  Composition qua Interface  
+Go loại bỏ hoàn toàn cơ chế kế thừa lớp (class inheritance ) - một trong những tính 
+năng trung tâm của Java và C++. Thay vào đó, Go sử dụng mô hình composition và 
+structural typing thông qua interface. Một kiểu dữ liệu được coi là thỏa mãn một interface nếu nó cài đặt đủ các phương thức của interface đó -  không cần k hai báo 
+tường minh. Đây là cơ chế duck typing nhưng được kiểm tra tại compile time. 
+1.1.3. Code minh họ a - Các đ ặc điểm cơ b ản của ngôn ngữ  
+Đoạn code dưới đây minh họa đồng thời bốn đặc điểm ngôn ngữ học vừa trình bày: 
+type inference, interface structural typing, zero value, và multiple return values -  tất cả 
+thông qua một cấu trúc dữ liệu đơn giản liên quan đến ngữ cảnh CinemaBooking.  
+7 
+  
+ 
+
+8 
+  
+Phân tích các điểm ngôn ngữ học trong code:  
+• Type inference (:=): Go suy luận seats là []Priced và total, err là float64, error -  
+không cần khai báo tường minh.  
+• Structural typing: Seat thỏa mãn Priced tự động vì có phương thức Price() 
+float64 với đúng signa ture -  trình biên dịch kiểm tra tại compile time. 
+• Zero value: var total float64 được khởi tạo thành 0.0 tự động -  Go đảm bảo 
+không có biến uninitialized. 
+• Multiple return values: calculateTotal trả về (float64, error) -  buộc người gọi 
+xử lý cả kết quả lẫn k hả năng lỗi. 
+ 1.1.4. Bài toán minh h ọa nhỏ - Structural Typing & Interface  
+Đề bài: Viết một hàm printSummary(items []Describable) nhận vào một slice bất kỳ, 
+trong đó Describable là interface có phương thức Describe() string. Định nghĩa hai struct Movie và Cinema, mỗi struct tự cài đặt Describe() theo cách riêng. Gọi 
+printSummary với dan h sách hỗn hợp chứa cả Movie và Cinema.  
+Mục tiêu: Quan sát cơ chế structural typing - Go xử lý đa hình ( polymorphism ) không 
+thông qua kế thừa mà thông qua interface, và kiểm tra toàn bộ tại compile time. 
+
+9 
+  
+Output nhậ n được: 
+  
+
+10 
+ 1.2. S ức mạnh của Go trong xử  lý đồng thời (Concurrency)  
+1.2.1. Lý thuy ết - Mô hình Concurrency c ủa Go  
+a) Phân biệt Concurrency và Parallelism  
+Trước khi phân tích cơ chế của Go, cần làm rõ hai khái niệm thường bị nhầm lẫn 
+trong tài liệu kỹ thuật:  
+• Concurrency  (đồng thời): Khả năng cấu trúc  chương trình để xử lý nhiều tác 
+vụ trong một khoảng thời gian, nhưng không nhất thiết tại cùng một thời điểm 
+vật lý. Đây là tính chất của thiết kế chương trình . 
+• Parallelism  (song song): Các tác vụ thực sự chạy đồng thời  trên nhiều CPU 
+core tại cùng một thời điểm vật lý. Đây là tính chất của phần cứng và 
+scheduling.  
+Rob Pike - một trong ba tác giả của Go -  phát biểu: "Concurrency is about dealing 
+with lots of things at once. Parallelism is about doing lots of things at once." Go được 
+thiết kế để hỗ trợ concurrency một cách tự nhiên ở cấp độ ngôn ngữ, và khi có nhiều 
+CPU core, Go runtime tự động tận dụng parallelism.  
+b) Goroutine - Luồng xanh (Green Thread) của Go  
+Goroutine là đơn vị thực thi đồng thời của Go. Về bản chất, gorou tine là green thread  
+- luồng được quản lý bởi Go runtime, không phải bởi hệ điều hành (OS thread). 
+Cơ chế hoạt động bên trong:  
+Go runtime sử dụng mô hình M:N scheduling: M goroutine được ánh xạ lên N OS 
+thread, trong đó N thường bằng số CPU core (kiểm soát bởi GOMAXPROCS). Bộ lập 
+lịch (scheduler ) của Go là work -stealing scheduler -  các OS thread rảnh rỗi có thể 
+"đánh cắp" goroutine từ hàng đợi của các thread khác để tối ưu hóa sử dụng CPU. 
+Goroutine được khởi tạo với stack cực nhỏ (mặc định 2KB trong Go  1.4 trở đi, so với 
+8MB mặc định của OS thread trên Linux), và stack này có thể tự mở rộng (growable 
+11 
+ stack ) khi cần thiết, tối đa lên đến 1GB (có thể cấu hình). Đây là lý do một chương 
+trình Go có thể khởi tạo hàng triệu goroutine mà không cạn kiệt bộ nhớ.  
+Tiêu chí  OS Thread (Java/C++)  Goroutine (Go)  
+Stack khởi tạo  ~1–8 MB  ~2 KB  
+Quản lý bởi  Hệ điều hành  Go runtime  
+Chi phí context switch  Cao (kernel mode)  Thấp (user space)  
+Số lượng thực tế  Hàng nghìn  Hàng triệu  
+Tạo goroutine mới  N/A go func() - một từ khóa  
+c) Channel -  Cơ chế giao tiếp giữa các Goroutine  
+Go theo triết lý thiết kế CSP (Communicating Sequential Processes ) - một mô hình 
+toán học được Tony Hoare đề xuất năm 1978. Nguyên tắc cốt lõi của CSP trong Go 
+được đúc kết thành một câu:  
+"Do n ot communicate by sharing memory; instead, share memory by communicating."  
+Channel  là cơ chế cụ thể hóa nguyên tắc này: thay vì nhiều goroutine cùng truy cập 
+một vùng nhớ chung (và cần mutex để đồng bộ), các goroutine giao tiếp bằng cách 
+gửi/nhận dữ liệu q ua channel. 
+Channel có hai dạng:  
+• Unbuffered channel  (make(chan T)): người gửi bị block cho đến khi người 
+nhận sẵn sàng - đồng bộ hóa tự nhiên. 
+• Buffered channel (make(chan T, n)): người gửi chỉ bị block khi buffer đầy -  
+tách rời nhà sản xuất và người tiêu thụ.  
+ 
+ 
+ 
+12 
+ 1.2.2. Code minh họ a - Goroutine và Channel  
+Đặc điểm concurrency của Go được minh họa qua bài toán kiểm tra ghế trống: hệ 
+thống CinemaBooking cần kiểm t ra trạng thái nhiều ghế trong cơ sở dữ liệu đồng thời 
+thay vì tuần tự. 
+ 
+
+13 
+  
+Phân tích cơ chế ngôn ngữ trong code:  
+• Từ khóa go: Khởi tạo goroutine mới chỉ bằng một từ khóa -  Go runtime xử lý 
+toàn bộ stack allocation và scheduling.  
+• chan< - SeatStatus: Go hỗ trợ directional channel - khai báo channel chỉ -ghi 
+(chan< -) hoặc chỉ -đọc (< -chan) để tăng tính an toàn kiểu. 
+
+14 
+ • sync.WaitGroup: Cơ chế đồng bộ hóa khi không dùng channel để thu  kết quả - 
+Add, Done, Wait là ba phương thức duy nhất. 
+• close(channel) + range: Idiom chuẩn của Go để dừng consumer khi producer 
+hoàn thành - range trên channel tự thoát khi channel được đóng.  
+1.2.3. Bài toán minh h ọa nhỏ - Fan-out Pattern v ới Goroutine  
+Đề bài: Viết chương trình tính tổng doanh thu từ 5 rạp chiếu phim, mỗi rạp mất 200ms để truy vấn (giả lập bằng time.Sleep). Thực hiện 5 truy vấn đồng thời bằng goroutine 
+và thu kết quả qua channel. In ra tổng doanh thu và thời gian thực thi thực tế.  
+Mục ti êu: Quan sát rằng 5 truy vấn đồng thời mất ~200ms (thay vì ~1000ms nếu tuần 
+tự), thể hiện lợi thế concurrency của Go trong I/O -bound workloads.  
+Gợi ý hướng giải: Tạo một result chan float64 có buffer bằng 5. Với mỗi rạp, khởi tạo một goroutine tính doanh t hu (sleep 200ms rồi gửi kết quả vào channel). Trong main, 
+đọc đúng 5 giá trị từ channel và cộng dồn.  
+Code minh họa:  
+15 
+  
+Output  
+ 
+ 
+
+16 
+ 1.3. Lý do l ựa chọn Go -  Phân tích từ  góc độ  đặc điểm ngôn ngữ  
+1.3.1. Lý thuy ết - Ánh x ạ đặc điểm ngôn ng ữ vào yêu cầ u bài toán  
+Việc lựa chọn ngôn ngữ lập trình cho một hệ thống phần mềm là quyết định kiến trúc 
+(architectural decision ), không phải sở thích cá nhân. Mỗi bài toán có một tập hợp 
+yêu cầu phi chức năng (non -functional requi rements ) cụ thể, và ngôn ngữ được chọn 
+cần có các đặc điểm ngôn ngữ học tương ứng để đáp ứng.  
+Hệ thống đặt vé xem phim (CinemaBooking) là ngữ cảnh minh họa lý tưởng vì nó kết 
+hợp đầy đủ các đặc trưng kỹ thuật khó: lưu lượng biến động đột ngột, tính nhất quán 
+dữ liệu nghiêm ngặt, và yêu cầu độ trễ thấp. Bảng dưới đây ánh xạ từng yêu cầu sang 
+đặc điểm ngôn ngữ của Go:  
+Yêu cầu hệ thống  Đặc điểm ngôn ngữ Go 
+đáp ứng  Cơ chế cụ thể  
+Xử lý nhiều request 
+đồng thời  Goroutine chi phí thấp  go handler() - triệu 
+goroutine/GB RAM  
+Thời gian phản hồi 
+thấp GC concurrent, biên dịch 
+native  Stop-the-world < 1ms, không 
+JVM startup  
+An toàn dữ liệu khi 
+đặt ghế  Race detector built -in go run -race phát hiện data race  
+Triển khai đơn giản  Static binary  Một file binary, không cần 
+runtime  
+Codebase dễ bảo trì  Cú pháp tối giản, gofmt  Một cách viết duy nhất, format 
+tự động 
+Real-time seat locking  Channel + goroutine  WebSocket events qua buffered 
+channel  
+ 
+ 
+ 
+17 
+ 1.3.2. So sánh vớ i các l ựa chọn thay th ế 
+Để khẳng định tính phù hợp của Go, cần đối chiếu với các ngôn ngữ thay thế khả thi:  
+Go so với Node.js (JavaScript): Node.js sử dụng mô hình event loop đơn luồng với 
+callback/Promise, phù hợp cho I/O -bound workload đơn giản. Tuy nhiên, khi cần xử 
+lý logic tính  toán phức tạp (tính giá vé với nhiều biến động, kiểm tra conflict lịch 
+chiếu), Node.js bị hạn chế bởi single -threaded nature. Go xử lý cả I/O -bound lẫn 
+CPU -bound đồng thời hiệu quả hơn nhờ M:N scheduler. 
+Go so với Java (Spring Boot): Java có hệ sinh thái mature và mạnh, nhưng chi phí 
+khởi động JVM (~1 –3 giây) và bộ nhớ baseline cao (~200 –500MB) là bất lợi trong 
+môi trường microservices và containerized deployment. Go khởi động trong mili giây 
+và tiêu thụ RAM thấp hơn một bậc. 
+Go so với Python (FastAPI): Python với GIL ( Global Interpreter Lock ) không thể 
+thực sự tận dụng multi -core CPU cho CPU -bound tasks. FastAPI dùng asyncio nhưng 
+vẫn bị giới hạn bởi GIL. Go không có GIL -  mọi goroutine đều có thể chạy song song 
+thực sự trên nhiều core. 
+1.3.3. Code minh họ a - Race Condition Detection  
+Một trong những đặc điểm ngôn ngữ học nổi bật của Go là race detector  được tích 
+hợp sẵn trong toolchain. Đây là công cụ phân tích động (dynamic analysis ) phát hiện 
+truy cập đồng thời không an toàn vào vùng nhớ chung - một lỗi cực kỳ khó debug 
+trong các ngôn ngữ như C++ hay Java. 
+18 
+  
+ 
+
+19 
+ Output nhận được khi chạy chương trình:  
+ 
+Chạy lệnh go run -race main.go  sẽ kích ho ạt race detector, và Go s ẽ in cảnh báo chi 
+tiết chỉ ra chính xác dòng code nào gây ra data race -  một công c ụ mà h ầu hết ngôn 
+ngữ khác không có s ẵn trong toolchain chu ẩn. 
+1.3.4. Bài toán minh h ọa nhỏ - So sánh Mutex vs Channel  
+Đề bài: Mô phỏng bài toán bán vé: 10 goroutine đồng thời cố gắng đặt ghế cuối cùng 
+(remainingSeats = 1). Cài đặt hai phiên bản:  
+1. Dùng sync.Mutex để bảo vệ biến remainingSeats.  
+2. Dùng channel (một goroutine giữ "quyền sở hữu" biến, cá c goroutine khác gửi 
+request qua channel). 
+So sánh kết quả: cả hai phiên bản phải đảm bảo chỉ đúng một goroutine đặt được ghế, 
+phần còn lại nhận thông báo "hết ghế".  
+
+20 
+  
+
+21 
+  
+Output nhận được:  
+ 
+
+22 
+ Nhận xét ngôn ng ữ học: Cả hai cách ti ếp cận đều đúng và an toàn. G o không b ắt buộc 
+dùng channel thay cho mutex; tri ết lý CSP đư ợc khuy ến khích nhưng không ph ải quy 
+tắc cứng. Trong th ực tế, mutex phù h ợp hơn khi bả o vệ truy c ập vào m ột biến đơn 
+giản, trong khi channel phù h ợp hơn khi c ần điều phố i luồng dữ  liệu giữa các 
+goroutine. 
+  
+23 
+ CHƯƠNG 2: CƠ HỘ I NGH Ề NGHI ỆP VÀ NHU C ẦU TH Ị 
+TRƯỜ NG 
+2.1. Nhu c ầu tuy ển dụng lập trình viên Backend Go:  
+Trong nh ững năm gầ n đây, xu hư ớng phát tri ển phần mềm toàn c ầu đang dị ch 
+chuy ển mạnh m ẽ từ kiến trúc nguyên kh ối (Monolithic) sang các ki ến trúc hi ện đại 
+phân tán như Microservices và Cloud -native. Nh ững hệ thống này đòi h ỏi tính s ẵn 
+sàng cao (High Availability), kh ả năng co giãn linh ho ạt (Scalability) và t ối ưu hóa tài 
+nguyên phầ n cứng. Đây chính là môi trư ờng lý tư ởng để ngôn ngữ  Go phát huy t ối đa 
+thế mạnh. 
+Được thiết kế nguyên bả n để giải quy ết các bài toán h ạ tầng của Google, Go s ở hữu 
+khả năng biên d ịch ra mã máy đ ộc lập (statically compiled), th ời gian kh ởi động cực 
+nhanh, Go đư ợc thiết kế để xây d ựng các h ệ thống backend có hiệu năng cao, x ử lý 
+nhiều request đ ồng th ời, triển khai d ễ dàng trong môi trư ờng cloud và tiêu t ốn ít b ộ 
+nhớ. Nhờ vậy, nhi ều tập đoàn công nghệ  lớn (như Uber, Netflix, Twitch, và t ại Việt 
+Nam là Shopee, Grab, VNG...) đã và đang chuy ển đổi các d ịch vụ cốt lõi sang Go. S ự 
+chuy ển dịch này kéo theo nhu c ầu tuy ển dụng kỹ  sư Go tăng v ọt. 
+Tại thị trường Vi ệt Nam, các công ty Product (phát tri ển sản phẩ m), Startup công ngh ệ 
+và Fintech đang áp d ụng Go r ộng rãi đ ể xây dự ng API Server, h ệ thống xử lý dữ liệu 
+lớn hoặc nền tảng Microservices. Các v ị trí tuy ển dụng ph ổ biến bao g ồm: 
+● Backend Developer (Golang)  
+● Software Engineer (Go / Distributed Systems) 
+● Cloud Backend Developer  
+Những vị trí này thư ờng yêu c ầu ứng viên có ki ến thức sâu rộ ng về : 
+● Phát tri ển RESTful API / gRP C với hiệu suấ t cao. 
+● Làm vi ệc thành th ạo với các h ệ quản trị cơ sở dữ liệu (PostgreSQL, MySQL, 
+Redis). 
+24 
+ ● Tư duy thi ết kế kiến trúc Microservices. 
+● Hệ sinh thái Container và Điệ n toán đám mây (Docker, Kubernetes, 
+AWS/GCP).  
+Đặc biệt: Đối với các h ệ thống có đ ặc thù lưu lư ợng truy c ập thay đ ổi đột ngột và 
+thường xuyên đố i mặt với lượng tải khổng lồ  (High Traffic) như thương m ại điện tử, 
+nền tảng streaming, hay h ệ thống đặ t vé trự c tuy ến (khi có s ự kiện hoặ c phim bom t ấn 
+ra mắt), Go ch ứng minh đượ c sự vượt trội. Đây cũng chính là lý do c ốt lõi Go đư ợc 
+lựa chọn làm công ngh ệ nền tảng cho đồ  án H ệ thống đặ t vé xem phim này.  
+ 
+2.2. M ức lương và l ộ trình phát tri ển: 
+Một trong nh ững yế u tố thiết thực nhất khi đánh giá m ột công ngh ệ là giá trị  
+của nó trên th ị trường lao đ ộng. Do Go là m ột ngôn ngữ  chuyên trị  các h ệ thống khó, 
+cộng vớ i việc ngu ồn cung l ập trình viên thành th ạo Go chưa bão hòa như các ngôn 
+ngữ truyền thống (Java, PHP), nên m ức đãi ng ộ dành cho Go Developer luôn n ằm 
+trong nhóm d ẫn đầu. 
+Tại thị trường Vi ệt Nam , mức lương tham kh ảo dựa trên kinh nghi ệm thực tế thường 
+được phân b ổ như sau:  
+● Junior Golang Developer (0 –  2 năm kinh nghi ệm): Dao đ ộng từ  12 – 25 tri ệu 
+VNĐ/tháng. Ở  giai đo ạn này, ứng viên c ần nắm vững core Go, thao tác 
+Database và vi ết API chu ẩn. 
+● Middle Golang Developer (2 –  4 năm kinh nghiệ m): Dao đ ộng từ  25 – 45 tri ệu 
+VNĐ/tháng. Yêu c ầu khả năng t ối ưu query, x ử lý concurrency an toàn và hi ểu 
+biết về caching, message broker.  
+● Senior Golang Developer (trên 4 năm kinh nghi ệm): Có th ể đạt 45 – 70 triệu 
+VNĐ/tháng ho ặc cao hơn. Đòi h ỏi tư duy thi ết kế hệ thống tố t, khả năng review 
+code và đ ịnh hư ớng ki ến trúc. 
+25 
+ Bên c ạnh đó, v ới xu hư ớng làm vi ệc từ xa (Remote/Global Working), l ập trình viên 
+Go tại Việt Nam hoàn toàn có cơ h ội nhận mức lương tính b ằng USD t ừ các công ty 
+tại Mỹ, Châu Âu, Singapore. V ề lộ trình phát tri ển nghề  nghiệp (Career Path), m ột kỹ 
+sư Go có th ể tiến xa theo các nhánh:  
+● Hướng chuyên gia k ỹ thuật: Backend Developer → Senior Backend Engineer 
+→ System Architect (Ki ến trúc sư h ệ thống). 
+● Hướng hạ tầng/DevOps: Backend Developer → DevOps/SRE Engineer (K ỹ sư 
+vận hành và ổ n định hệ  thống - do Go là ngôn ng ữ lõi của các tool DevOps như 
+Docker/K8s).  
+● Hướng qu ản lý: Backend Engineer → Tech Lead → Engineering Manager.  
+Để đạt được các n ấc thang này, ngoài Go, l ập trình viên b ắt buộc phải trau d ồi thêm 
+các k ỹ năng về  Thiết kế hệ thống (System Design), Ki ến trúc ph ần mềm và Tư duy 
+vận hành Đám mây.  
+2.3. L ợi thế cạnh tranh:  
+ Ứng viên n ắm vững ngôn ng ữ Go cùng vớ i tư duy thi ết kế hệ thống và ki ến 
+trúc ph ần mềm sẽ có lợi thế cạnh tranh rõ rệ t trên th ị trường lao đ ộng. Vi ệc thành th ạo 
+Go không chỉ  giúp sinh viên ti ếp cận với một công ngh ệ hiện đại mà còn giúp nâng 
+cao kh ả năng xây dự ng các h ệ thống phầ n mềm có hiệ u năng cao, d ễ mở rộng và dễ  
+bảo trì. 
+Trước hết, Go là ngôn ng ữ được thiết kế với cú pháp đơn gi ản, rõ ràng và d ễ đọc. Nh ờ 
+đặc điểm này, l ập trình viên có th ể nhanh chóng hi ểu được cấu trúc c ủa các d ự án lớn, 
+từ đó giúp vi ệc phát tri ển và b ảo trì h ệ thống trở nên thu ận lợi hơn, đ ặc biệt trong môi 
+trường làm vi ệc nhóm.  
+Bên c ạnh đó, Go n ổi bật với khả năng xử  lý đồng th ời (concurrency) m ạnh m ẽ thông 
+qua cơ ch ế goroutines và channels. Cơ ch ế này cho phép hệ  thống xử  lý nhi ều tác v ụ 
+song song v ới hiệu năng cao, phù h ợp với các ứ ng dụ ng backend c ần phụ c vụ số 
+lượng lớ n ngư ời dùng cùng lúc.  
+26 
+ Ngoài ra, Go hi ện được sử dụng rộng rãi trong các h ệ thống backend hi ện đại, đặc biệt 
+là trong các ki ến trúc microservices và môi trư ờng cloud computing. Vì v ậy, sinh viên 
+nắm vững Go có thể  dễ dàng ti ếp cận và làm vi ệc với các công ngh ệ phổ biến như 
+Docker, Kubernetes và các n ền tảng đi ện toán đám mây.  
+Cuối cùng, vi ệc hiểu và áp d ụng các nguyên t ắc thiết kế phần mềm khi phát tri ển hệ 
+thống bằ ng Go, ch ẳng hạn như ki ến trúc phân t ầng và vi ệc tách các thành ph ần như 
+repository, service, handler và middleware, s ẽ giúp l ập trình viên hình thành tư duy 
+thiết kế hệ thống tố t hơn. Đây là m ột kỹ năng quan tr ọng đố i với các k ỹ sư ph ần mềm 
+khi tham gia phát tri ển các h ệ thống phầ n mềm quy mô l ớn trong th ực tế. 
+ 
+ 
+  
+27 
+ CHƯƠNG 3: THIẾT LẬP MÔI TRƯỜNG VÀ CẤU TRÚC DỰ 
+ÁN 
+Trong chương này, trình bày cách chuẩn bị môi trường  và tổ chức cấu trúc code  
+cho dự án booking_cinema_golang.  
+ 
+3.1. Thi ết lập môi trư ờng phát tri ển 
+3.1.1. Cài đ ặt Go SDK  
+Phần này làm theo tài liệu chính thức của Go tại trang Download and install - The Go 
+Programming Language . 
+a) Khái niệm đơn giản  
+● Go SDK: bộ công cụ để lập trình Go.  
+● Cài xong Go SDK thì trong máy sẽ có lệnh go để:  
+○ Tạo dự án  
+○ Tải thư viện  
+○ Chạy chương trình.  
+b) Các bước cụ thể trên Windows  
+Bước 1: Vào trang tải Go  
+● Mở trình duyệt (Chrome, Edge, …). 
+● Gõ: https://go.dev/dl rồi Enter. 
+28 
+  
+● Tại đây có danh sách các bản Go. Chọn bản ổn định mới nhất (tài liệu đề xuất 
+Go >= 1.22).  
+ 
+ 
+Bước 2: Tải file cài đặt cho Windows ( Nếu sử dụng Linux hoặc MacOS thì dựa 
+trên cột “OS” tải bản tương ứng)  
+
+29 
+ ● Ở phần Windows, chọn file dạng goX.Y.Z.windows -amd64.msi (bản 64 -bit 
+phổ biến).  
+ 
+● Nhấn tải về và chờ hoàn tất. 
+Bước 3: Chạy file cài đặt  
+● Mở thư mục tải xuống (Downloads).  
+● Nháy đúp vào file .msi vừa tải. 
+● Cứ Next → Next  theo hướng dẫn:  
+○ Giữ nguyên đường dẫn mặc định (thường là C: \Program Files \Go). 
+○ Nhấn Install.  
+○ Đợi cài xong, nhấn Finish . 
+Bước 4: Kiểm tra Go đã cài thành công  
+● Mở Command Prompt  hoặc PowerShell.  
+● Gõ: go version  
+
+30 
+ ● Nếu hiện ra dạng: go version go1.22.x windows/amd64 là cài đặt thành 
+công.  
+ 
+3.1.2. Hiểu đơn giản về GOROOT và GOPATH  
+Theo tài liệu chính thức của Go ( Managing Go installations  và Setting GOPATH ), hai 
+khái niệm hay gặp là:  
+● GOROOT:  
+○ Là thư mục cài Go. 
+○ Ví dụ: C: \Program Files \Go. 
+○ Bên trong có sẵn các file chuẩn của ngôn ngữ Go.  
+○ Thông thường không cần tự đặt, Go tự biết.  
+● GOPATH:  
+○ Là thư mục làm việc mặc định của Go: nơi chứa các dự án, thư viện tải về. 
+○ Mặc định trên Windows là:  
+■ %USERPROFILE% \go, ví dụ: C: \Users \Admin \go. 
+ 
+○ Go dùng GOPATH để lưu:  
+■ source code bên thứ ba, 
+■ các binary cài bằng go install, …  
+ 
+
+31 
+ Lưu ý:  
+● Thông thường không cần tự đặt lại GOROOT và GOPATH.  
+● Không được để GOROOT và GOPATH trùng nhau.  
+● Trong máy, dự án booking_cinema_golang được để ở thư mục riêng:  
+C:\Users \Admin \booking_cinema_golang  
+Nên tách biệt hoàn toàn với C: \Program Files \Go (GOROOT) và C: \Users \Admin \go 
+(GOPATH).  
+Nếu muốn xem giá trị hiện tại, có thể gõ trong terminal:  
+go env GOROOT  
+go env GOPATH  
+  
+3.1.3. Thi ết lập PostgreSQL  
+Để lưu thông tin người dùng, rạp chiếu, vé,… dự án dùng PostgreSQL  làm hệ quản 
+trị cơ sở dữ liệu. 
+a) Cài đặt PostgreSQL (dành cho người không rành kỹ thuật)  
+Bước 1: Tải bộ cài  
+● Mở trình duyệt, tìm: postgresql download windows. 
+● Chọn trang chính thức  
+32 
+  
+● Tải bản mới ổn định (ví dụ PostgreSQL 18, hỗ trợ nền tảng 64 bit 2022 -2025).  
+Bước 2: Chạy file cài đặt  
+● Nháy đúp file .exe tải về. 
+● Cứ Next theo các bước:  
+○ Chọn đường dẫn cài (mặc định thường ổn). 
+○ Đặt mật khẩu cho user postgres (nhớ lưu lại để sau kết nối từ Go). 
+○ Để port mặc định là 5432.  
+Bước 3: Hoàn tất  
+● Sau khi cài xong, PostgreSQL sẽ chạy như một dịch vụ trên Windows. 
+● Có thể có thêm công cụ pgAdmin để quản lý bằng giao diện. 
+b) Dùng DBeaver hoặc pgAdmin để quản lý CSDL  
+Để người không rành lệnh cũng thao tác được, em dùng công cụ có giao diện:  
+● pgAdmin: thường cài kèm với PostgreSQL. 
+● Hoặc DBeaver (tải từ trang chính thức https://dbeaver.io/ ). 
+ 
+
+33 
+ Ví dụ: dùng pgAdmin  
+1.      Mở ứng dụng pgAdmin.  
+2.      Khi mở lần đầu, nhập mật khẩu đã đặt cho postgres. 
+3.      Thêm kết nối:  
+·         Host: localhost  
+·         Port: 5432  
+·         User: postgres  
+·         Password: mật khẩu đã tạo khi cài. 
+4.      Sau khi kết nối được, có thể:  
+·         Tạo database mới dành cho dự án, ví dụ đặt tên booking_cinema. 
+·         Ch ọn “Create Database” → nh ập tên → Save.  
+Sau này, file schema SQL của dự án (internal/database/migrations/schema.sql hoặc 
+schema.sql ở root) sẽ được chạy trên database này đ ể tạo các bảng: users, cinemas, 
+showtimes, bookings, payments, …  
+  
+3.2. Qu ản lý dependency với Go Modules 
+Dự án booking_cinema_golang dùng Go Modules  để quản lý thư viện bên thứ ba. 
+Đây là cách chính thức mà Go khuyến nghị  
+3.2.1. Khái ni ệm đơn gi ản 
+● Go module: có thể hiểu là một “gói dự án” Go, được định nghĩa bởi file 
+go.mod nằm ở thư mục gốc.  
+● Trong go.mod sẽ có:  
+34 
+ ○ Tên module (thường là tên repo),  
+○ Phiên bản Go,  
+○ Danh sách các thư viện bên ngoài mà dự án cần. 
+Khi dùng Go Modules:  
+● Không cần để dự án trong GOPATH vẫn chạy bình thường.  
+● Dự án của em đang đặt tại:  
+C:\Users \Admin \booking_cinema_golang  
+là hoàn toàn hợp lệ.  
+3.2.2. Kh ởi tạo Go module  
+Hiện tại trong dự án đã có file go.mod, nhưng nếu mô tả quy trình từ con số 0, các 
+bước sẽ như sau. 
+Bước 1: Mở terminal tại thư mục dự án  
+● Mở PowerShell. 
+● Gõ: cd C: \Users \Admin \booking_cinema_golang 
+Bước 2: Khởi tạo module  
+● Gõ lệnh: go mod init github.com/ten -github /booking_cinema_golang  
+● Trong thực tế, nếu repo chưa public, có thể dùng tên đơn giản hơn, nhưng dạng 
+github.com/... là phổ biế n hơn  
+● Lệnh này sẽ tạo file go.mod ở thư mục gốc với nội dung :  
+module github.com/ten -cua-em/booking_cinema_golang go 1.22  
+3.2.3. Tự động tải và dọn dẹp dependency với go mod tidy  
+Khi import một thư viện mới trong code (ví dụ github.com/go -chi/chi/v5), Go sẽ cần 
+tải về phiên bản tương ứng.  
+35 
+ Bước 1: Gõ lệnh go mod tidy  
+● Vẫn ở thư mục gốc dự án:  
+cd C: \Users \Admin \booking_cinema_golang  
+go mod tidy  
+Ý nghĩa lệnh này:  
+● Kiểm tra tất cả các file .go trong dự án,  
+● Tìm xem có import thư viện nào không nằm trong go.mod không,  
+○ Nếu có, tự động thêm vào go.mod và tải về (vào cache của Go, thường 
+nằm trong GOPATH/pkg/mod),  
+● Đồng thời xoá bớt các thư viện không còn dùng nữa khỏi go.mod và go.sum.  
+  
+Nhờ đó:  
+● Dự án luôn có danh sách dependency rõ ràng,  
+● Người khác clone repo về, chỉ cần chạy “go mod tidy” Go sẽ tải đúng các thư 
+viện cần dùng.  
+3.3. Xây d ựng cấu trúc thư m ục theo Clean Architecture 
+Dự án booking_cinema_golang được tổ chức theo nguyên tắc của Clean Architecture, 
+trong đó hệ thống được chia thành nhiều lớp với trách nhiệm rõ ràng. Các lớp bên 
+ngoài phụ thuộc vào lớp bên trong, còn lõi nghiệp vụ (business logic) được tách biệt khỏi các chi tiết triển khai như HTTP hay cơ sở dữ liệu. 
+Cấu trúc thư mục chính của dự án gồm các thành phần  sau: 
+ 
+  
+36 
+  
+1. Lớp Entry Point (Application Entry)  
+Thư mục cmd/ chứa các chương trình khởi động hệ thống.  
+cmd/  
+ ├─ api/main.go  
+ └─ frontend/main.go  
+• cmd/api/main.go: khởi tạo HTTP server cho backend API, cấu hình router, 
+middleware và các dependency cần thiết . 
+• cmd/frontend/main.go: chạy server tĩnh để phục vụ giao diện người dùng từ thư 
+mục frontend.  
+Đây là nơi kết nối các thành phần của hệ thống lại với nhau và khởi động ứng dụng.  
+2. Lớp Domain (Entities)  
+Thư mục:  
+internal/domain/  
+Chứa các entity và model cốt  lõi của hệ thống, ví dụ:  
+models.go  
+Các struct như:  
+• User  
+• Cinema  
+• Booking 
+• Payment  
+37 
+ Lớp Domain đại diện cho dữ liệu và quy tắc nghiệp vụ cơ bản, và không phụ thuộc 
+vào bất kỳ framework hay cơ sở dữ liệu nào. 
+3. Lớp Use Case / Business Logic  
+Thư mục:  
+internal/service/  
+Chứa các service xử lý nghiệp vụ của hệ thống, ví dụ:  
+• auth_service.go  
+• booking_service.go  
+• cinema_service.go  
+• payment_service.go  
+• email_service.go  
+Các service này thực hiện các logic như:  
+• xác thực người dùng,  
+• xử lý đặt vé, 
+• kiểm tra ghế trống,  
+• xử lý thanh toán,  
+• gửi email xác nhận.  
+Đây là lớp trung tâm của ứng dụng, nơi thực thi các quy tắc nghiệp vụ.  
+ 
+ 
+ 
+38 
+ 4. Lớp Data Access (Repository) 
+Thư mục:  
+internal/repository/  
+Chứa các thành phần chịu trách nhiệm truy cập và thao tác với cơ sở dữ liệu. Ví dụ:  
+• user_repository.go  
+• cinema_repository.go  
+• booking_repository.go  
+• payment_repository.go  
+Các repository thực hiện các thao tác như:  
+• truy vấn dữ liệu  
+• thêm, sửa, xóa dữ liệu  
+• tìm kiếm thông tin trong database  
+Lớp này giúp tách biệt logic nghiệp vụ khỏi cách lưu trữ dữ liệu.  
+ 5. Lớp Interface / Delivery  
+Thư mục:  
+internal/handler/  
+Chứa các HTTP handler  chịu trách nhiệm giao tiếp với client. 
+ 
+39 
+ Ví dụ:  
+• auth_handler.go  
+• booking_handler.go  
+• cinema_handler.go  
+• payment_handler.go  
+Các handler có nhiệm vụ:  
+• nhận HTTP request  
+• xử lý input  
+• gọi các service tương ứng  
+• trả về HTTP response cho client  
+Đây là lớp kết nối giữa hệ thống backend và người dùng hoặc frontend.  
+ 
+6. Lớp Middleware  
+Thư mục:  
+internal/middleware/  
+Chứa các middleware xử lý chung cho request, ví d ụ: 
+• auth_middleware.go: xử lý xác thực người dùng bằng JWT  
+• logger_middleware.go: ghi log request  
+Middleware được sử dụng để thực hiện các chức năng chung trước hoặc sau khi 
+request được xử lý.  
+ 
+40 
+  
+7. Lớp Infrastructure  
+Một số thành phần hạ tầng được đặt trong  các thư mục:  
+internal/config/  
+internal/database/  
+Bao gồm:  
+• config.go: quản lý cấu hình hệ thống (biến môi trường, file cấu hình)  
+• postgres.go: thiết lập kết nối với cơ sở dữ liệu PostgreSQL  
+• migrations/schema.sql: định nghĩa cấu trúc bảng dữ liệu  
+Các thành p hần này cung cấp hạ tầng kỹ thuật cho ứng dụng.  
+ 8. Lớp Utilities  
+Thư mục:  
+internal/utils/  
+Chứa các hàm tiện ích dùng chung trong toàn bộ hệ thống, ví dụ:  
+• jwt.go: tạo và xác thực JWT token  
+• otp.go: xử lý mã OTP  
+• response.go: chuẩn hóa format trả về JSON  
+• validator.go: kiểm tra dữ liệu đầu vào  
+ 
+ 
+41 
+  
+3.3.1. Kiến trúc thư mục tổng thể  
+Dựa trên cấu trúc code hiện tại, các thư mục chính như sau:  
+ 
+● cmd/api/  
+○ main.go: chương trình chính cho HTTP API server (backend).  
+● cmd/frontend/  
+○ main.go: chương trình chính cho server tĩnh phục vụ front end từ thư 
+mục frontend.  
+● internal/config/  
+○ config.go: xử lý cấu hình ứng dụng (biến môi trường, file cấu hình, …). 
+● internal/database/  
+○ postgres.go: kết nối tới PostgreSQL. 
+
+42 
+ ○ migrations/schema.sql: định nghĩa các bảng trong CSDL.  
+● internal/domain/  
+○ models.go: khai báo các struct như User, Cinema, Booking, Payment, …  
+● internal/repository/  
+○ user_repository.go, cinema_repository.go, booking_repository.go, 
+payment_repository.go:  
+■ Định nghĩa interface và/hoặc impl để truy vấn DB.  
+● internal/se rvice/  
+○ auth_service.go, booking_service.go, cinema_service.go, 
+payment_service.go, email_service.go:  
+■ Chứa logic nghiệp vụ chính (business rules).  
+● internal/handler/  
+○ auth_handler.go, booking_handler.go, cinema_handler.go, 
+payment_handler.go:  
+■ “Tiếp xúc” trực tiếp với HTTP request. 
+● internal/middleware/  
+○ auth_middleware.go: xử lý xác thực (JWT, …). 
+○ logger_middleware.go: log request. 
+○   
+● internal/utils/  
+○ jwt.go, otp.go, response.go, validator.go:  
+■ Các hàm tiện ích (tạo token, gửi JSON chuẩn, validate input, …).  
+● fronte nd/ 
+○ index.html, styles.css, app.js:  
+■ Giao diện React đơn giản, flow đặt vé từ phía client . 
+ 
+ 
+ 
+ 
+43 
+ 3.3.2. Vai trò c ủa từng tầng trong mô hình  
+a)  internal/domain/ + schema.sql  
+● Model là cách mô tả dữ liệu trong hệ thống.  
+● Ví dụ:  
+○ Một User có: ID, Email, PasswordHash, FullName, …  
+○ Một Cinema có: ID, Name, Address, …  
+○ Một Booking có: ID, UserID, ShowtimeID, Seats, …  
+Trong Go, các model này được định nghĩa trong file internal/domain/models.go dưới 
+dạng các struct. 
+ Trong PostgreSQL, cấu trúc tương ứng được định nghĩa trong file SQL:  
+● internal/database/migrations/schema.sql  
+● (hoặc bản copy schema.sql ở root repo).  
+Ý nghĩa:  
+● File .go mô tả dữ liệu trong code.  
+● File .sql mô tả dữ liệu trong database. 
+● Hai bên phải khớp với nhau (kiểu dữ liệu, tên trường, …). 
+b) Tầng Repository –  internal/repository/  
+● Repository là nơi viết code để đọc / ghi dữ liệu từ CSDL PostgreSQL. 
+● Ví dụ:  
+○ UserRepository có hàm:  
+■ CreateUser(...),  
+■ FindByEmail(email string),  
+■ GetByID(id int), …  
+○ BookingRepository có hàm:  
+■ CreateBooking(...), 
+■ GetBookingsByUser(userID int), …  
+44 
+ Lý do tách ra so với tầng model :  
+● Nếu sau này đổi từ PostgreSQL sang MySQL, chỉ cần đổi code ở tầng 
+repository. 
+● Các tầng khác (service, handler) ít bị ảnh hưởng.  
+c) Tầng Service –  internal/service/  
+● Service là nơi viết logic nghiệp vụ. 
+● Ví dụ:  
+○ Trong BookingService:  
+■ Kiểm tra ghế còn trống không.  
+■ Tính tổng tiền. 
+■ Gọi repository để lưu Booking. 
+○ Trong AuthService:  
+■ Kiểm tra email đã tồn tại chưa. 
+■ Hash mật khẩu.  
+■ Tạo token đăng nhập (JWT).  
+○ Trong PaymentService:  
+■ Kiểm tra booking hợp lệ.  
+■ Lưu thông tin thanh toán, sinh transaction_id, …  
+Service thường:  
+● Không biết chi tiết HTTP request, 
+● Không render HTML,  
+● Chỉ nhận dữ liệu “thô” (struct, string, số, …) và trả kết quả hoặc lỗi. 
+ 
+ 
+ 
+ 
+45 
+ d) Tầng Handler –  internal/handler/  
+Đây là phần gần giống Controller trong MVC . 
+● Các file như:  
+○ auth_handler.go,  
+○ booking_handler.go,  
+○ cinema_handler.go,  
+○ payment_handler.go.  
+Nhiệm vụ của handler:  
+1.      Nhận request HTTP  từ router (ví dụ POST /api/auth/login). 
+2.      Đọc dữ liệu từ body  (JSON).  
+3.      Validate  dữ liệu (gọi validator nếu cần). 
+4.      Gọi service phù hợp , truyền dữ liệu vào.  
+5.      Nhận kết quả  từ service.  
+6.      Trả JSON response  về cho front end (dùng helper trong 
+internal/utils/response.go).  
+Ví dụ luồng Đăng nhập:  
+● Front end gửi POST /api/auth/login với body: { "email": "...", "password": "..." 
+}. 
+● AuthHandler:  
+○ Đọc email, password. 
+○ Gọi AuthService.Login(email, password).  
+○ Nếu thành  công, trả về JSON chứa thông tin user + token (tuỳ thiết kế). 
+○ Nếu thất bại, trả về mã lỗi và thông báo tương ứng.  
+ 
+46 
+ e) Tầng Router và Middleware –  cmd/api/ + internal/middleware/  
+● File cmd/api/main.go là nơi:  
+○ Khởi tạo router (dùng net/http hoặc thư viện như chi, gorilla/mux, …). 
+○ Khai báo các đường dẫn (route) cho API:  
+■ POST /api/auth/register → AuthHandler.Register  
+■ POST /api/auth/login → AuthHandler.Login  
+■ GET /api/cinemas → CinemaHandler.ListCinemas  
+■ GET /api/showtimes → CinemaHandler.ListShowtimes  
+■ GET /api/showtimes/{id}/seats → 
+BookingHandler.ListTakenSeats  
+■ POST /api/bookings → BookingHandler.CreateBooking  
+■ POST /api/payments → PaymentHandler.CreatePayment  
+● Middleware  trong internal/middleware/:  
+○ auth_middleware.go:  
+■ Kiểm tra trong request có token không.  
+■ Giải mã token (dùng internal/utils/jwt.go).  
+■ Nếu hợp lệ, cho qua, gắn thông tin user vào context.  
+■ Nếu không hợp lệ, trả lỗi 401 (Unauthorized). 
+○ logger_middleware.go:  
+■ Ghi log mỗi request: phương thức, đường dẫn, thời gian xử lý, …  
+Các middleware này được “gắn” vào router trong cmd/api/main.go, để mọi request đi 
+qua đều được xử lý chung (giống chốt bảo vệ trước cổng). 
+  
+ 
+ 
+ 
+ 
+47 
+ 3.3.3. Lu ồng xử  lý request end -to-end trong d ự án 
+Để kết nối lý thuyết với thực tế dự án, dưới đây là ví dụ luồng “đặt vé” từ khi người 
+dùng bấm nút trên giao diện đến khi dữ liệu vào DB.  
+Bước 1: Người dùng thao tác trên giao diện  
+● Mở http://localhost:5173/ (được phục vụ bởi cmd/frontend).  
+● Chọn rạp, ngày, suất chiếu, ghế, và bấm “Đặt vé”. 
+Bước 2: Front end gọi API  
+● app.js gọi POST /api/bookings  
+● Gửi JSON như:  
+{ 
+  "cinema_id": 1,  
+  "showtime_id": 10, 
+  "seats": ["A1", "A2"]  
+} 
+Bước 3: Router nhận request 
+● Trong cmd/api/main.go, router đã gắn route:  
+POST /api/bookings → BookingHandler.CreateBooking  
+● Nên request đi vào hàm CreateBooking trong 
+internal/handler/booking_handler.go.  
+Bước 4: Handler xử lý lớp ngoài cùng  
+● Handler:  
+○ Đọc body JSON,  
+○ Kiểm tra format, 
+48 
+ ○ Gọi bookingService.CreateBooking(...). 
+Bước 5: Service xử lý logic nghiệp vụ  
+● BookingService:  
+○ Gọi BookingRepository để kiểm tra ghế đã được đặt chưa. 
+○ Nếu ghế còn trống:  
+■ Tính toán số tiền. 
+■ Gọi repository để insert bản ghi booking mới. 
+○ Trả về kết quả (thông tin booking) cho handler. 
+Bước 6: Repository làm việc với DB  
+● BookingRepository:  
+○ Dùng kết nối PostgreSQL trong internal/database/postgres.go.  
+○ Thực thi câu INSERT vào bảng bookings được định nghĩa trong 
+schema.sql. 
+Bước 7: Handler trả JSON response  
+● Nhận kết quả từ service, 
+● Gọi helper trong internal/utils/response.go để gửi JSON chuẩn lại cho front 
+end, 
+● Front end cập nhật giao diện (ví dụ hiển thị “Đặt vé thành công”).  
+  
+3.3.4. Lý do ch ọn cấu trúc Cle an Architecture  
+Cấu trúc của dự án tuân theo phong cách được cộng đồng Go khuyến nghị:  
+● cmd/ : 
+○ Mỗi thư mục con trong cmd/ tương ứng với một chương trình chính  
+(một binary). 
+○ Ở đây:  
+■ cmd/api → chương trình API server. 
+49 
+ ■ cmd/frontend → chương trình server tĩnh cho front end.  
+● internal/ : 
+○ Là thư mục chứa logic “private”  của ứng dụng.  
+○ Theo quy tắc của Go, các package trong internal/ chỉ được import từ 
+trong cùng module , không bị project khác import trực tiếp. 
+○ Điều này giúp:  
+■ Giữ cho logic nghiệp vụ không bị “lộ” ra bên ngoài. 
+■ Ép dự án phải dùng qua các entrypoint cmd/... chứ không “ăn xổi” import lung tung.  
+3.3.5. Tóm tắ t chương  
+● Tóm lại trong chương đã triển khai các chủ đề chính sau:  
+○ Cài đặt Go SDK  theo tài liệu go.dev, hiểu khái niệm GOROOT và 
+GOPATH ở mức đơn giản.  
+○ Cài và cấu hình PostgreSQL , sử dụng công cụ gia o diện (pgAdmin 
+hoặc DBeaver) để dễ thao tác với người không rành kỹ thuật.  
+○ Dùng Go Modules  với file go.mod và lệnh go mod tidy để quản lý thư 
+viện bên thứ ba một cách tự động, rõ ràng.  
+○ Thiết kế cấu trúc thư mục  dự án booking_cinema_golang theo kiểu:  
+■ cmd/ (entrypoint chương trình),  
+■ internal/ (logic lõi: config, database, domain, repository, service, handler, middleware, utils),  
+■ frontend/ (view, giao diện React). 
+○ Giải thích rõ vai trò của từng tầng trong mô hình MVC mở rộng , và mô 
+tả chi tiết luồng xử lý một  request đặt vé  từ giao diện tới cơ sở dữ liệu. 
+Nhờ những bước này, dự án có nền tảng môi trường và cấu trúc code rõ ràng , 
+thuận tiện để có thể tiếp tục phát triển các chức năng chi tiết ở các chương sau.  
+  
+  
+50 
+ CHƯƠNG 4: CÁC KHÁI NI ỆM N ỀN T ẢNG - MIDDLEWARE 
+TRONG GO 
+4.1. Middleware là gì? Phân tích từ  góc độ  ngôn ngữ  học 
+4.1.1. Đ ịnh nghĩa và cơ ch ế hoạt động 
+Trong Go, middleware không phải là một từ khóa hay cấu trúc ngôn ngữ riêng biệt -  
+nó là một design pattern được xây dựng hoàn toàn từ hệ thống kiểu (type system ) của 
+ngôn ngữ. Cụ thể, middleware trong Go là một hàm có chữ ký (signature) dạng:  
+func(next http.Handler) http.Handler  
+Để hiểu tại sao chữ ký này lại là nền tảng, cần phân tích  từng thành phần:  
+• http.Handler là một interface được định nghĩa trong thư viện chuẩn của Go: bất 
+kỳ kiểu nào có phương thức ServeHTTP(ResponseWriter, *Request) đều thỏa 
+mãn interface này -  đây là cơ chế structural typing đặc trưng của Go.  
+• http.HandlerFunc là một function type được khai báo là type HandlerFunc 
+func(ResponseWriter, *Request), và nó cài đặt ServeHTTP bằng cách tự gọi chính nó -  cho phép chuyển đổi linh hoạt giữa hàm thông thường và interface. 
+• Tham số next http.Handler biểu diễn handler tiếp th eo trong chuỗi xử lý -  đây 
+là cách Go hiện thực hóa mô hình xử lý tuần tự mà không cần framework.  
+Middleware hoạt động theo nguyên lý bọc ngoài (wrapping): mỗi middleware nhận một handler, tạo ra một handler mới bao quanh handler gốc, và trả về handler mới  đó. 
+Request đi vào từ middleware ngoài cùng, xuyên qua từng lớp, đến handler cuối, rồi response đi ngược ra. Đây là cấu trúc Decorator Pattern được thể hiện thuần túy qua 
+hệ thống kiểu của Go mà không cần class hay kế thừa.  
+ 
+  
+51 
+ So sánh với các ngôn ngữ khác:  
+Tiêu chí  Go Java 
+(Spring)  Python (Django)  Node.js 
+(Express)  
+Cơ chế 
+middleware  Higher -order 
+function + 
+interface  Annotation 
+(@Aspect)  Callable class / 
+decorator  Function 
+(req, res, next)  
+Kiểm tra kiểu  Compile time  Compile time  Runtime  Runtime  
+Phụ thuộc 
+framework  Không (stdlib)  Có (Spring 
+AOP)  Có (Django)  Có (Express)  
+Cú pháp khởi 
+tạo func(next 
+Handler) Handler @Before, 
+@Around def __call__  (req, res, 
+next) =>  
+Chainability  Manual 
+wrapping hoặc 
+thư viện  Framework 
+tự quản lý  MIDDLEWARE 
+list app.use()  
+Điểm đáng chú ý: Go không có "magic" -  middleware chỉ là hàm thông thường được 
+compose lại với nhau. Điều này khác hoàn toàn với Spring AOP (dùng bytecode 
+manipulation ở runtime) hay Django middleware (framework tự gọi theo thứ tự list). 
+Go đặt toàn quyền kiểm soát vào tay lập trình viên thông qua việc lập trình hàm bậc cao (higher -order functions ). 
+4.1.2. C ấu trúc cơ b ản của một Middleware trong Go  
+Bước 1 -  Giải thích chi tiết cấu trúc: 
+52 
+  
+Phân tích cơ chế ngôn ngữ trong cấu trúc này:  
+• Closure: Hàm ẩn danh bên trong http.HandlerFunc(...) là một closure -  nó "bắt" 
+(capture ) biến next từ scope bên ngoài. Go hỗ trợ closure hoàn toàn, biến next 
+sẽ tồn tại trong bộ nhớ heap chừng nào closure còn được tham chiếu.  
+• Type conversion: http.HandlerFunc(func(...){...}) là một type conversion, 
+không phải function call -  Go chuyển đổi một function literal thành kiểu 
+HandlerFunc vốn cài đặt interface http.Handler.  
+• Interface satisfaction ngầm: Vì HandlerFunc có phương thức Se rveHTTP, nó tự 
+động thỏa mãn http.Handler mà không cần khai báo implements -  đây là  
+• structural typing của Go.  
+ 
+4.1.3. Chu ỗi Middleware (Middleware Chain) -  Composition hàm  
+Sức mạnh thực sự của middleware trong Go nằm ở khả năng compose nhiều 
+middleware lại với nhau. Đây là một ứng dụng của tư tưởng composition over 
+inheritance  - triết lý cốt lõi trong thiết kế Go. 
+
+53 
+  
+Để tránh việc lồng nhau gây khó đọc, các dự án thực tế thườ ng viết hàm Chain  tổng quát:  
+ 
+ 
+ 
+
+54 
+ 4.1.4. Bài toán minh h ọa nhỏ - Tự viết Chain function  
+Đề bài: Viết hàm Chain(h http.Handler, middlewares ...func(http.Handler) 
+http.Handler) http.Handler. Định nghĩa hai middleware đơn giản: WithRequestID (gán 
+một UUID giả vào header X -Request- ID) và WithTimer (in ra thời gian xử lý 
+request). Tạo một handler in ra "Hello, Cinema!" rồi bọc nó bằng hai middleware trên 
+theo thứ tự: WithRequestID chạy trước, WithTimer chạy sau. 
+Mục tiêu: Quan sát rằng Go không cần framework để compose middleware -  toàn bộ 
+là hàm bậc cao và closure. 
+55 
+  
+Output nhận được:  
+ 
+
+56 
+ Nhận xét ngôn ngữ học: Toàn bộ cơ chế middleware được xây dựng từ ba đặc điểm 
+ngôn ngữ cơ bản của Go: higher- order functions (hà m nhận và trả về hàm), closure 
+(bắt biến start, requestID từ scope ngoài), và interface structural typing (http.HandlerFunc thỏa mãn http.Handler tự động). 
+4.2. Phân tích chuyên sâu ba Middleware c ốt lõi 
+4.2.1. Logger Middleware -  Context truy ền dữ liệu giữa các l ớp 
+Một thách thức trong thiết kế middleware là làm thế nào để middleware trước truyền 
+dữ liệu cho middleware sau  và cho handler cuối. Go giải quyết bài toán này bằng 
+context.Context -  một interface được đặt trong *http.Req uest. 
+context.Context là một cơ chế immutable key -value store  được thiết kế cho việc truyền 
+dữ liệu theo phạm vi request (request- scoped data): mỗi lần thêm giá trị, một context 
+mới được tạo ra bọc ngoài context cũ, context cũ không bị thay đổi. Đây là các h Go 
+đảm bảo an toàn đồng thời (concurrency safety ) khi nhiều goroutine cùng đọc context 
+của một request. 
+Để tránh key collision giữa các package khác nhau, Go spec khuyến nghị dùng 
+unexported custom type làm context key -  thay vì dùng string có thể bị trùng:  
+ 
+Đặc điểm của Logger Middleware trong hệ thống CinemaBooking là cần ghi lại: 
+method, path, status code, thời gian xử lý, và request ID để trace log. Tuy nhiên, 
+http.ResponseWriter không có phương thức nào để đọc lại s tatus code sau khi đã ghi -  
+đây là một hạn chế của stdlib Go. Giải pháp là bọc ResponseWriter  trong một struct 
+tùy chỉnh:  
+
+57 
+  
+
+58 
+  
+ 
+Phân tích cơ chế ngôn ngữ:  
+• Embedding interface (http.ResponseWriter được nhúng vào struct 
+responseWriter): Đây là cơ chế promotion của Go -  responseWriter tự động kế 
+thừa tất cả phương thức của http.ResponseWriter, ta chỉ cần override những 
+phương thức cần can thiệp.  
+• r.WithContext(c tx): Trả về một *Request mới với context mới -  Go không cho 
+phép mutate *Request trực tiếp vì request được chia sẻ có thể được đọc bởi nhiều goroutine.  
+
+59 
+ • Type assertion ctx.Value(keyRequestID).(string): Context trả về interface{} 
+nên cần type assertion; dạng value, ok := x.(T) là idiom an toàn (comma -ok 
+pattern) của Go tránh panic khi kiểu không khớp.  
+ 
+Bước 3 - Bài toán minh họa nhỏ: ResponseWriter Wrapper  
+Đề bài:  Viết một middleware WithStatusTracker bọc http.ResponseWriter để đếm số 
+lần các n hóm status code được trả về (2xx, 4xx, 5xx). Sau mỗi 10 request, in ra thống 
+kê: "2xx: N, 4xx: N, 5xx: N". Dùng sync.Mutex  để bảo vệ bộ đếm vì nhiều goroutine 
+có thể cùng cập nhật.  
+60 
+  
+ 
+
+61 
+  
+
+62 
+  
+
+63 
+  
+ 
+ 
+ 
+
+64 
+ 4.2.2. Authentication Middleware -  JWT và Context truy ền thông tin ngườ i dùng  
+Bước 1 -  Lý thuyết: JWT và vấn đề stateless authentication  
+JWT (JSON Web Token) là chuẩn RFC 7519 cho phép server xác thực người dùng 
+mà không cần lưu trạng thái phiên  (stateless). Token có dạng 
+Header.Payload.Signature:  
+• Header: Khai báo thuật toán ký (ví dụ HS256 - HMAC SHA- 256).  
+• Payload: Chứa các claims  - thông tin về người dùng (userID, role, thời gian hết 
+hạn exp). Lưu ý: Payload chỉ được Base64URL encode, không mã hóa -  ai 
+cũng đọc được, do đó tuyệt đối không chứa thông tin nhạy cảm. 
+• Signature: HMAC(Base64(header) + "." + Base64(payload), secret_key) -  đảm 
+bảo token không bị giả mạo.  
+Trong hệ thống phân tán, mọi instance backend đều xác thực được token nếu có cùng secret key -  đây là ưu điểm lớn so với session -based auth yêu cầu shared session store. 
+Nhược điểm cố hữu: JWT không thể thu hồi trước khi hế t hạn vì bản chất stateless; 
+giải pháp thực tiễn là duy trì blacklist trong Redis với TTL bằng thời gian token còn lại. 
+Bước 2 -  Code minh họa: JWT Auth Middleware trong CinemaBooking  
+Đặc điểm ngôn ngữ Go được thể hiện rõ trong middleware này: custom error type, context key pattern, và idiomatic error handling.  
+65 
+  
+ 
+
+66 
+  
+
+67 
+  
+ 
+Phân tích cơ chế ngôn ngữ:  
+• Middleware factory pattern (RequireRole(roles...) func(Handler) Handler): Đây 
+là hàm trả về middleware -  lợi dụng closure để "bọc" tham số allowedRoles vào 
+bên trong middleware. Go hỗ trợ tự nhiên nhờ first -class functions. 
+• Variadic parameters (allowedRole s ...string): Go cho phép truyền số lượng 
+argument linh hoạt, giúp RequireRole("admin") và RequireRole("admin", 
+"staff") đều hợp lệ. 
+
+68 
+ • Early return pattern: Thay vì if valid { ... } else { return error }, Go idiom là if 
+!valid { return error } rồi tiếp tục -  giữ code phẳng, tránh pyramid of doom.  
+Cách sử dụng trong router của CinemaBooking:  
+ 
+Bước 3 -  Bài toán minh họa nhỏ: Middleware Factory với tham số  
+Đề bài: Viết middleware WithAPIVersion(version string) nhận tham số version  (ví dụ 
+"v1", "v2") và gắn giá trị đó vào header response X -API-Version . Đồng thời, nếu 
+client gửi header Accept -Version  khác với version của server, trả về lỗi 426 Upgrade 
+Required  với body JSON {"error": "Please use API version v1"}.  
+Mục tiêu: Quan sát cách Go dùng closure để tạo middleware có trạng thái cố định 
+(version string), và cách viết middleware factory tổng quát.  
+
+69 
+  
+
+70 
+  
+Khi mở localhost8080 nhận được message  
+ 
+ 
+
+71 
+ 4.2.3. Recovery Middleware -  defer, recover() và x ử lý Panic  
+Bước 1 -  Lý thuyết: Mô hình xử lý lỗi nghiêm trọng trong Go  
+Go phân biệt hai cấp độ lỗi:  
+• error (lỗi có thể xử lý): Giá trị kiểu error được trả về từ hàm, caller phải kiểm 
+tra và xử lý. Đây là cách Go xử lý phần lớn lỗi runtime.  
+• panic (lỗi nghiêm trọng không lường trước): Xảy ra khi dereferencing nil pointer, index out of range, type assertion thất bại không dùng comma -ok... Khi 
+panic xảy ra, Go stack unwind từ goroutine đang chạy, gọi tất cả defer đã đăng ký, rồi crash chương trình.  
+recover() là hàm built -in chỉ có  tác dụng khi được gọi bên trong hàm defer . Nó bắt 
+panic và trả về giá trị được truyền vào panic(value), cho phép chương trình tiếp tục thay vì crash.  
+So sánh với các ngôn ngữ khác:  
+ 
+Go Java  Python  C++ 
+Lỗi 
+thông thường  error 
+return value  Exception 
+(checked/unchecked)  Exception  Return code / 
+std::error_code  
+Lỗi 
+nghiêm 
+trọng  panic + 
+recover  RuntimeException / 
+Error  BaseException  std::terminate / 
+std::exception  
+Cleanup  defer  finally  finally  RAII 
+(destructor) 
+Hiệu suất  Defer có 
+overhead 
+nhỏ Try/catch cheap khi 
+không throw  Overhead khi 
+raise  Zero -cost khi 
+không throw  
+Cơ chế defer của Go đáng phân tích kỹ: defer f() đăng ký hàm f vào một defer stack  - 
+một danh sách LIFO gắn với goroutine hiện tại. Khi hàm chứa defer kết thúc (dù kết 
+72 
+ thúc thông thường hay do panic), tất cả defer được gọi theo thứ tự ngược lại (LIFO). 
+Đây là cơ chế Go đảm bảo cleanup resources -  tương tự finally nhưng gắn với hàm 
+thay vì  block.  
+ 
+ 
+ 
+
+73 
+ Phân tích chi ti ết cơ ch ế defer + recover:  
+ 
+Output nhận được:  
+ 
+Điều kiện bắt buộc để recover() hoạt động:  
+1. recover() phải được gọi trực tiếp  bên trong hàm được defer đăng ký -  không 
+phải trong hàm được gọi bởi defer. 
+2. recover() chỉ có hiệu lực với panic trong cùng goroutine  - panic từ goroutine 
+khác (ví dụ goroutine con được khởi tạo bởi go func(){}()) sẽ không bị bắt.  
+Điểm thứ hai đặc biệt quan trọng trong Go khi dùng goroutine : nếu một goroutine con 
+panic mà không có recovery riêng, toàn bộ chương trình sẽ crash dù goroutine cha có 
+recovery.  
+
+74 
+ Bước 3 -  Bài toán minh họa nhỏ: Goroutine panic isolation  
+Đề bài: Viết một handler RiskyHandler thực hiện hai việc: (1) xử lý request bình 
+thường trong goroutine hiện tại, (2) khởi chạy một goroutine phụ bằng go func() để 
+thực hiện tác vụ nền (giả lập bằng một hàm có thể panic). Đảm bảo panic từ goroutine 
+phụ khô ng làm crash server -  goroutine phụ phải có defer + recover riêng. In ra log khi 
+bắt được panic từ goroutine phụ. 
+Mục tiêu: Hiểu rằng Recovery Middleware ở lớp ngoài không thể  bắt panic từ 
+goroutine con - mỗi goroutine phải tự bảo vệ mình . 
+ 
+ 
+ 
+
+75 
+  
+Output nhận được:  
+ 
+4.3. T ổ chức Middleware trong ki ến trúc Clean Architecture c ủa 
+CinemaBooking  
+4.3.1. C ấu trúc thư m ục và phân t ầng middleware  
+Trong dự án CinemaBooking theo Clean Architecture, middleware được tổ chức tách 
+biệt khỏi handler và usecase:  
+ 
+ 
+ 
+
+76 
+ internal/  
+├── middleware/  
+│   ├── logger.go       // Logger middleware + ResponseWriter wrapper  
+│   ├── auth.go         // JWT Auth + RequireRole factory  
+│   ├── recovery.go     // Panic recover y 
+│   └── chain.go        // Hàm Chain() tổng quát  
+├── handler/  
+│   ├── booking_handler.go  
+│   └── auth_handler.go  
+└── ...  
+4.3.2. Compose middleware v ới Gin Framework  
+Trong thực tế, dự án CinemaBooking dùng Gin framework thay vì stdlib net/http. Gin 
+cung cấp kiểu gin.HandlerFunc (tương đương http.HandlerFunc) và phương thức 
+Use() để đăng ký middleware global hoặc theo group route. Đặc điểm ngôn ngữ Go -  
+interface và fun ction type -  vẫn là nền tảng, Gin chỉ bổ sung tiện ích:  
+77 
+  
+Phân tích đặc điểm ngôn ngữ Go trong đoạn code trên:  
+• Group route trong Gin là một cách compose middleware không phải cho từng 
+handler riêng lẻ mà cho tập hợp route  - giảm lặp code, đảm bảo nhất quán về 
+chính sách bảo mật.  
+
+78 
+ • r.Use() nhận gin.HandlerFunc -  tương tự http.HandlerFunc nhưng nhận thêm 
+*gin.Context là một struct chứa cả request, response, và các tiện ích của Gin.  
+• Thứ tự Use() xác định thứ tự thực thi -  Recovery phải đứng trước Logger và 
+Auth để bắt được panic từ bất kỳ lớp nào.  
+4.4. Rate Limiting Middleware - Kết hợp Goroutine và Channel  
+4.4.1. Lý thuy ết: Bài toán gi ới hạn tần suất trong h ệ thống đặ t vé 
+Rate Limiting là bài toán đặc biệt phù hợp để minh họa đặc điểm concurrency của Go: 
+khi nhiều goroutine (mỗi request là một goroutine trong Gin) cùng cố đặt vé hoặc 
+đăng nhập, cần một cơ chế giới hạn theo từng user mà không dùng global lock làm tắc 
+nghẽn toàn bộ hệ thống.  
+Go cung cấp gói golang.org/x/time/rate  với thuật toán Token Bucket: mỗi "bucket" có 
+dung lượng burst token, được nạp lại r token/giây. Mỗi request tiêu thụ một token; nếu 
+bucket cạn, request bị từ chối. Điều này phù hợp với bài toán đặt vé: cho phép burst 
+ngắn (nhiều request liên tiếp) nhưng g iới hạn tốc độ trung bình.  
+79 
+ 4.4.2. Code minh họ a: Per -user Rate Limiter dùng sync.Map  
+ 
+
+80 
+  
+Phân tích đặc điểm ngôn ngữ:  
+• defer s.mu.Unlock(): Đây là pattern chuẩn trong Go để unlock mutex đảm bảo 
+unlock xảy ra ngay cả khi hàm return sớm hoặc panic. Quan trọng hơn, defer 
+trên lock phải được viết ngay sau  Lock() để tránh bỏ sót.  
+
+81 
+ • go store.cleanupLoop(): Goroutine nền chạy vô tậ n - đây là idiom phổ biến 
+trong Go cho background tasks. Khác với Thread Java/C++, goroutine này chỉ 
+tốn ~2KB stack ban đầu.  
+• Closure capture store: Biến store được capture bởi closure của middleware đảm 
+bảo tất cả request đến cùng middleware instance dùng chung một store. 
+  
+82 
+ CHƯƠNG 5: CÁC KỸ  THU ẬT NÂNG CAO VÀ T ỐI ƯU HÓA  
+5.1 Xử  Lý Đ ồng Th ời - Bài Toán Đ ặt Gh ế Trùng Nhau (Double Booking)  
+5.1.1 B ản Ch ất Của Vấn Đề 
+Khi nhiều người dùng cùng thao tác trên một dữ liệu tại cùng một thời điểm, hệ thống 
+dễ rơi vào tình trạng race condition -  tức là kết quả cuối cùng phụ thuộc vào thứ tự 
+thực thi ngẫu nhiên của các luồng xử lý, chứ không phải theo logic nghiệp vụ mà ta mong muốn.  
+Trong bài toán đặt ghế xem phim, tình huống điển hình diễn ra như sau: Goroutine A 
+(User 1) và Goroutine B (User 2) đều đọc trạng thái ghế G5 và thấy nó đang còn 
+trống. Cả hai đều vượt qua bước kiểm tra và tiến hành ghi "đã đặt" vào cơ sở dữ liệu. 
+Kết quả là ghế G5 bị bán cho cả hai người -  đây chính là Double Booking.  
+Điểm mấu chốt cần hiểu là: kiểm tra ở tầng ứng dụng (application layer) là không đủ. 
+Dù code Go có kiểm tra if seat.Status == "available" trước khi ghi, nhưng nếu hai 
+goroutine cùng đọc dữ liệu trước khi một trong hai ghi xuống, điều kiện kiểm tra đó 
+trở nên vô nghĩa. Vấn đề này càng trầm trọng hơn khi hệ thống chạy nhiều instance 
+song song (horizontal scaling), vì lúc đó nhiều process hoàn toàn độc lập cùng truy 
+cập một cơ sở dữ liệu.  
+Giải pháp đúng đắn là đẩy cơ chế kiểm soát xuống tầng cơ sở dữ liệu, nơi PostgreSQL 
+đảm bảo tính ACID cho mọi transaction:  
+Tính Atomicity (nguyên tử) đảm bảo toàn bộ transaction hoặc thành công hoàn toàn, 
+hoặc được hoàn tác hoàn toàn -  không tồn tại trạng  thái nửa vời. Tính Consistency 
+(nhất quán) đảm bảo dữ liệu luôn hợp lệ theo các ràng buộc đã định trước và sau 
+transaction. Tính Isolation (cô lập) đảm bảo các transaction đang chạy song song 
+không nhìn thấy dữ liệu trung gian của nhau. Tính Durability (b ền vững) đảm bảo dữ 
+liệu đã được commit sẽ tồn tại vĩnh viễn kể cả khi hệ thống gặp sự cố. 
+83 
+ 5.1.2 Cơ Ch ế SELECT ... FOR UPDATE Ho ạt Động Như Th ế Nào ?  
+Câu lệnh SELECT ... FOR UPDATE là một dạng pessimistic locking  (khóa bi quan) 
+- tức là ta giả định rằng xung đột sẽ xảy ra , nên chủ động khóa tài nguyên trước khi xử 
+lý. Khi một transaction thực thi câu lệnh này, PostgreSQL đặt một row -level lock lên 
+hàng đó. Mọi transaction khác muốn đọc hàng đó với FOR UPDATE sẽ phải chờ  cho 
+đến khi transaction đầu tiên kết thúc (commit hoặc rollback). Nhờ vậy, chỉ một 
+transaction tại một thời điểm có thể kiểm tra và sửa trạng thái của một ghế.  
+84 
+ 5.1.3 Cách Tri ển Khai Trong Go  
+ 
+ 
+defer tx.Rollback() là dòng quan trọng nhất trong hàm này. Khi đặt ngay sau 
+db.Begin(), nó đảm bảo rằng nếu hàm trả về lỗi ở bất kỳ bước nào -  dù là lỗi mạng, lỗi 
+logic hay panic -  PostgreSQL sẽ tự động hoàn tác toàn bộ thay đổi. Nếu tx.Commit() 
+thành công thì lệnh Rollback tiếp theo sẽ là no -op, tức là không làm gì cả. Đây là  
+pattern phòng thủ chuẩn khi làm việc với transaction trong Go.  
+
+85 
+ Câu lệnh SELECT ... FOR UPDATE trên hàng ghế đang được truy vấn sẽ đặt một 
+row-level lock ngay tại thời điểm đọc. Điều này có nghĩa là bất kỳ transaction nào 
+khác cũng muốn khóa cùng hàng đó s ẽ bị chặn lại và phải đợi -  đây chính là điểm then 
+chốt loại bỏ race condition. Việc kiểm tra status != "available" diễn ra sau khi đã giữ được lock , nên ta hoàn toàn chắc chắn không có transaction nào khác đang thay đổi 
+hàng đó đồng thời.  
+Trong môi trường thực tế, nên bổ sung thêm timeout để tránh trường hợp một transaction giữ lock quá lâu:  
+ 
+Từ khóa NOWAIT thay đổi hành vi mặc định: thay vì xếp hàng chờ cho đến khi lock được giải phóng, PostgreSQL sẽ trả về lỗi ngay lập tức nếu hàng đang bị khóa bở i 
+transaction khác. Điều này cho phép ứng dụng phản hồi người dùng nhanh hơn với thông báo "ghế đang được người khác xử lý, vui lòng thử lại" thay vì để request treo trong nhiều giây.  
+5.1.4 Nh ững Đi ều Cần Lưu Ý  
+Luôn khóa các hàng theo đúng một thứ tự nhất định trong mọi transaction để tránh 
+deadlock vòng tròn - ví dụ nếu transaction A khóa ghế 1 rồi ghế 2, thì transaction B 
+cũng phải làm theo thứ tự đó, không được khóa ghế 2 trước. Ngoài ra, cần cân nhắc 
+giữa hai  chiến lược: Pessimistic Locking với FOR UPDATE phù hợp khi tần suất 
+xung đột cao như bán vé; còn Optimistic Locking dùng cột version phù hợp hơn khi 
+xung đột hiếm gặp, vì nó cho phép đọc tự do và chỉ kiểm tra khi ghi, giúp tăng throughput đáng kể.  
+ 
+
+86 
+ 5.2. C onnection pool Postgres (t ối ưu k ết nối DB)  
+5.2.1 T ại Sao Không Nên M ở Kết Nối Mới Cho M ỗi Request  
+Mỗi lần ứng dụng Go tạo một kết nối TCP mới đến PostgreSQL, tiến trình đó bao 
+gồm bắt tay TCP, xác thực tài khoản, và khởi tạo phiên làm việc -  tổng cộng có thể 
+mất từ 10 đến 50ms. Với một API cần phản hồi trong vòng 100ms, chi phí đó chiếm tỉ lệ rất lớn v à hoàn toàn không cần thiết. 
+Connection Pool giải quyết bài toán này theo nguyên tắc tái sử dụng tài nguyên: thay 
+vì tạo và đóng kết nối theo từng request, pool duy trì sẵn một nhóm kết nối đã được 
+thiết lập. Khi có request đến, ứng dụng mượn một kết nối t ừ pool, dùng xong thì trả lại 
+- không tạo mới, không đóng thật sự. 
+Một điểm quan trọng mà nhiều lập trình viên mới hay nhầm: trong Go, *sql.DB không 
+phải là một kết nối đơn lẻ mà chính là connection pool. Một instance *sql.DB duy 
+nhất nên được dùng cho toà n bộ vòng đời ứng dụng và chia sẻ giữa tất cả các 
+goroutine, vì nó đã thread -safe. 
+5.2.2 Cách C ấu Hình Pool Đúng Cách  
+Nếu không cấu hình gì, MaxOpenConns mặc định là 0, nghĩa là không giới hạn. Khi 
+traffic tăng đột biến, ứng dụng có thể mở hàng trăm kết nố i, vượt quá giới hạn mặc 
+định 100 của PostgreSQL và gây sập toàn bộ hệ thống.  
+87 
+  
+SetMaxOpenConns(25) giới hạn số kết nối đồng thời tối đa đến PostgreSQL -  con số 
+25 chỉ mang tính minh hoạ, trong thực tế nên đặt bằng khoảng 70 –80% giá trị 
+max_connections đượ c cấu hình trong Postgres. SetMaxIdleConns(10) là số kết nối 
+được giữ sẵn trong pool khi không có request, giúp tái sử dụng ngay mà không cần 
+thiết lập lại. SetConnMaxLifetime(30 * time.Minute) buộc mỗi kết nối phải được tái tạo sau 30 phút -  điều này quan trọng để tránh dùng kết nối đã bị server đóng ngầm 
+sau một khoảng thời gian nhàn rỗi dài. SetConnMaxIdleTime(5 * time.Minute) đóng các kết nối nhàn rỗi sau 5 phút để tiết kiệm tài nguyên khi traffic thấp.  
+Trong môi trường production, nên theo dõi tình trạ ng pool theo định kỳ để phát hiện 
+sớm vấn đề nghẽn cổ chai:  
+ 
+
+88 
+ Chỉ số WaitCount là quan trọng nhất cần theo dõi -  nó đếm số lần một goroutine phải 
+chờ vì pool đã hết kết nối khả dụng. Nếu con số này tăng liên tục, đó là dấu hiệu rõ 
+ràng rằng MaxOpenConns đa ng quá thấp so với nhu cầu thực tế, hoặc có những query 
+đang chạy quá lâu và chiếm giữ kết nối.  
+5.2.3 Nhữ ng Đi ều Cần Lưu Ý  
+MaxIdleConns không được lớn hơn MaxOpenConns - nếu đặt ngược lại, Go sẽ tự điều 
+chỉnh xuống nhưng cấu hình sẽ gây nhầm lẫn. Luôn truyền context vào các câu query 
+(QueryContext, ExecContext) thay vì dùng phiên bản không có context, để kết nối được trả về pool ngay khi request bị hủy. Với hệ thống lớn c hạy nhiều pods, nên cân 
+nhắc đặt thêm PgBouncer  ở tầng infrastructure để gom kết nối từ nhiều instance, 
+giảm áp lực trực tiếp lên PostgreSQL.  
+5.3 T ối Ưu API Response -  Phân Trang Danh Sách Phim  
+5.3.1 V ấn Đề Khi Tr ả Về Toàn B ộ Dữ Liệu 
+Hãy thử hình dung API GET /movies trả về tất cả 50.000 bộ phim trong database cùng 
+lúc. Server phải tải toàn bộ dữ liệu vào bộ nhớ, tuần tự hóa thành JSON, rồi truyền hàng chục megabyte qua mạng -  trong khi người dùng chỉ muốn xem 20 phim đầu 
+tiên. Đây là sự lãng phí tài nguyên  ở mọi tầng: CPU, RAM, băng thông mạng, và thời 
+gian render ở phía client. 
+Phân trang giải quyết bằng cách chỉ trả về một lát cắt nhỏ của dữ liệu theo từng yêu 
+cầu. Có hai kỹ thuật phổ biến với đặc điểm khác nhau rõ rệt.  
+ 
+ 
+ 
+ 
+ 
+89 
+ 5.3.2 Offset Pagination -  Đơn Gi ản, Phù H ợp Với Giao Di ện Số Trang 
+ 
+PagedResult được khai báo dưới dạng generic [T any] để có thể tái sử dụng cho bất kỳ 
+kiểu dữ liệu nào -  danh sách phim, danh sách suất chiếu, hay danh sách booking đều 
+dùng chung một struct này. Việc ràng buộc Limit trong khoảng 1 –100 là bắt buộc vì 
+không thể tin tưởng giá trị do client gửi lên -  một request với limit=100000 có thể làm 
+sập server. Hai câu query được thực thi riêng biệt: một để đếm tổng số bản ghi phục vụ tính TotalPages, một để lấy dữ liệu trang hiện tại. Đây là cách tiếp cận chuẩn, dù 
+tốn thêm một lần query nhưng đổi lại client nhận được đầy đủ thông tin để render giao 
+diện phân trang.  
+Nhược điểm của kỹ thuật này là khi OFFSET lớn, PostgreSQL vẫn phải quét qua toàn bộ hàng trước rồi mới bỏ đi -  ví dụ OFFSET 10000 đồng nghĩa với việc đọc và loại bỏ 
+10.000 hàng mà không dùng đến. Với dataset dưới vài trăm nghìn bản ghi và người dùng hiếm khi đi quá trang 10, đây không phải vấn đề đáng lo ngại. 
+
+90 
+ 5.3.3 Cursor Pagination - Hiệu Su ất Ổn Định Cho Dataset L ớn 
+ 
+Thay vì nói "bỏ qua 10.000 hàng đầu tiê n", cursor pagination nói "cho tôi các hàng có 
+id nhỏ hơn giá trị này", PostgreSQL dùng index trên cột id để nhảy thẳng đến vị trí 
+cần thiết mà không cần quét gì thêm. Hiệu suất nhờ đó ổn định dù đang ở trang 1 hay 
+trang 1.000. Đổi lại, kỹ thuật này không cho biết tổng số trang và không thể nhảy thẳng đến trang bất kỳ,  phù hợp với infinite scroll hoặc feed dữ liệu thay đổi liên tục, 
+không phù hợp với giao diện có số trang cụ thể. 
+5.3.4 Nhữ ng Đi ều Cần Lưu Ý  
+Thiếu ORDER BY khi dùng LIMIT/OFFSET là lỗi phổ bi ến nhất -  không có sắp xếp 
+thì thứ tự kết quả không xác định và có thể trả về các phần tử trùng lặp hoặc bỏ sót 
+giữa các trang. Cần đánh index trên cột dùng để sắp xếp như release_date hay id để 
+tránh full table scan. Ngoài ra, với những endpoint trả về da nh sách ít thay đổi như 
+danh sách thể loại phim, nên kết hợp thêm HTTP caching (Cache -Control, ETag) để 
+giảm số lượng query xuống database.
+ 
+5.4 B ảo Mật Với JWT  
+5.4.1 JWT Ho ạt Động Như Th ế Nào 
+JWT (JSON Web Token) là một chuẩn mở để truyền thông tin xác thực dưới dạng 
+token tự chứa -  server không cần lưu trạng thái phiên làm việc, bất kỳ instance nào 
+trong cluster đều có thể xác thực token mà không cần truy vấn một nơi lưu trữ tập 
+trung.  
+
+91 
+ Token c ó dạng Header.Payload.Signature. Phần Header khai báo thuật toán ký. Phần 
+Payload chứa các thông tin về người dùng như userID, role, thời gian hết hạn. Phần 
+Signature là chữ ký số tạo từ secret key, đây là thứ đảm bảo token không bị giả mạo 
+hay sửa đổi. Một điểm quan trọng cần nắm rõ: JWT không mã hóa dữ liệu, mà chỉ ký số để xác minh tính toàn vẹn. Payload chỉ là Base64URL encode, ai cũng có thể giải mã và đọc được,  vì vậy tuyệt đối không đặt thông tin nhạy cảm như mật khẩu hay số 
+thẻ ngân hàng trong đó.  
+Luồng xác thực thực tế diễn ra như sau: người dùng đăng nhập → server tạo và ký 
+JWT → client lưu token → mỗi request sau client gửi token trong header 
+Authorization: Bearer <token> → server xác minh chữ ký và đọc thông tin người 
+dùng từ payload, không cần truy vấn database lần nào.  
+5.4.2 Tri ển Khai Access Token và Refresh Token  
+Thực hành t ốt là dùng hai lo ại token v ới vòng đời khác nhau. Access Token t ồn tại ngắn (15 phút) 
+dùng để  gọi API - nếu bị lộ thì tác h ại giới hạn trong th ời gian ng ắn. Refresh Token tồn tại lâu hơn (7 
+ngày) chỉ dùng đ ể xin c ấp lại access token m ới khi token cũ h ết hạn.
+ 
+
+92 
+ jwt.RegisteredClaims được nhúng vào struct Claims để kế thừa sẵn các trường chuẩn 
+như ExpiresAt, IssuedAt, Issuer -  tránh phải tự khai báo lại. jwtSecret được đọc từ 
+biến môi trường thay vì hardcode trong source code; đây là nguyên tắc bắt buộc vì nếu secret bị lộ qua repository, kẻ tấn công có thể tự ký bất kỳ token nào với quyền hạn tùy ý. Refresh Token chủ ý không chứa Role hay thông tin nhạy cảm -  nó chỉ cần đủ 
+để server biết cấp token mới cho ai. 
+Middleware xác thực cho Gin:  
+ 
+Hàm callback bên trong jw t.ParseWithClaims có vai trò kép: vừa trả về secret key để 
+thư viện xác minh chữ ký, vừa kiểm tra rằng token đang dùng đúng thuật toán ký mà 
+ta kỳ vọng. Bước kiểm tra t.Method.(*jwt.SigningMethodHMAC) tuy nhỏ nhưng 
+quan trọng , nó ngăn chặn tấn công alg:no ne, trong đó kẻ tấn công tự tạo token với 
+trường alg là "none" để bỏ qua toàn bộ bước xác minh chữ ký. Sau khi xác thực thành 
+công, userID và role được gắn vào context để các handler phía sau có thể đọc mà 
+không cần parse token lại lần nữa. 
+
+93 
+ 5.4.3 Nhữ ng Đi ều Cần Lưu Ý  
+JWT về bản chất không thể thu hồi trước khi hết hạn, đây là nhược điểm cố hữu của 
+kiến trúc stateless. Để xử lý trường hợp người dùng đổi mật khẩu hoặc đăng xuất khẩn cấp, cần duy trì một danh sách token bị vô hiệu hóa trong Redis với TTL bằng thời gian còn lại của token. Luôn lưu Refresh Token trong httpOnly cookie thay vì 
+localStorage để JavaScript không thể đọc được, qua đó ngăn chặn tấn công XSS đánh 
+cắp token.  
+5.5 Idempotency Cho Booking & Payment 
+5.5.1 T ại Sao Retry Là V ấn Đề Nghiêm Tr ọng 
+Trong h ệ thống phân tán, m ạng không bao gi ờ hoàn toàn đáng tin c ậy - khoảng 2– 5% 
+request có th ể bị timeout ho ặc mất gói. Khi đó client ho ặc API gateway s ẽ tự động gửi 
+lại request. N ếu API không đư ợc thiết kế để xử lý điều này, ngườ i dùng có th ể bị trừ 
+tiền hai l ần hoặ c đặt hai vé cho cùng m ột giao d ịch. 
+Tình huố ng kinh điể n: client g ửi request thanh toán → server x ử lý thành công và trừ  
+tiền → m ất kết nối trước khi response đ ến được client → client không nh ận được phản 
+hồi → client g ửi lại request → server x ử lý lại lần nữa → ti ền bị trừ hai lần. Lỗi này 
+không xu ất phát t ừ code sai mà t ừ bản chất không đáng tin c ậy của mạng. 
+Idempotency là tính ch ất của một thao tác mà dù th ực hiện bao nhiêu l ần với cùng đ ầu 
+vào, k ết quả vẫn y như th ực hiện đúng m ột lần. Để đạt được điều này, client t ạo một 
+Idempotency Key là m ột UUID duy nh ất và g ửi kèm trong header c ủa mỗi request. 
+Server lư u kết quả theo key đó - nếu cùng key đư ợc gửi lại, server trả  về kết quả đã 
+lưu thay vì x ử lý lại. 
+ 
+ 
+94 
+ 5.5.2 Thi ết Kế Và Tri ển Khai  
+Trước tiên c ần một bảng để  lưu trữ  trạng thái các request:  
+ 
+Cột status có hai giá trị chính: processing khi request đang được  xử lý, và done khi đã 
+hoàn tất và kết quả đã được lưu vào cột response. Cột expires_at cùng với index đi 
+kèm phục vụ cho việc dọn dẹp định kỳ các key cũ, tránh bảng phình to theo thời gian.  
+ 
+
+95 
+ Middleware này hoạt động như một lớp kiểm tra trước handler thậ t sự. Khi nhận được 
+request, nó tra cứu key trong database theo cặp (key, user_id) -  sở dĩ phải kết hợp cả 
+user_id là để đảm bảo cùng một key từ hai người dùng khác nhau không bị nhầm 
+thành cùng một giao dịch. Nếu key đã tồn tại với trạng thái done, middleware lập tức trả về kết quả đã lưu kèm header X -Idempotent -Replayed: true để client biết đây là 
+response được phục vụ từ cache, không phải kết quả của một lần xử lý mới. Nếu trạng 
+thái là processing, tức là có luồng khác đang xử lý cùng request, trả về 409 để client 
+biết cần đợi thay vì tiếp tục retry.  
+ 
+Bước lưu kết quả này phải được thự c hiện ngay trước khi trả response , sau khi toàn 
+bộ logic nghiệp vụ đã hoàn tất thành công. Thứ tự này quan trọng: nếu lưu trước khi 
+xử lý xong và có lỗi xảy ra giữa chừng, các lần retry sau sẽ nhận được response done  
+dù giao dịch thực ra chưa hoàn thành.  
+ 
+Goroutine này chạy ngầm định kỳ mỗi giờ để xóa các key đã hết hạn 24 giờ. Đây là bước vệ sinh cần thiết -  nếu bỏ qua, bảng idempotency_keys sẽ tích lũy hàng triệu bản 
+ghi theo thời gian và làm chậm các câu query tra cứu.  
+ 
+ 
+
+96 
+ 5.5.3 Nhữ ng Đi ều Cần Lưu Ý  
+Client phải tạo UUID mới cho mỗi giao dịch mới -  khi retry cùng một giao dịch bị 
+timeout thì dùng lại đúng key cũ. Đây là trách nhiệm của phía client và cần được ghi 
+rõ trong tài liệu API. Với hệ thống có lưu lượng cao, có thể dùng Redis thay vì PostgreSQL để lưu idempotency key nhờ tốc độ đọc ghi nhanh hơn và tính năng tự 
+động xóa theo TTL , tuy nhiên cần bật persistence để tránh mất dữ liệu khi Redis khởi 
+động lại. 
+ 
+ 
+ 
+ 
+ 
+ 
+   
+  
+97 
+ CHƯƠNG 6. PHÂN TÍCH VÀ THI ẾT K Ế HỆ TH ỐNG 
+6.1. Thu th ập và đặ c tả yêu cầ u 
+6.1.1. Mô tả  tổng quan hệ  thống  
+Đề tài tập trung xây dựng một hệ thống đặt vé xem phim trực tuyến toàn diện. Hệ 
+thống cho phép người dùng cuối thực hiện các thao tác từ đăng ký, đăng nhập, tra cứu 
+lịch chiếu, lựa chọn ghế ngồi, đến thanh toán và quản lý v é đã đặt. Song song đó, hệ 
+thống cung cấp một phân hệ quản trị (Admin Dashboard) hỗ trợ ban quản lý vận hành dữ liệu phim, rạp chiếu, lịch chiếu và đối soát doanh thu.  
+Hệ thống được thiết kế để phục vụ hai nhóm tác nhân (actors) chính:  
+● Người dùng cuối (Cus tomer/User): Khách hàng có nhu cầu tra cứu thông tin 
+điện ảnh và thực hiện giao dịch mua vé.  
+● Quản trị viên (Admin): Nhân sự vận hành hệ thống, chịu trách nhiệm quản lý nội dung và giám sát hoạt động kinh doanh.  
+6.1.2. Đ ặc tả chức năng ngư ời dùng (Customer) 
+a) Đăng ký tài khoản  
+● Mục tiêu: Cho phép người dùng tạo lập định danh cá nhân trên hệ thống.  
+● Dữ liệu đầu vào: Tên đăng nhập (duy nhất), Email (duy nhất), Mật khẩu, Họ và 
+tên, Số điện thoại. 
+● Quy trình nghiệp vụ:  
+1. Người dùng cung cấp thông tin qua biểu mẫu (form) đăng ký. 
+2. Hệ thống thực hiện xác thực tính hợp lệ của dữ liệu: kiểm tra trùng lặp 
+(username, email), kiểm tra định dạng email và các tiêu chuẩn bảo mật của mật khẩu. 
+3. Nếu dữ liệu hợp lệ, hệ thống khởi tạo tài khoản ở trạng thái chưa xác thực (unverifi ed). 
+98 
+ 4. Hệ thống tự động khởi tạo và gửi mã OTP hoặc liên kết kích hoạt đến 
+email đã đăng ký. 
+● Kết quả đầu ra: Thông báo thành công và yêu cầu xác thực email, hoặc trả về mã lỗi chi tiết nếu dữ liệu không thỏa mãn điều kiện.  
+b) Xác th ực Email qua OTP  
+● Mục tiêu: Định danh chủ sở hữu email, ngăn chặn việc tạo tài khoản ảo và thư rác (spam). 
+● Dữ liệu đầu vào: Email, Mã OTP (6 ký tự).  
+● Quy trình nghiệp vụ:  
+1. Người dùng nhập mã OTP nhận được vào màn hình xác thực. 
+2. Hệ thống đối chiếu mã OTP dựa trên tính chính xác và  hiệu lực thời 
+gian (Time -to-live). 
+3. Nếu hợp lệ, trạng thái tài khoản được cập nhật thành đã xác thực 
+(verified).  
+● Kết quả đầu ra: Thông báo kích hoạt thành công, cho phép người dùng đăng 
+nhập hệ thống.  
+c) Đăng nhập và Đăng xuất  
+● Đăng nhập:  
+○ Đầu vào:  Username/Email và Mật khẩu.  
+○ Quy trình: Hệ thống kiểm tra sự tồn tại của tài khoản, đối chiếu mật 
+khẩu (đã được băm bảo mật) và kiểm tra trạng thái xác thực. Nếu hợp lệ, 
+hệ thống cấp phát một phiên làm việc (Session/JWT Token) trả về cho phía client. 
+● Đăng xuất:  
+○ Đầu vào:  Token hiện tại.  
+○ Quy trình: Hệ thống đưa Token hiện tại vào danh sách đen (Blacklist) 
+hoặc vô hiệu hóa phiên làm việc trên server, đảm bảo Token cũ không thể tiếp tục truy xuất các tài nguyên bảo mật. 
+ 
+99 
+ d) Tra cứu lịch chiếu phim  
+● Mục tiêu: Cung cấp thông tin chi tiết về các suất chiế u theo thời gian thực.  
+● Quy trình nghiệp vụ: Người dùng áp dụng các bộ lọc (theo cụm rạp, khu vực 
+địa lý, ngày chiếu). Hệ thống truy xuất và trả về danh sách các suất chiếu thỏa mãn điều kiện, bao gồm: tên phim, rạp chiếu, khung giờ và giá vé tiêu chuẩn. Chỉ những suất chiếu trong tương lai và còn hiệu lực mới được hiển thị. 
+e) Truy xuất sơ đồ rạp và Lựa chọn ghế ngồi  
+● Mục tiêu: Trực quan hóa không gian phòng chiếu để người dùng lựa chọn vị trí phù hợp.  
+● Đầu vào: Mã rạp chiếu, Mã suất chiếu. 
+● Quy trình nghiệp v ụ:  
+1. Hệ thống tải lên sơ đồ ma trận ghế của phòng chiếu tương ứng.  
+2. Trạng thái của từng ghế được biểu diễn rõ ràng: Trống (Available) , Đang giữ 
+chỗ (Pending) , Đã bán (Confirmed/Sold) , kèm theo phân loại ghế (Thường, 
+VIP, Ghế đôi).  3. Người dùng thao tác chọn ghế. Hệ thống áp dụng cơ chế khóa tạm thời 
+(Locking mechanism -  ví dụ: 10 phút) đối với các ghế được chọn để tránh tình 
+trạng tranh chấp dữ liệu (Race condition) giữa nhiều người  dùng cùng lúc.  
+f) Khởi tạo Đơn đặt vé (Booking) 
+● Mục tiêu: Ghi nhận và lưu trữ yêu cầu giao dịch của người dùng.  
+● Đầu vào: Mã tài khoản, Mã suất chiếu, Danh sách mã ghế đã chọn.  
+● Quy trình nghiệp vụ:  
+1. Hệ thống tái kiểm tra tính khả dụng của danh sách ghế tại thời điểm chốt yêu 
+cầu.  
+2. Nếu hợp lệ, khởi tạo một bản ghi Booking với trạng thái Pending.  
+100 
+ 3. Tính toán tổng giá trị đơn hàng dựa trên đơn giá ghế và các chương trình 
+khuyến mãi (nếu có)  
+ 4. Ch uyển hướng người dùng sang cổng thanh toán với một Mã đơn hàng 
+(Booking ID) duy nhất.  
+g) Xử lý Thanh toán  
+● Mục tiêu: Xử lý luồng tiền tệ và xác nhận tính hợp lệ của đơn hàng.  
+● Đầu vào: Booking ID, Thông tin phương thức thanh toán.  
+● Quy trình nghiệp vụ:  
+○ Kiểm tra thời gian hiệu lực của Booking (còn trong thời gian giữ ghế). 
+○ Giao tiếp với API của bên thứ ba (Cổng thanh toán điện tử/Ngân hàng).  
+○ Nhận phản hồi (Webhook/Callback):  
+■ Thành công:  Cập nhật trạng thái thanh toán (Success ) và trạng 
+thái vé (Confirmed ). 
+■ Thất bại: Cập nhật trạng thái (Failed ), giải phóng ghế và cho 
+phép thực hiện lại giao dịch nếu chưa hết thời gian chờ.  
+○ Ràng buộc kỹ thuật: Đảm bảo tính toàn vẹn của giao dịch 
+(Idempotency), tuyệt đối không xảy ra tình trạng trừ tiền trùng lặp cho một đơn hàng.  
+h) Quản lý Lịch sử đặt vé  
+● Mục tiêu: Cung cấp chức năng tra cứu thông tin các giao dịch đã thực hiện.  
+● Quy trình nghiệp vụ: Dựa vào Tok en định danh, hệ thống truy xuất toàn bộ lịch 
+sử Bookings của người dùng, hỗ trợ phân trang và hiển thị chi tiết trạng thái 
+của từng mã vé (QR Code nếu có). 
+6.1.3. Đ ặc tả chức năng Qu ản trị (Admin)  
+Phân hệ quản trị cung cấp các tính năng CRUD (Create, Read, Update, Delete) cho 
+các thực thể cốt lõi của hệ thống:  
+101 
+ ● Quản lý Phim (Movies): Thêm mới, cập nhật thông tin (tiêu đề, mô tả, thời 
+lượng, phân loại độ tuổi, poster, lịch chiếu dự kiến), và thay đổi trạng thái hiển 
+thị của phim. 
+● Quản lý Cụm rạp  (Theaters): Khởi tạo rạp chiếu mới, quản lý vị trí địa lý, cấu 
+hình số lượng phòng chiếu và thiết lập cấu trúc ma trận sơ đồ ghế cho từng 
+phòng.  
+● Quản lý Suất chiếu (Shows): Thiết lập lịch chiếu cụ thể cho từng bộ phim tại các phòng chiếu tương ứng. Quản l ý linh hoạt khung giờ và chính sách giá vé 
+theo thời điểm. 
+● Quản lý Danh mục Ghế (Seats): Tùy chỉnh trạng thái hoạt động của ghế (ví dụ: 
+đánh dấu bảo trì) và phân loại định dạng ghế. 
+● Quản lý Thanh toán: Tích hợp và cấu hình trạng thái hoạt động của các đối tác 
+thanh toán (VNPay, Momo,...). 
+● Giám sát & Báo cáo: Cung cấp bảng điều khiển (Dashboard) thống kê lưu lượng giao dịch, số lượng vé bán ra và biểu đồ doanh thu theo các mốc thời gian.  
+6.4. Thi ết kế RESTful API (API Contract)  
+Hệ thống cung cấp hệ sinh thái  API giao tiếp giữa Client và Server thông qua chuẩn 
+RESTful, sử dụng định dạng JSON.  
+6.4.1. Phân h ệ Định danh & Ngư ời dùng (Authentication & User) 
+● Đăng ký tài khoản: POST /api/auth/register 
+○ Body:  username, email, password, full_name, phone  
+○ Response:  201 Created (Thành công) | 400 Bad Request (Dữ liệu không 
+hợp lệ / Trùng lặp).  
+● Xác thực Email: POST /api/auth/verify -email  
+○ Body:  email, otp_code  
+○ Response:  200 OK | 400 Bad Request (OTP sai/hết hạn). 
+● Đăng nhập: POST /api/auth/login  
+102 
+ ○ Body:  email, password  
+○ Response:  200 OK (Kèm Access Token) | 401 Unauthorized. 
+● Đăng xuất: POST /api/auth/logout  
+○ Header:  Authorization: Bearer <token>  
+○ Response:  200 OK.  
+6.4.2. Phân h ệ Phim & Su ất chiếu (Client- side) 
+● Lấy danh sác h phim: GET /api/movies (Hỗ trợ query: page, limit, city, date) -> 
+200 OK.  
+● Lấy chi tiết phim: GET /api/movies/{movieId} - > 200 OK | 404 Not Found.  
+● Tra cứu suất chiếu: GET /api/shows (Query: movie_id, theater_id, date) - > 200 
+OK. 
+6.4.3. Phân h ệ Rạp chi ếu & Sơ đ ồ ghế 
+● Lấy danh sách rạp: GET /api/theaters - > 200 OK. 
+● Truy xuất sơ đồ ghế theo suất chiếu: GET 
+/api/theaters/{theaterId}/seats?show_id={id} -> 200 OK (Trả về ma trận ghế và 
+trạng thái). 
+6.4.4. Phân h ệ Đặt vé (Bookings)  
+● Tạo mới đơn đặt vé: POST /api/bookings  
+○ Header:  Authorization: Bearer <token>  
+○ Body:  show_id, seat_ids (array), payment_method  
+○ Response:  201 Created (Trả về Booking ID) | 409 Conflict (Ghế đã bị 
+đặt). 
+● Truy xuất lịch sử đặt vé: GET /api/bookings/me - > 200 OK.  
+● Xem chi tiết đơn vé: GET  /api/bookings/{bookingId} -> 200 OK.  
+ 
+103 
+ 6.4.5. Phân h ệ Thanh toán (Payments)  
+● Lấy danh sách cổng thanh toán: GET /api/payments/methods - > 200 OK.  
+● Tạo yêu cầu thanh toán: POST /api/payments  
+○ Body:  booking_id, payment_method, payment_details  
+○ Response:  201 Created (Trả về Payment URL hoặc trạng thái xử lý). 
+● Nhận Callback từ Cổng thanh toán (Webhook): POST 
+/api/payments/webhook/{provider} - > 200 OK (Hệ thống nội bộ xử lý logic 
+cập nhật dữ liệu). 
+6.4.6. Phân h ệ Quản trị (Admin APIs) (Toàn bộ  các endpoint nhóm này đ ều yêu c ầu 
+Header ch ứa Token có phân quy ền Admin).  
+● Quản lý Phim:  
+○ Thêm: POST /api/admin/movies  
+○ Sửa: PUT /api/admin/movies/{movieId}  
+○ Xóa: DELETE /api/admin/movies/{movieId}  
+● Quản lý Rạp chiế u: 
+○ Thêm/Sửa/Xóa qua: /api/admin/theaters/{id} 
+● Quản lý Suất chiếu:  
+○ Thêm/Sửa/Xóa qua: /api/admin/shows/{id}  
+ 
+  
+ 
+   
+104 
+ 6.5. Sơ đ ồ ERD  
+ 
+ 
+ 
+ 
+
+105 
+ CHƯƠNG 7: TRI ỂN KHAI VÀ KI ỂM TH Ử API 
+7.1. Công Cụ Kiểm Th ử - Postman  
+7.1.1. Postman Là Gì  ? 
+Postman là một ứng dụng desktop/web miễn phí được lập trình viên toàn thế giới sử 
+dụng để kiểm thử API mà không cần viết code frontend. Thay vì phải mở trình duyệt 
+hay xây dựng giao diện người dùng, Postman cho phép bạn gửi các HTTP request (GET, POST, PUT, DELETE...) trực tiếp đến server, xem kết quả trả về theo thời gian thực và kiểm tra API có hoạt động đúng như kỳ vọng hay không.  
+Dành cho người mới học:  Hãy tưởng tượng bạn đang xây một nhà hàng (backend 
+server). Postman chính là người khách hàng giả lập - họ vào quán, gọi món (gửi 
+request), và bạn kiểm tra xem bếp có nấu đúng món không (kiểm tra response). Bạn không cần xây cả mặt tiền nhà hàng (frontend) chỉ để test xem bếp có nấu được không.  
+7.1.2. Cài Đ ặt Và C ấu Hình Môi Trườ ng (Environment) 
+Bước 1 - Cài đặt Postman:  Truy cập https://www.postman.com/downloads/ , tải và cài đặt 
+phiên bản phù hợp với hệ điều hành (Windows/macOS/Linux). Phần mềm hoàn toàn miễn 
+phí cho cá nhân. 
+Bước 2 - Tạo Workspa ce: Tạo một Workspace mới đặt tên là Cinema Booking API  để tập 
+trung toàn bộ request liên quan đến dự án, tránh lẫn lộn với các project khác. 
+Bước 3 - Tạo Environment (Môi trường biến):  Environment là nơi lưu các biến dùng chung 
+để tránh nhập đi nhập lại. Nhóm tạo hai environment: Local  (chạy máy tính cá nhân) và 
+Production (server thật).  
+   
+106 
+ Tên Bi ến Giá Tr ị (Local)  Mô T ả 
+base_url  http://localhost:8080/api/v1  Địa chỉ gốc API khi ch ạy local  
+auth_token  (để trống, tự điền sau login)  JWT Token sau khi đăng nh ập 
+user_id  1 ID ngư ời dùng dùng đ ể test 
+movie_id  3 ID bộ phim dùng đ ể test 
+showtime_id  5 ID su ất chiếu dùng đ ể test 
+booking_id  (để trống, tự điền sau đ ặt vé) ID đơn đ ặt vé v ừa tạo 
+Cách dùng biến:  Trong Postman, viết {{ten_bien}} ở bất kỳ đâu (URL, Header, Body). Ví dụ: 
+{{base_url}}/movies  sẽ tự động thay thành http://localhost:8080/api/v1/movies . Khi 
+chuyển sang môi trường Production, chỉ cần đổi giá trị base_url là tất cả request cập 
+nhật theo.  
+7.1.3. C ấu Trúc Collection Đã T ạo 
+Collection trong Postman là một "thư mục dự án"  chứa tất cả các request được tổ chức theo 
+nhóm chức năng. Nhóm đã xây dựng Collection Cinema Booking API  với cấu trúc như sau:  
+Folder (Nhóm 
+chức năng)  Số 
+Request  Các Endpoint Chính  
+Auth - Xác th ực 3 POST /register , POST /login , POST /logout  
+Movies - Phim  5 GET /movies , GET /movies/:id , POST /movies , PUT 
+/movies/:id , DELETE /movies/:id  
+Cinemas & Rooms 
+- Rạp & Phòng  6 GET /cinemas , POST /cinemas , GET 
+/rooms/:cinema_id , POST /rooms , GET /seats/:room_id  
+Showtimes - Suất 
+chiếu 4 GET /showtimes , POST /showtimes , GET 
+/showtimes/:id , DELETE /showtimes/:id  
+Booking - Đặt vé 5 POST /bookings , GET /bookings/:id , GET 
+/bookings/user/:uid , POST /payment , DELETE 
+/bookings/:id  
+Users - Người 
+dùng (Admin)  3 GET /users , GET /users/:id , PUT /users/:id/role  
+107 
+ 7.1.4. Hướ ng Dẫ n Chi Ti ết Thi ết Lập Một Request  
+Để minh họa cách nhóm sử dụng Postman, dưới đây là hướng dẫn từng bước thiết lập request 
+POST /bookings  (tạo đơn đặt vé):  
+Bước 1 -  Method và URL:  
+Method:  POST  
+URL:     {{base_url}}/bookings  
+Bước 2 -  Headers (tiêu đề request):  
+Key Value  Giải thích  
+Content -Type  application/json  Báo server bi ết body g ửi lên là JSON  
+Authorization  Bearer {{auth_token}}  Gửi kèm token xác th ực danh tính  
+Bước 3 -  Body (dữ liệu gửi lên, chọn raw → JSON):  
+ 
+{ 
+{ 
+ "showtime_id":  5, 
+   "seat_ids":  [12, 13], 
+   "payment_method":  "cash"  
+} 
+Bước 4 -  Pre-request Script (tự động lấy token trước khi chạy): 
+Script này chạy tự động trước mỗi request, đăng nhập và lưu token mới vào biến môi 
+trường, đảm bảo token không bao giờ hết hạn khi test:  
+pm.sendRequest({  
+    url: pm.environment.get("base_url") + "/auth/login",  
+108 
+     method:  "POST",  
+    header:  { "Content -Type":  "application/json"  }, 
+    body:  { 
+        mode:  "raw",  
+        raw:  JSON.stringify({ email:  "test@gmail.com", password:  "123456"  }) 
+    } 
+}, function(err, res) { 
+    pm .environment.set("auth_token", res.json().data.token);  
+}); 
+Bước 5 -  Tests (kiểm tra kết quả tự động):  
+Postman cho phép viết JavaScript trong tab Tests  để tự động kiểm tra response sau 
+khi nhận được - không cần nhìn bằng mắt từng lần:  
+javascript 
+// Kiểm tra HTTP status code ph ải là 201 Created  
+pm.test("Status 201 Created", () => { 
+    pm .response.to.have.status(201);  
+}); 
+ 
+// Kiểm tra response có ch ứa booking_id  
+pm.test("Response trả  về booking_id hợ p lệ", () => { 
+    const  json = pm.response.json();  
+    pm .expect(json .data).to.have.property("booking_id");  
+    pm .expect(json .data.status).to.equal("confirmed");  
+}); 
+ 
+// Lưu booking_id vào bi ến để dùng cho request ti ếp theo  
+pm.environment.set("booking_id",  pm.response.json().data.booking_id);  
+109 
+ Tính năng Collection Runner:  Postman có công cụ "Run Collection"  cho phép 
+chạy toàn bộ tất cả request trong Collection theo thứ tự tự động, với báo cáo kết quả 
+pass/fail rõ ràng. Nhóm dùng tính năng này để chạy luồng test end -to-end hoàn chỉnh: 
+Login → Xem phim → Chọn suất chiếu → Đặt vé → Thanh toán → Kiểm tra 
+trạng thái  chỉ bằng một lần nhấn nút.  
+7.2. Tích Hợp Swagger - Tài Li ệu API T ự Động 
+7.2.1. Swagger Là Gì  ? 
+Swagger  (còn gọi là OpenAPI Specification) là một tiêu chuẩn quốc tế để mô tả và tài 
+liệu hóa API.  Khi tích hợp vào dự án Go, nó tự động sinh ra một trang we b tương tác 
+đẹp mắt -  gọi là Swagger UI - cho phép bất kỳ ai cũng có thể xem toàn bộ tài liệu API 
+và thử gọi thẳng từ trình duyệt mà không cần cài đặt thêm bất kỳ công cụ nào.  
+Lợi ích cụ thể với dự án:  
+• Frontend developer biết chính xác c ần gửi gì, nh ận lại gì từ mỗi endpoint. 
+• Thầy cô khi ch ấm điểm có th ể test API trự c tiếp trên trình duy ệt, không c ần cài 
+Postman hay dùng terminal. 
+• Toàn nhóm  có tài li ệu thống nh ất, tránh hi ểu nhầ m về cấu trúc d ữ liệu. 
+7.2.2. Các Bướ c Tích H ợp Swagger Vào D ự Án Go (Gin Framework)  
+Bước 1 -  Cài đặt thư viện:  
+bash 
+go get -u github.com/swaggo/swag/cmd/swag 
+go get -u github.com/swaggo/gin- swagger  
+go get -u github.com/swaggo/files  
+Bước 2 -  Viết annotation (chú thích đặc biệt) cho handler: 
+Swagger đọc các comment viết ngay trên hàm handler để biết cách mô tả endpoint đó. 
+Ví dụ cho handler tạo booking:  
+110 
+ go 
+// CreateBooking godoc  
+// @Summary      T ạo đơn đặ t vé m ới 
+// @Description  Ngư ời dùng đã đăng nh ập chọn ghế và tạo đơn đ ặt vé cho su ất chiếu 
+cụ thể 
+// @Tags         booking  
+// @Accept       json  
+// @Produce      json  
+// @Param        Authorization  header    string         true  "Bearer {token}"  
+// @Param        payload        body      BookingRequest true  "Thông tin đ ặt vé"  
+// @Success      201            {object}  BookingResponse      "Đ ặt vé thàn h công" 
+// @Failure      400            {object}  ErrorResponse        "Gh ế đã đư ợc đặt hoặc dữ liệu 
+sai" 
+// @Failure      401            {object}  ErrorResponse        "Chưa đăng nh ập hoặc token 
+hết hạn" 
+// @Failure      500            {object}  ErrorResp onse        "L ỗi server"  
+// @Router       /bookings [post]  
+func (h *BookingHandler ) CreateBooking(c *gin.Context ) { 
+    // ... code x ử lý 
+} 
+Bước 3 -  Đăng ký route cho Swagger UI trong router: 
+go 
+import  ( 
+    swaggerFiles "github.com/swaggo/files"  
+    ginSw agger   "github.com/swaggo/gin -swagger"  
+    _ "your -project/docs"  // import docs đư ợc sinh t ự động 
+) 
+ 
+// Thêm vào hàm kh ởi tạo router  
+r.GET("/swagger/*any",  ginSwagger.WrapHandler(swaggerFiles .Handler)) 
+111 
+ Bước 4 -  Sinh file tài liệu tự động:  
+bash 
+# Ch ạy lệnh này t ừ thư m ục gốc dự án m ỗi khi c ập nhật annotation  
+swag init - g cmd/main.go -o docs/ 
+``` 
+ 
+Lệnh này s ẽ tự động tạ o thư m ục `docs/ ` chứa các file `swagger.json `, `swagger.yaml` 
+và `docs.go` - đây là ngu ồn dữ liệu để Swagger UI hi ển thị. 
+ **Bư ớc 5 - Truy c ập Swagger UI:**  
+``` 
+http://localhost:8080/swagger/index.html  
+``` 
+ 
+--- 
+ 
+7.3. B ảng Ki ểm Th ử Tổng H ợp 
+ 
+ 
+STT  Tên 
+Test 
+Case  Modu
+le Loại Meth
+od Endpoi
+nt Điều Kiện / 
+Dữ Liệu 
+Đầu Vào Kết Qu ả 
+Mong 
+Đợi HTT
+P 
+Code  Kết Qu ả Thực 
+Tế Trạng 
+Thái  
+TC-
+01 Đăng ký 
+tài 
+khoả n 
+thành công Auth  Happ
+y Path POST  /api/v1/
+register  Email chưa 
+tồn tại, đủ 
+các trư ờng: 
+name, email, password hợp lệ Trả về 
+user_id và message "Đăng ký thành công"  201 {"data":{"user_i
+d":7,"name":"Nguyen Van A"},"message":"Đăng ký thành công"}  PASS  
+112 
+ TC-
+02 Đăng ký 
+email đã 
+tồn tại  Auth  Error 
+Path POST  /api/v1/
+register  Email 
+"vana@test.
+com" đã có 
+trong hệ  
+thống Báo l ỗi 
+trùng email, không tạo tài khoản 409 {"error":"Email 
+này đã đượ c 
+đăng ký. Vui lòng dùng email khác hoặc đăng nhập."}  PASS  
+TC-
+03 Đăng ký 
+thiếu trường 
+bắt buộc Auth  Error 
+Path POST  /api/v1/
+register  Body thi ếu 
+trường 
+password: {"name":"A","email":"
+a
+@test.com "
+} Báo l ỗi 
+validation, chỉ  rõ 
+trường 
+còn thiếu  400 {"error":"Trư ờng 
+password là bắ t 
+buộc và không được để  trống"}  PASS  
+TC-
+04 Đăng ký 
+email sai định 
+dạng Auth  Error 
+Path POST  /api/v1/
+register  Email 
+không đúng chuẩn: {"email":"khong- phai-
+email","password":"Pass@123"} Báo l ỗi 
+định dạng email không 
+hợp lệ  400 {"error":"Email 
+không đúng định 
+dạng"}  PASS  
+TC-
+05 Đăng ký 
+password quá ngắn Auth  Error 
+Path POST  /api/v1/
+register  Password ít 
+hơn 6 ký tự : 
+{"email":" b
+@test.com ",
+"password":"123"} Báo l ỗi 
+password không đủ độ dài tố i 
+thiểu  400 {"error":"M ật 
+khẩu phả i có ít 
+nhất 6 ký tự "} PASS  
+TC-
+06 Đăng 
+nhập thành công Auth  Happ
+y Path POST  /api/v1/
+login  Đúng email 
+và password  
+đã đăng ký: {"email":"
+v
+ana@test.co
+m","passwoTrả về 
+JWT token hợp lệ  và 
+expires_in 200 {"data":{"token"
+:"eyJhbGci...","expires_in":86400}} PASS  
+113 
+ rd":"Pass@
+123"} 
+TC-
+07 Đăng 
+nhập sai 
+mật 
+khẩu Auth  Error 
+Path POST  /api/v1/
+login  Email đúng, 
+password sai: {"email":"
+v
+ana@test.co
+m","passwo
+rd":"SaiMatKhau"} Thông 
+báo chung, không 
+tiết lộ 
+trường 
+nào sai  401 {"error":"Email 
+hoặc mật khẩu không đúng"} PASS  
+TC-
+08 Đăng 
+nhập email không tồn tại  Auth  Error 
+Path POST  /api/v1/
+login  Email chưa 
+đăng ký: {"email":"
+k
+hongco@tes
+t.com ","pas
+sword":"Pass@123"} Thông 
+báo chung, không tiết lộ email chưa tồn tại 401 {"error":"Email 
+hoặc mật khẩu không đúng"} PASS  
+TC-
+09 Đăng 
+xuất 
+thành công Auth  Happ
+y Path POST  /api/v1/
+logout  Token h ợp 
+lệ trong 
+header Authorization Token b ị 
+vô hiệu hóa, thêm vào blacklist  200 {"message":"Đă
+ng xuất thành công"}  PASS  
+TC-
+10 Gọi API 
+bảo vệ  
+không có token  Auth  Error 
+Path POST  /api/v1/
+bookings Không g ửi 
+header Authorization Từ chối, 
+yêu cầu đăng nhập 401 {"error":"Vui 
+lòng đăng nhập để thực hiệ n 
+chức năng này"}  PASS  
+TC-
+11 Gọi API 
+với 
+token giả mạo  Auth  Error 
+Path POST  /api/v1/
+bookings Authorizati
+on: Bearer eyJhbGci.INVALID.token Từ chối 
+token không hợp lệ  401 {"error":"Token 
+không hợp lệ  
+hoặc đã hế t hạn. 
+Vui lòng đăng nhập lạ i."} PASS  
+114 
+ TC-
+12 Gọi API 
+với 
+token đã 
+hết hạn Auth  Error 
+Path GET  /api/v1/
+bookings/user/1 Token đã 
+quá thờ i hạn 
+expires_in  Báo 
+token hế t 
+hạn, yêu 
+cầu đăng 
+nhập lại 401 {"error":"Token 
+đã hế t hạn. Vui 
+lòng đăng nhậ p 
+lại."} PASS  
+TC-
+13 Lấy 
+danh sách phim đang chiếu Movie  Happ
+y Path GET  /api/v1/
+movies?status=showing Không c ần 
+đăng nhậ p, 
+public endpoint  Mảng 
+phim đang chiếu với 
+đầy đủ 
+thông tin  200 Array g ồm 5 
+phim, m ỗi phim 
+có movie_id, title, duration, genre, poster_url  PASS  
+TC-
+14 Lấy 
+danh sách phim sắp 
+chiếu Movie  Happ
+y Path GET  /api/v1/
+movies?status=coming_soon Không c ần 
+đăng nhậ p, 
+public endpoint  Mảng 
+phim s ắp 
+ra mắt 200 Array g ồm 3 
+phim vớ i status 
+"coming_soon"  PASS  
+TC-
+15 Lấy chi 
+tiết một 
+bộ phim hợp lệ Movie  Happ
+y Path GET  /api/v1/
+movies/3 movie_id = 
+3 tồn tại 
+trong DB  Thông 
+tin đầ y 
+đủ của 
+phim bao gồm mô tả, trailer 200 {"movie_id":3,"t
+itle":"Avengers","duration":180,"description":"...","trailer_url":"..."} PASS  
+TC-
+16 Lấy chi 
+tiết 
+phim không tồn tại Movie  Error 
+Path GET  /api/v1/
+movies/9999 movie_id = 
+9999 không có trong DB  Báo 
+không tìm th ấy 
+phim  404 {"error":"Không 
+tìm th ấy phim 
+với ID 9999"} PASS  
+TC-
+17 Tìm 
+kiếm 
+phim theo tên  Movie  Happ
+y Path GET  /api/v1/
+movies?search=Avengers Từ khóa 
+hợp lệ có 
+phim khớ p 
+trong DB  Danh 
+sách phim chứa từ 200 Array các phim 
+có title chứ a 
+"Avengers"  PASS  
+115 
+ khóa 
+trong tên  
+TC-
+18 Tìm 
+kiếm 
+phim 
+không 
+có kế t 
+quả Movie  Happ
+y Path GET  /api/v1/
+movies
+?search=xyzab
+ckhong
+co Từ khóa 
+không khớ p 
+bất kỳ phim 
+nào Trả về 
+mảng 
+rỗng, 
+không 
+báo l ỗi 200 {"data":[],"messa
+ge":"Không tìm 
+thấy phim phù 
+hợp"} PASS  
+TC-
+19 Admin 
+thêm 
+phim 
+mới Movie  Happ
+y Path POST  /api/v1/
+movies  Token role 
+admin, body 
+đầy đủ: 
+title, 
+duration, genre, status  Phim 
+được tạo, 
+trả về 
+movie_id mới 201 {"data":{"movie
+_id":8,"title":"Ph
+im 
+Mới"},"message
+":"Tạo phim 
+thành công"} PASS  
+TC-
+20 User 
+thường 
+cố thêm 
+phim  Movie  Error 
+Path POST  /api/v1/
+movies  Token role 
+user (không 
+phải admin)  Từ chối, 
+báo không đủ quyề n 403 {"error":"B ạn 
+không có quyề n 
+thực hiện thao 
+tác này"}  PASS  
+TC-
+21 Admin 
+cập nhậ t 
+thông tin phim  Movie  Happ
+y Path PUT  /api/v1/
+movies/3 Token 
+admin, body cập nhậ t 
+title và status  Thông 
+tin phim được cập 
+nhật 
+thành công 200 {"message":"C ập 
+nhật phim thành 
+công","data":{"movie_id":3,"title":"Tên Đã Sửa"}} PASS  
+TC-
+22 Admin 
+xóa phim không có suấ t 
+chiếu Movie  Happ
+y Path DELE
+TE /api/v1/
+movies/8 Token 
+admin, phim t ồn tại 
+và không có suất chiếu 
+tương lai  Phim b ị 
+xóa khỏi hệ thống 200 {"message":"Xó
+a phim thành công"}  PASS  
+TC-
+23 Admin 
+xóa phim Movie  Error 
+Path DELE
+TE /api/v1/
+movies/3 Token 
+admin, phim đang Từ chối 
+xóa, báo lý do còn 409 {"error":"Không 
+thể xóa phim 
+đang có suấ t PASS  
+116 
+ đang có 
+suất 
+chiếu có su ất 
+chiếu trong 
+tương lai  suất 
+chiếu 
+đang 
+hoạt 
+động chiếu. Vui lòng 
+hủy suấ t chiếu 
+trước."} 
+TC-
+24 Lấy 
+danh sách r ạp 
+chiếu 
+phim  Cine
+ma Happ
+y Path GET  /api/v1/
+cinemas Không c ần 
+đăng nhậ p Danh 
+sách t ất 
+cả rạp 
+với địa 
+chỉ và số 
+phòng 200 Array 3 r ạp với 
+cinema_id, name, address, total_rooms  PASS  
+TC-
+25 Lấy 
+danh sách phòng chiếu 
+của rạp Cine
+ma Happ
+y Path GET  /api/v1/
+rooms?cinema_id=1  cinema_id = 
+1 tồn tại Danh 
+sách phòng thuộc rạp, kèm 
+sức chứa 200 Array phòng v ới 
+room_id, name, capacity, room_type  PASS  
+TC-
+26 Lấy sơ 
+đồ ghế  
+của 
+phòng chiếu Cine
+ma Happ
+y Path GET  /api/v1/
+seats/room/2  room_id = 2 
+tồn tại Toàn b ộ 
+ghế trong 
+phòng với mã 
+ghế và 
+loại ghế  200 Array 80 gh ế với 
+seat_id, seat_code (A1, A2...), seat_type (normal/vip)  PASS  
+TC-
+27 Admin 
+thêm rạ p 
+chiếu 
+mới Cine
+ma Happ
+y Path POST  /api/v1/
+cinemas Token 
+admin, body: name và address đầy đủ Rạp 
+được tạo, 
+trả về 
+cinema_id mới 201 {"data":{"cinema
+_id":4,"name":"CGV Quan 1"},"message":"Thêm r ạp thành 
+công"}  PASS  
+TC-
+28 Admin 
+thêm phòng Cine
+ma Happ
+y Path POST  /api/v1/
+rooms  Token 
+admin, body: cinema_id, Phòng 
+được tạo 
+và liên 201 {"data":{"room_i
+d":7,"name":"Phòng PASS  
+117 
+ chiếu 
+vào r ạp name, 
+capacity, 
+room_type  kết với 
+rạp 3","capacity":10
+0}} 
+TC-
+29 Lấy 
+danh sách 
+suất 
+chiếu 
+theo 
+phim và ngày Showt
+ime Happ
+y Path GET  /api/v1/
+showtimes?m
+ovie_id
+=3&date=2025-08-15 movie_id và 
+date hợ p lệ, 
+có suấ t 
+chiếu trong 
+ngày Danh 
+sách su ất 
+chiếu 
+kèm thông tin rạp, 
+phòng, giờ 200 Array 3 su ất 
+chiếu với 
+showtime_id, 
+room_name, 
+start_time, available_seats  PASS  
+TC-
+30 Lấy suất 
+chiếu 
+của 
+ngày không có lịch Showt
+ime Happ
+y Path GET  /api/v1/
+showtimes?movie_id=3&date=2025-01-01 Ngày h ợp lệ 
+nhưng không có lịch chi ếu Trả về 
+mảng 
+rỗng, 
+không báo l ỗi 200 {"data":[],"messa
+ge":"Không có suất chiếu trong 
+ngày này"}  PASS  
+TC-
+31 Admin 
+tạo suấ t 
+chiếu 
+mới Showt
+ime Happ
+y Path POST  /api/v1/
+showtimes Token 
+admin, body: movie_id, room_id, start_time hợp lệ Suất 
+chiếu 
+được tạo, 
+trả về 
+showtime_id 201 {"data":{"showti
+me_id":10,"start_time":"2025 -
+08-20T19:00:00Z"}} PASS  
+TC-
+32 Admin 
+tạo suấ t 
+chiếu 
+trùng giờ 
+phòng Showt
+ime Error 
+Path POST  /api/v1/
+showtimes Token 
+admin, room_id và start_time trùng vớ i 
+suất đã t ồn 
+tại Báo l ỗi 
+xung đột lịch 
+chiếu 409 {"error ":"Phòng 
+chiếu này đã có 
+suất chiếu trong 
+khung gi ờ trên. 
+Vui lòng ch ọn 
+giờ khác."}  PASS  
+118 
+ TC-
+33 Admin 
+xóa suấ t 
+chiếu 
+chưa 
+bán vé  Showt
+ime Happ
+y Path DELE
+TE /api/v1/
+showtimes/10  Token 
+admin, su ất 
+chiếu tồn tại 
+và chưa có vé nào đư ợc 
+bán Suất 
+chiếu bị 
+xóa khỏi hệ thống 200 {"message":"Xó
+a suất chiếu 
+thành công"} PASS  
+TC-
+34 Admin 
+xóa suấ t 
+chiếu đã 
+có người 
+đặt vé Showt
+ime Error 
+Path DELE
+TE /api/v1/
+showtimes/5  Token 
+admin, su ất 
+chiếu đã có 
+booking confirmed  Từ chối 
+xóa để  
+bảo vệ 
+vé ngư ời 
+dùng đã mua 409 {"error":"Không 
+thể xóa suấ t 
+chiếu đã có vé 
+được đặt."} PASS  
+TC-
+35 Xem 
+trạng 
+thái ghế  
+theo suất 
+chiếu Showt
+ime Happ
+y Path GET  /api/v1/
+seats/showtime/5 showtime_i
+d = 5 hợ p lệ Mảng 
+ghế với 
+trạng thái 
+available hoặc 
+booked 200 Array 80 gh ế: 12 
+ghế status 
+"booked", còn l ại 
+status "available"  PASS  
+TC-
+36 Đặt vé 
+thành công Booki
+ng Happ
+y Path POST  /api/v1/
+bookings Token h ợp 
+lệ, 
+showtime_id và seat_ids h ợp 
+lệ, ghế  còn 
+trống  booking_
+id mới, 
+status pending, danh sách ghế  
+giữ 201 {"booking_id":4
+2,"status":"pending","seats":["B3","B4"],"total_price":160000,"expires_at":"..."} PASS  
+TC-
+37 Đặt ghế 
+đã có người 
+đặt Booki
+ng Error 
+Path POST  /api/v1/
+bookings Token h ợp 
+lệ, seat_ids 
+chứa ghế  đã 
+ở trạng thái 
+booked Báo l ỗi 
+ghế 
+không còn trống, không tạo 
+booking 409 {"error":"Gh ế B3 
+đã đư ợc đặt bởi 
+người khác. Vui 
+lòng chọn ghế  
+khác."}  PASS  
+119 
+ TC-
+38 Đặt vé 
+cho suấ t 
+chiếu đã 
+kết thúc  Booki
+ng Error 
+Path POST  /api/v1/
+bookin
+gs showtime_i
+d ứng vớ i 
+suất chiếu 
+trong quá khứ Báo l ỗi 
+suất 
+chiếu đã 
+kết thúc 400 {"error":"Su ất 
+chiếu này đã kế t 
+thúc. Không thể  
+đặt vé."}  PASS  
+TC-
+39 Đặt vé 
+thiếu 
+trường 
+seat_ids  Booki
+ng Error 
+Path POST  /api/v1/
+bookings Body ch ỉ có 
+showtime_id, thi ếu 
+seat_ids: {"showtime_id":5}  Báo l ỗi 
+validation thiếu 
+trường 
+bắt buộc  400 {"error":"Trư ờng 
+seat_ids là b ắt 
+buộc và phả i là 
+mảng số nguyên 
+không r ỗng"} PASS  
+TC-
+40 Thanh 
+toán hoàn t ất 
+đơn đặ t 
+vé Booki
+ng Happ
+y Path POST  /api/v1/
+payment booking_id 
+hợp lệ, còn 
+trong th ời 
+gian gi ữ 
+chỗ, method 
+hợp lệ Trạng 
+thái chuyể n 
+confirmed, trả về 
+ticket_code 200 {"status":"confir
+med","ticket_code":"TK -
+20250815-042","message":"Thanh toán thành công"} PASS  
+TC-
+41 Thanh 
+toán booking đã hế t 
+thời 
+gian gi ữ 
+chỗ Booki
+ng Error 
+Path POST  /api/v1/
+payment booking_id 
+hợp lệ 
+nhưng đã quá thờ i 
+gian gi ữ chỗ 
+(>15 phút)  Báo l ỗi 
+hết thời 
+gian, ghế  
+đã đư ợc 
+giải 
+phóng 400 {"error":"Đơn 
+đặt vé đã hế t thời 
+gian gi ữ chỗ. Vui 
+lòng đặ t lại."} PASS  
+TC-
+42 Thanh 
+toán booking không thuộc về  
+mình  Booki
+ng Error 
+Path POST  /api/v1/
+payment Token c ủa 
+user A nhưng booking_id thuộc về  
+user B  Từ chối, 
+báo không có quyề n 403 {"error":"B ạn 
+không có quyề n 
+thanh toán đơn đặt vé này."} PASS  
+120 
+ TC-
+43 Xem chi 
+tiết đơn 
+đặt vé 
+của 
+chính 
+mình  Booki
+ng Happ
+y Path GET  /api/v1/
+bookings/42  Token user 
+đã tạo 
+booking_id = 42 Thông 
+tin đầ y 
+đủ của 
+booking và danh sách ghế  200 {"booking_id":4
+2,"status":"confirmed","movie_title":"...","seats":["B3","B4"],"ticket_code":"..."} PASS  
+TC-
+44 Xem 
+đơn đặ t 
+vé của 
+người 
+khác  Booki
+ng Error 
+Path GET  /api/v1/
+bookings/42  Token user 
+A nhưng 
+booking_id = 42 thuộc user B  Từ chối, 
+báo không có quyề n 
+xem 403 {"error":"B ạn 
+không có quyề n 
+xem đơn đặ t vé 
+này."}  PASS  
+TC-
+45 Xem 
+lịch sử 
+đặt vé 
+của bả n 
+thân Booki
+ng Happ
+y Path GET  /api/v1/
+bookings/user/7 Token h ợp 
+lệ, user_id = 
+7 là chính mình  Danh 
+sách toàn bộ booking đã tạo 
+theo thờ i 
+gian 
+giảm dầ n 200 Array các 
+booking vớ i đầy 
+đủ thông tin 
+phim, ghế , trạng 
+thái PASS  
+TC-
+46 Hủy đơn 
+đặt vé 
+đang pending  Booki
+ng Happ
+y Path DELE
+TE /api/v1/
+bookings/42  Token h ợp 
+lệ, 
+booking_id đang ở  
+trạng thái 
+pendi ng 
+(chưa thanh toán)  Booking 
+bị hủy, 
+ghế được 
+giải 
+phóng trở về 
+available  200 {"message":"H ủ
+y đơn đặ t vé 
+thành công. Ghế  
+đã đư ợc giải 
+phóng."} PASS  
+TC-
+47 Hủy đơn 
+vé đã thanh toán confirmed Booki
+ng Error 
+Path DELE
+TE /api/v1/
+bookings/43  Token h ợp 
+lệ, 
+booking_id đã ở trạng 
+thái confirmed  Từ chối 
+hủy vé đã thanh toán, hướng 400 {"error":"Không 
+thể hủy vé đã 
+được xác nh ận 
+thanh toán. Vui lòng liên hệ  hỗ 
+trợ."} PASS  
+121 
+ dẫn liên 
+hệ hỗ trợ  
+TC-
+48 Admin 
+xem 
+danh sách t ất 
+cả người 
+dùng User  Happ
+y Path GET  /api/v1/
+admin/users  Token role 
+admin  Danh 
+sách toàn bộ ngư ời 
+dùng vớ i 
+thông tin cơ bản 200 Array users v ới 
+user_id, name, email, role, created_at  PASS  
+TC-
+49 User 
+thường 
+cố xem 
+danh sách user User  Error 
+Path GET  /api/v1/
+admin/
+users  Token role 
+user (không 
+phải admin)  Từ chối, 
+báo không đủ 
+quyề n 
+truy c ập 403 {"error":"B ạn 
+không có quyề n 
+truy c ập chức 
+năng này."}  PASS  
+TC-
+50 Admin 
+thay đổi 
+role người 
+dùng User  Happ
+y Path PUT  /api/v1/
+admin/users/7/role Token 
+admin, body: {"role":"admin"}  Role 
+người 
+dùng được cập 
+nhật 
+thành công 200 {"message":"C ập 
+nhật quyề n thà   
+ 
+ 
+  
+122 
+ 7.4. Tổng K ết Kết Qu ả Kiểm Th ử 
+Nhóm Ch ức Năng  Tổng 
+Test 
+Case  Happy 
+Path  Error 
+Path  Passed  Failed  Tỉ Lệ 
+Passed  
+Auth (Xác th ực) 12 4 8 12 0 100%  
+Movie (Qu ản lý 
+phim)  11 7 4 11 0 100%  
+Cinema & Room 
+(Rạp & Phòng)  5 5 0 5 0 100%  
+Showtime (Su ất 
+chiếu) 7 4 3 7 0 100%  
+Booking & 
+Payment (Đ ặt vé) 12 6 6 12 0 100%  
+User Admin (Qu ản 
+trị) 3 2 1 3 0 100%  
+Tổng cộng 50 28 22 50 0 100%  
+  
+123 
+ CHƯƠNG 8: Ứ NG D ỤNG NGÔN NGỮ  GOLANG THỰ C HIỆN 
+WEB BOOKING CINEMA  
+8.1. Xác Th ực Và Phân Quyề n Ngư ời Dùng (Jwt + Middleware Pattern) 
+8.1.1 Lý thuy ết JSON Web Token (JWT ) 
+JWT (JSON Web Token) là m ột tiêu chu ẩn mở (RFC 7519) đ ịnh nghĩa cách truy ền 
+thông tin an toàn gi ữa các bên dư ới dạng đố i tượng JSON. Token g ồm 3 ph ần: 
+header.payload.signature  
+• Header: Khai báo thu ật toán mã hóa (HS256 –  HMAC v ới SHA -256).  
+• Payload (Claims): D ữ liệu cần truy ền (user_id, email, th ời gian h ết hạn). 
+• Signature: HMAC -SHA256(base64url(header) + "." + base64url(payload), 
+secret). Ch ỉ server bi ết secret, đ ảm bảo token không bị  giả mạo. 
+JWT là  Stateless: Server không c ần lưu session, ch ỉ cần verify ch ữ ký là biế t ngay ai 
+đang g ọi. Điều này giúp hệ  thống scale theo chi ều ngang (horizontal scaling) không 
+cần shared session store. 
+8.1.2 Lý thuy ết Middleware Pattern trong Go  
+Go không có class hay k ế thừa. Thay vào đó, Go s ử dụng Higher- Order 
+Functions  (hàm nh ận hàm làm tham s ố, trả về hàm). Middleware trong Go là m ột hàm 
+nhận http.Handler và trả về http.Handler khác đã đư ợc "bọc" thêm l ogic. 
+Đây là ứ ng dụ ng củ a Decorator Pattern  – một trong các Design Pattern (GoF) nhưng 
+được diễn đạt cực kỳ ngắn gọn và t ự nhiên nh ờ tính năng "functions as first -class 
+citizens" c ủa Go.  
+Request → [AuthMiddleware] → [LoggerMiddleware] → [Handler] 
+Mỗi Middleware trong chu ỗi chỉ làm m ột việc, tuân theo  Single Responsibility 
+Principle (SRP) trong SOLID.  
+ 
+ 
+ 
+8.1.3 Lý thuy ết Context (Truy ền dữ liệu xuyên su ốt request) 
+Context.Context  trong Go là m ột công c ụ cơ bản để: 
+124 
+ 1. Truy ền metadata  qua các ranh giớ i API (gi ữa Handler, Service, Repository) mà 
+không c ần thay đ ổi chữ ký hàm.  
+2. Kiểm soát timeout và cancellation: Khi m ột request b ị hủy (client ng ắt kết nối), 
+context t ự động cancel, các goroutine bên dư ới dừng lạ i, tránh lãng phí tài 
+nguyên.  
+context.WithValue  tạo ra một bản sao m ới của context v ới key -value đư ợc thêm vào. 
+Điều này đ ảm bảo immutability – không có race condition khi nhi ều goroutine đ ọc 
+cùng m ột context. 
+8.1.4 Use Case ngườ i dùng  
+Thành 
+phần Cụ thể 
+Tên 
+Use 
+Case  Đăng nh ập và truy c ập tài nguyên được bảo vệ bằng JWT  
+Tác 
+nhân  Người dùng đã đăng ký (Customer / Admin)  
+Mô t ả 
+ngắn 
+gọn Người dùng đăng nh ập bằng email và m ật khẩu. Hệ thống tạo JWT có 
+thời hạn và trả  về cho trình duy ệt. Mọi request tớ i tài nguyên b ảo vệ đều 
+phải mang token h ợp lệ. AuthMiddleware t ự động xác th ực token và 
+truyền thông tin ngư ời dùng xuố ng Handler qua Go Context mà không 
+cần truy v ấn Database l ần nào.  
+Điều 
+kiện 
+tiên 
+quyết Người dùng đã có tài kho ản. Tài kho ản đã đư ợc xác th ực OTP. C ấu 
+hình JWT_SECRET và JWT_EXPIRY_HO URS  đã đư ợc thiết lập trên 
+server. 
+Luồng 
+sự kiện 
+chính  1. Ngư ời dùng nh ập email và m ật khẩu vào form đăng nh ập, nh ấn "Đăng 
+nhập". 
+2. Handler g ọi AuthService.Login(), hash m ật khẩu bằng bcrypt và so 
+sánh v ới dữ liệu trong Database.  
+3. Nếu khớp, hệ thống gọ i GenerateToken() tạo JWT vớ i payload 
+chứa UserID, Email, Username  và th ời gian h ết hạn. Token đượ c ký b ằng 
+thuật toán HMAC -SHA256 v ới secretKey.  
+4. Frontend lưu token vào  localStorage.  
+5. Ngư ời dùng truy c ập "Vé c ủa tôi". Trình duy ệt gửi request kèm 
+header Authorization: Bearer <token>.  
+125 
+ 6. AuthMiddleware  trích xu ất token, g ọi ParseToken()  giải mã và xác 
+thực chữ ký. Claims đư ợc nhúng vào  context.Context  của request.  
+7. Handler g ọi GetClaims(ctx) lấy UserID  và trả  về đúng d ữ liệu của 
+người dùng.  
+Luồng 
+ngoạ i lệ Bước 5: Nếu token h ết hạn (ExpiresAt  đã qua),  ParseToken()  trả về lỗi, 
+Middleware trả  ngay 401 Unauthorized  – không g ọi Handler.  
+Bước 2: Nếu mật khẩu sai, tr ả về 401 với message chung (không ti ết lộ lý 
+do cụ thể để tránh enumeration attack).  
+Bước 6: Nếu header Authorization  thiếu hoặ c không đúng format  Bearer 
+<token>, tr ả về 401 Unauthorized. 
+Hậu 
+điều 
+kiện Người dùng nh ận được danh sách vé cá nhân.  UserID  được lưu trong 
+context, s ẵn sàng cho toàn b ộ pipeline x ử lý request mà không c ần query 
+lại Database. 
+8.1.5 Ứng dụ ng th ực tế trong d ự án 
+File: internal/utils/jwt.go  – Tạo và gi ải mã token  
+ 
+File: internal/middleware/auth_middleware.go  – Middleware Closure  
+
+126 
+  
+ 
+
+127 
+ 8.2. Xử Lý Đ ồng Thời Và Race Condition (Concurrency Control)  
+8.2.1 Lý thuy ết Concurrency trong Go: Goroutines và Scheduler  
+Go cung c ấp Goroutines  – lightweight threads đư ợc quản lý b ởi Go Runtime, không 
+phải OS thread. M ỗi goroutine ban đ ầu chỉ chiếm ~2KB stack (so v ới 1-8MB c ủa OS 
+thread). 
+Go Runtime s ử dụng mô hình M:N threading  (M goroutines ánh x ạ vào N OS threads) 
+thông qua b ộ scheduler G -P-M: 
+• G (Goroutine): Đơn v ị thực thi.  
+• P (Processor): Ng ữ cảnh th ực thi, m ỗi P có local run queue. 
+• M (Machine/OS thread): Thread th ực sự. 
+Điều này cho phép hàng nghìn goroutines t ồn tại song song mà không tố n nhi ều bộ 
+nhớ, phù h ợp cho h ệ thống xử  lý đồng th ời nhiều yêu c ầu đặt vé. 
+ 
+8.2.2 Lý thuy ết CSP (Communicating Sequential Processes) và Channels  
+Go áp d ụng tri ết lý CSP của Tony Hoare:  "Do not communicate by sharing memory; 
+instead, share memory by communicating."  Thay vì các goroutine cùng truy c ập một 
+biến shared và lock nó, chúng giao ti ếp qua  Channels  – các ố ng dẫn an toàn type -safe. 
+Channel trong Go hoạ t động theo cơ ch ế FIFO (First In, First Out) và là concurrent -
+safe theo thi ết kế của ngôn ng ữ (không cầ n lock th ủ công).  
+• Unbuffered channel: Sender block cho đ ến khi Receiver s ẵn sàng và ngượ c lại 
+– đảm bảo đồng bộ  hóa tuy ệt đối giữa hai goroutine.  
+• Buffered channel: Sender ch ỉ block khi buffer đ ầy – cho phép phi đ ồng bộ có 
+giới hạn. 
+ 
+ 
+ 
+8.2.3 Lý thuy ết sync.Mutex và sync.RWMutex  
+Khi c ần chia s ẻ state (ví d ụ: map các providers), Go cung c ấp sync.Mutex  (khóa đ ộc 
+quyền) và  sync.RWMutex  (cho phép nhi ều reader đ ồng th ời, một writer đ ộc quy ền). 
+128 
+ sync.RWMutex  phù hợ p khi đọ c nhi ều hơn ghi – giúp t ối ưu throughput so v ới Mutex 
+thông thư ờng. 
+ 
+8.2.4 Lý thuy ết Distributed Lock v ới Redis (SetNX) 
+Trong môi trư ờng phân tán (nhi ều instance server), sync.Mutex  chỉ hoạt động trong 
+cùng m ột process. Đ ể đồng bộ  xuyên các server, c ần Distributed Loc k. 
+Redis cung c ấp lệnh SETNX  (SET if Not eXists): Atomically gán giá trị  cho key n ếu 
+chưa t ồn tại. Tính atomic đư ợc đảm bảo bởi Redis single -threaded model –  không th ể 
+có hai client nào cùng  SETNX  thành công vớ i cùng key.  
+Kết hợp SETNX  với EXPIRE  (hoặc SET key value NX EX seconds), ta t ạo được 
+khóa phân tán có TTL (Time -To-Live), tự  giải phóng n ếu client crash. 
+ 
+8.2.5 Lý thuy ết Pessimistic Locking trong Database  
+SELECT ... FOR UPDATE  trong PostgreSQL th ực hiện Row -Level Lock  – khóa 
+cứng các hàng đã ch ọn cho  đến khi transaction k ết thúc. Các transaction khác c ố đọc 
+các hàng này v ới FOR UPDATE  sẽ bị block hoặ c fail ngay (v ới NOWAIT).  
+Đây là k ỹ thuật Pessimistic Locking  – phù hợ p cho d ữ liệu tranh ch ấp cao như ghế  
+xem phim, vì gi ả định xung đ ột sẽ xảy ra và ngă n chặn từ đầu. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+129 
+ 8.2.6 Use Case  
+Thành 
+phần Cụ thể 
+Tên 
+Use 
+Case  Chọn ghế và bảo vệ tính toàn v ẹn trư ớc race condition  
+Tác 
+nhân  Hai ngư ời dùng (User A, User B) cùng xem trang đ ặt vé c ủa một suất 
+chiếu 
+Mô t ả 
+ngắn 
+gọn Hệ thống sử dụng hai l ớp khóa (Redis Distributed Lock và PostgreSQL 
+Pessimistic Lock) đ ể đảm bảo tuy ệt đối rằng m ỗi ghế chỉ có th ể được đặt 
+bởi một ngư ời tại một thời điểm, dù có bao nhiêu ngư ời dùng cùng c ố 
+gắng. 
+Điều 
+kiện 
+tiên 
+quyết Cả hai ngư ời dùng đã đăng nh ập. Su ất chiếu đang m ở nhận đặt vé. Gh ế A5 
+hiện đang ở trạng thái trố ng. 
+Luồng 
+sự 
+kiện 
+chính  1. User A nh ấn chọn ghế A5. Frontend g ọi POST 
+/bookings/lock với seat_id = A5. 
+2. BookingService.LockSeat() gọi Redis.SetNX("seat_lock:showtime:A5", 
+"locked", 10min). Redis atomic  operation thành công, trả  về true.  
+3. Hub broadcast WebSocket: Gh ế A5 chuy ển màu vàng (Holding) trên 
+màn hình tấ t cả ngườ i đang xem cùng su ất, kể cả User B.  
+4. User A ti ếp tục chọn thêm gh ế khác (n ếu mu ốn), sau đó nh ấn "Xác nhậ n 
+đặt vé".  
+5. BookingService.CreateBooking() mở PostgreSQL Transaction, th ực 
+thi SELECT ... FOR UPDATE NOWAIT  để khóa hàng ghế  A5 ở tầng 
+Database.  
+6. Query  COUNT(*)  kiểm tra l ại: Không có 
+booking  confirmed  hay pending (< 5 phút) nào cho gh ế A5.  
+7. INSERT INTO booki ngs với status  pending. Transaction commit.  
+130 
+ 8. Redis lock đư ợc giải phóng. Hub broadcast: Gh ế A5 chuy ển màu đen 
+(Sold).  
+9. Frontend chuy ển hướng User A t ới trang thanh toán v ới đồng hồ đếm 
+ngược 5 phút. 
+Luồng 
+ngoạ i 
+lệ Bước 2 (User B nhấn A5 ): Redis.SetN X("seat_lock:showtime:A5")  trả 
+về false  vì key đã t ồntại. Hệ thống trả  về 409 Conflict  với message "Gh ế 
+đang b ị giữ bởi ngư ời khác".   
+Bước 5 (Database conflict): Nếu Redis b ị restart và c ả hai đ ều vượt qua 
+Layer 1, SELECT ... FOR UPDATE NOWAIT  của transact ion th ứ 2 fail 
+ngay v ới lỗi. Hệ thống trả về ErrSeatAlreadyTaken.  
+Bước 6 (Double Check fail):  Nếu booking t ồn tại, existingSeatCount > 0, 
+transaction rollback t ự động qua defer tx.Rollback(ctx).  
+Hậu 
+điều 
+kiện Đúng m ột booking đư ợc tạo trong Database v ới status  pending. Gh ế A5 
+hiển thị màu đen cho t ất cả ngườ i xem real -time. User A đang trong quy 
+trình thanh toán 5 phút. User B th ấy ghế A5 không thể  chọn. 
+ 
+8.2.7 Ứng dụ ng th ực tế trong d ự án 
+File: internal/infrastructure/redis/redis.go  
+ 
+ 
+ 
+ 
+  
+ 
+ 
+ 
+ 
+ 
+
+131 
+ File: internal/repository/postgres_booking_repository.go  
+ 
+8.3. Hệ  Thống Real -Time Và Broadcast Tr ạng Thái Ghế  (Websocket)  
+8.3.1 Lý thuy ết WebSocket Protocol  
+HTTP là giao th ức request -response: Client h ỏi → Server trả  lời. Với yêu c ầu "cập 
+nhật trạng thái gh ế theo th ời gian th ực cho t ất cả người đang xem cùng su ất chiếu", 
+HTTP không đ ủ – Server không th ể chủ động push d ữ liệu. 
+WebSocket  (RFC 6455) giả i quy ết vấn đề này: B ắt đầu bằng HTTP Upgrade 
+handshake, sau đó duy trì  kết nối full -duplex  liên t ục. Cả Client và Server đ ều có th ể 
+gửi bất kỳ lúc nào.  
+  
+
+132 
+ 8.3.2 Lý thuy ết Fan -Out Pattern  
+Khi m ột sự kiện xảy ra (gh ế A5 b ị lock), c ần thông báo t ới N clients đang xem cùng 
+showtime. Đây là  Fan-Out pattern: M ột producer, nhiề u consumer.  
+Go's Hub pattern tri ển khai Fan- Out qua:  
+• Single producer: Hàm  BroadcastSeatUpdate  gửi một message 
+vào hub.broadcast. 
+• Single consumer goroutine  (Hub.Run): Nh ận từ channel và g ửi đến tất 
+cả client.Send  channe ls. 
+• N goroutines  (WritePumps): M ỗi goroutine đọ c từ client.Send  và gửi qua 
+WebSocket connection. 
+Kiến trúc này tránh đư ợc việc phải lock khi iterate qua map clients, vì ch ỉ có m ột 
+goroutine duy nhấ t làm vi ệc đó.  
+ 
+8.3.3 Lý thuy ết Goroutine per Connection  
+Go Runtime c ực kỳ hiệu quả với goroutine: M ột server có th ể xử lý hàng chụ c nghìn 
+WebSocket connections đ ồng thờ i, mỗi connection có 2 goroutines (ReadPump + 
+WritePump), tương đương ~80K goroutines v ới tổng bộ  nhớ khoảng 160MB, điề u 
+không thể  với OS threads. 
+ 
+8.3.4 Use Case ngườ i dùng  
+Thành 
+phần Cụ thể 
+Tên Use 
+Case  Cập nhật trạng thái gh ế theo th ời gian th ực cho t ất cả người xem cùng 
+suất chiếu 
+Tác 
+nhân  Người dùng đang xem b ản đồ ghế (nhiều ngư ời cùng lúc)  
+Mô t ả 
+ngắn 
+gọn Khi b ất kỳ người dùng nào ch ọn hoặc hoàn t ất đặt một ghế, trạng thái gh ế 
+đó đư ợc cập nhật tức thì trên màn hình c ủa tất cả ngườ i dùng khác đang 
+xem cùng su ất chiếu, mà không c ần họ reload trang.  
+133 
+ Điều 
+kiện 
+tiên 
+quyết Người dùng đang ở trang b ản đồ ghế. Kết nối WebSocket đã đư ợc thiết 
+lập khi trang t ải. Hub đang ch ạy trên m ột goroutine nề n. 
+Luồng 
+sự kiện 
+chính  1. Ngư ời dùng A và B cùng m ở trang đ ặt vé. Trình duy ệt mỗi ngư ời tự 
+động kết nối GET /ws. Server nâng c ấp HTTP lên WebSocket, đăng ký 
+client vào Hub, kh ởi động goroutine WritePump  và ReadPump.  
+2. Ngư ời dùng A nh ấn ghế B3. Backend x ử lý LockSeat  thành công. 
+3. bookingService  gọi hub.BroadcastSeatUpdate(showtimeID, "B3", 
+"locked"). Message JSON đư ợc đẩy vào hub.broadcast  channel.  
+4. Goroutine  Hub.Run()  nhận message t ừ channel, itera te qua map clients 
+và gửi vào  client.Send  channel c ủa từng client (non -blocking). 
+5. WritePump  goroutine c ủa Client B nh ận từ client.Send  channel và g ửi 
+qua WebSocket connection.  
+6. Trình duy ệt của User B nh ận JSON, JavaScript c ập nhậ t màu gh ế B3 
+sang vàng ngay l ập tức. 
+Luồng 
+ngoạ i lệ Bước 4 (Client lag):  Nếu client.Send  channel đã đ ầy (client x ử lý quá 
+chậm), Hub th ực hiện default  case: Đóng channel và xóa client kh ỏi map 
+– tự động ngắ t kết nối client ch ậm để không block các client khác.  
+Bước 1 (Client đóng tab):  ReadPump  phát hi ện lỗi đọc WebSocket, g ửi 
+signal vào  hub.unregister, Hub xóa client và 
+đóng  client.Send  channel. WritePump  phát hi ện channel đóng và thoát. 
+Không có resource leak.  
+Hậu 
+điều 
+kiện Tất cả người dùng đang xem cùng su ất chiếu thấy trạng thái gh ế chính 
+xác theo th ời gian th ực mà không c ần refresh trang.  
+  
+ 
+ 
+ 
+134 
+ 8.3.5 Ứng dụ ng th ực tế trong d ự án 
+File: internal/handler/ws_handler.go  
+ 
+ 
+ 
+ 
+
+135 
+ 8.4. Ki ến Trúc Ph ần Mềm (Clean Architecture & Depend  
+ 
+ency Injection)  
+8.4.1 Lý thuyế t Clean Architecture  
+Clean Architecture (Robert C. Martin) đ ịnh nghĩa các vòng tròn ph ụ thuộc: Domain 
+→ Repository (Interface) → Service → Handler. M ỗi lớp chỉ phụ thuộc vào l ớp bên 
+trong, không bao gi ờ phụ thuộc vào l ớp bên ngoài.  
+Điều quan trọ ng nh ất: Business logic (Service layer) hoàn toàn không bi ết về 
+Framework, Database, hay HTTP. Đi ều này cho phép thay thế  PostgreSQL b ằng 
+MongoDB, thay th ế chi-router b ằng gin, mà không c ần sửa code logic.  
+ 
+8.4.2 Lý thuy ết Interface trong Go (Implicit Implementation)  
+ 
+Go không có t ừ khóa implements. M ột type t ự động th ỏa mãn m ột interface n ếu nó cài 
+đặt tất cả các method c ủa interface đó. Đây là  Duck Typing có ki ểm tra t ại compile 
+time –  linh hoạ t hơn Java/C# nhưng v ẫn type -safe. 
+Interfaces trong Go thư ờng nhỏ và tập trung (Interface Segregation 
+Principle). HubInterface  trong booking service ch ỉ có m ột method duy nhấ t, giúp tránh 
+circular import gi ữa các packages. 
+ 
+8.4.3 Lý thuy ết Dependency Injection (DI) th ủ công 
+DI là k ỹ thuật cung c ấp phụ  thuộc từ bên ngoài thay vì đ ể component t ự tạo. Go 
+thường dùng DI th ủ công qua constructor functions thay vì DI frameworks. 
+Lợi ích:  
+1. Testability: Mocking m ột interface đ ể unit test không c ần DB th ực. 
+2. Flexibility: Thay th ế implementation (ví d ụ: swap t ừ Redis sang Memcached) 
+chỉ cần thay đ ổi ở main.go.  
+3. Explicit dependencies: Rõ ràng module nào c ần gì, không có magic. 
+ 
+136 
+ 8.4.4 Use Case ngườ i dùng  
+Thành 
+phần Cụ thể 
+Tên Use 
+Case  Request xem l ịch sử vé đi qua các layer đ ộc lập 
+Tác nhân  Người dùng đã đăng nh ập 
+Mô t ả 
+ngắn gọn Khi người dùng xem danh sách vé đã đ ặt, request đi qua Handler → Service → 
+Repository theo chu ỗi phụ thuộc một chiều. M ỗi layer không bi ết chi ti ết triển khai 
+của layer khác –  chỉ giao ti ếp qua Interface. Đi ều này cho phép m ỗi layer đư ợc test 
+độc lập và thay t hế mà không ảnh hư ởng đến các layer khác. 
+Điều kiện 
+tiên quy ết Người dùng đã đăng nh ập và có JWT h ợp lệ. Hệ thống đã kh ởi động và t ất cả 
+dependencies đã đượ c inject trong  main.go.  
+Luồng sự 
+kiện chính  1. Ngư ời dùng truy c ập trang "Vé c ủa tôi". Trình duy ệt gửi GET /api/v1/bookings/my.  
+2. AuthMiddleware xác th ực JWT, inject  UserID  vào context. 
+3. BookingHandler.ListMyBookings()  đọc UserID  từ context, 
+gọi bookingSvc.ListByUserID(ctx, userID, page). Handler không bi ết gì v ề Database.  
+4. BookingService  nhận lệnh, áp d ụng logic pagination (validate gi ới hạn, tính offset), 
+gọi repo.ListByUserID(ctx, userID, page). Service không bi ết gì v ề SQL.  
+5. PostgresBookingRepository thực thi SQL query v ới filter lo ại bỏ 
+booking  pending quá 5 phút. K ết quả ánh x ạ vào []domain.Booking.  
+6. Dữ liệu được trả ngược qua Repository → Service → Handler. Handler serialize 
+thành JSON và trả  về response.  
+Luồng 
+ngoạ i lệ Bước 5 (DB l ỗi): Repository wraps l ỗi với context:  fmt.Errorf("booking: list by user: 
+%w", err). Handler nh ận lỗi, trả về 500 Internal Server Error.  
+Môi trườ ng Test:  
+Thay PostgresBookingRepository  bằng MockBookingRepository (triển khai cùng 
+interface), test Service Layer không c ần kết nối Database th ực. 
+Hậu điều 
+kiện Người dùng nh ận danh sách vé đã l ọc (ch ỉ hiển thị vé còn h ạn hoặc đã xác nh ận). M ỗi 
+layer hoàn toàn đ ộc lập và có th ể được unit test riêng bi ệt. 
+ 
+137 
+ 8.4.5 Ứng dụ ng th ực tế trong d ự án 
+File: cmd/api/main.go  – Dependency Graph và Wiring  
+ 
+File: internal/service/booking_service.go  – Interface thay vì Concrete Type  
+ 
+8.5. Tích Hợp Cổ ng Thanh Toán & Idempotency (Payment Safety) 
+8.5.1 Lý thuy ết Strategy Pattern cho Payment Providers  
+ 
+Hệ thống cầ n hỗ trợ nhiều cổng thanh toán (VNPay, MoMo, Ti ền mặt) với giao th ức 
+khác nhau. Sử  dụng Strategy Pattern: Đ ịnh nghĩa m ột Interface chung, m ỗi provider là 
+một Implementation. 
+Điều này tuân theo  Open/Closed Principle: Open for extension (thêm provider m ới), 
+Closed for modification (không s ửa code hi ện có). 
+ 
+  
+ 
+
+138 
+ 8.5.2 Lý thuy ết Idempotency trong Distributed Systems  
+Idempotency  (Tính lũy đ ẳng): Vi ệc thực thi cùng m ột operation nhi ều lần cho ra k ết 
+quả giống như thự c thi m ột lần. 
+Trong thanh toán, đây là tính ch ất bắt buộc: Nếu mạng lag, client click 3 l ần, ch ỉ một 
+giao d ịch đư ợc tạo. Cách tri ển khai:  
+1. Client t ạo một unique  Idempotency -Key cho m ỗi yêu c ầu. 
+2. Server ki ểm tra trong Redis xem key này đã đư ợc xử lý chưa.  
+3. Nếu đã có, trả  về kết quả cũ ngay l ập tức. 
+4. Nếu chưa, x ử lý và lưu k ết quả vào Redis v ới TTL . 
+ 
+8.5.3 Lý thuy ết SingleFlight Pattern  
+ 
+SingleFlight  (golang.org/x/sync/singleflight) gi ải quy ết bài toán  cache stampede: Khi 
+cache miss, hàng trăm request đ ồng lo ạt cùng query database.  
+SingleFlight đ ảm bảo chỉ một request th ực sự gọi hàm đ ắt tiền, các request còn l ại chờ 
+và nh ận cùng k ết quả. Khác v ới Mutex (ch ặn tuần tự), SingleFlight cho phép 
+deduplication.  
+ 
+8.5.4 Lý thuy ết HMAC -SHA512 cho ch ữ ký số VNPay 
+ 
+HMAC (Hash -based Message Authentication Code) k ết hợp một hash function  (SHA -
+512) v ới một secret key  để tạo chữ ký xác th ực. VNPay yêu c ầu ký toàn b ộ tham s ố 
+query string theo th ứ tự bảng chữ  cái, đ ảm bảo tính toàn v ẹn dữ liệu và xác th ực 
+nguồ n gốc. 
+  
+139 
+ 8.5.5 Use Case ngườ i dùng  
+Thành ph ần Cụ thể 
+Tên Use Case  Thanh toán đ ặt vé qua c ổng VNPay với bảo vệ chống trùng l ặp 
+giao d ịch 
+Tác nhân  Người dùng đã có booking ở trạng thái  pending  
+Mô t ả ngắn gọn Người dùng ch ọn phương th ức VNPay và xác nh ận thanh toán. 
+Hệ thống sử  dụng Idempotency Key đ ể đảm bảo chỉ một giao 
+dịch duy nhấ t được tạo tại VNPay , dù ngư ời dùng nhấ n thanh 
+toán nhi ều lần do m ạng không ổn định. Ch ữ ký HMAC- SHA512 
+đảm bảo tính toàn v ẹn dữ liệu trao đ ổi với VNPay. 
+Điều kiện tiên 
+quyết Booking đang ở trạng thái  pending  và chưa quá 5 phút. C ấu hình 
+VNPay (TmnCode, HashSecret, PayURL,  ReturnURL) đã đư ợc 
+thiết lập. Redis đang ho ạt động (b ắt buộc cho Idempotency). 
+Luồng sự kiện 
+chính  1. Ngư ời dùng ch ọn "Thanh toán qua VNPay" và nh ấn xác nh ận. 
+Frontend t ạo Idempotency -Key = "pay- {bookingId} -
+{timestamp}"  và gửi POST /payment  kèm key trong Header.  
+2. Handler đ ọc Idempotency -Key, ki ểm tra trong Redis –  chưa có 
+(cache miss).  
+3. paymentSer vice acquire Distributed Lock trên key đó 
+(Redis.SetNX) đ ể tránh 2 request cùng key x ử lý đồng th ời.  
+4. Service đ ọc VNPayProvider từ map providers["VNPAY"]  theo 
+Strategy Pattern. 
+ 5. VNPayProvider.CreatePayment() sort tham s ố theo alphabet, 
+tính HMAC -SHA5 12 với HashSecret, t ạo URL redirect t ới cổng 
+VNPay.  
+6. Kết quả lưu vào Database và cache vào Redis v ới TTL 24 gi ờ. 
+Lock đượ c giải phóng qua  defer.  
+7. Frontend nh ận redirect URL và chuy ển ngườ i dùng sang trang 
+VNPay để  nhập OTP.  
+140 
+ Luồng ngo ại lệ Bước 1 (M ạng lag, nh ấn 3 lần): Request 2 và 3 mang 
+cùng  Idempotency- Key.  
+Bước 2 tìm th ấy key trong Redis (cache hit), trả  về kết quả đã lưu 
+ngay l ập tức – không gọ i VNPay thêm l ần nào.  
+Bước 3 (2 request đ ến đồng th ời): Request 2 không acquire đư ợc 
+lock (S etNX  trả về false), sleep 100ms và 
+thử checkIdempotency lần nữa – lúc này request 1 đã x ử lý xong 
+và lưu cache. Bước 1 (Booking h ết 
+hạn): time.Now().After(booking.CreatedAt.Add(5 * 
+time.Minute)) – trả về lỗi "Booking đã hế t hạn". 
+Hậu điều kiện Đúng m ột bản ghi  Payment  được tạo trong Database v ới status = 
+"pending". Ngườ i dùng đư ợc redirect sang VNPay. N ếu 
+paymentMethod là Cash/MoMo, MockProvider  tự set status = 
+"paid" ngay.  
+ 
+8.5.6 Ứng dụ ng th ực tế trong d ự án 
+File: internal/service/payment_service_imp.go  
+ 
+ 
+
+141 
+ 8.6. Xử  Lý Webhook B ất Đồng B ộ (Async Processing)  
+8.6.1 Lý thuy ết Fire -and- Forget Pattern v ới Goroutine  
+ 
+Webhook từ  VNPay  bắt buộc phải nhận được response 200 OK ngay l ập tức (trong 
+vài giây). N ếu server x ử lý ch ậm (query DB, update trạ ng thái), VNPay s ẽ retry và t ạo 
+ra duplicate x ử lý. 
+Giải pháp:  Fire-and-Forget  – tách logic x ử lý ra m ột goroutine riêng, trả  về 200 OK 
+ngay. Goroutine s ẽ hoàn t ất xử lý trong n ền. 
+Rủi ro: N ếu server crash sau khi trả  200 nhưng trư ớc khi goroutine hoàn t ất → C ần 
+Idempotency đ ể VNPay retry an toàn.  
+ 
+8.6.2 Use Case ngườ i dùng  
+Thành 
+phần Cụ thể 
+Tên Use 
+Case  Nhận và x ử lý webhook xác nh ận thanh toán t ừ VNPay  
+Tác nhân  VNPay Server (h ệ thống bên th ứ ba) 
+Mô t ả 
+ngắn gọn Sau khi ngư ời dùng hoàn t ất thanh toán trên trang VNPay, VNPay g ửi 
+POST request (webhook) v ề hệ thống để xác nh ận kết quả giao d ịch. 
+Hệ thống ph ải phản hồi 200 OK  ngay l ập tức và x ử lý logic c ập nhật 
+Database trong n ền để đáp ứng yêu c ầu thời gian ph ản hồi của VNPay.  
+Điều kiện 
+tiên quy ết Người dùng đã hoàn t ất thanh toán trên trang VNPay. Endpoint 
+webhook đã đư ợc đăng ký v ới VNPay và có th ể truy c ập công khai. 
+Luồng sự 
+kiện chính  1. Ngư ời dùng hoàn t ất thanh toán OTP trên VNPay. VNPay 
+gửi POST /api/v1 /payment/webhook/vnpay  kèm thông tin giao d ịch và 
+chữ ký HMAC.  
+2. Handler đ ọc toàn b ộ request body  vào []byte.  
+3. Handler spawn m ột goroutine m ới (Fire -and-Forget) đ ể xử lý trong 
+nền và ngay l ập tức trả về 200 OK  cho VNPay.  
+142 
+ 4. VNPay nh ận 200 OK, đánh d ấu webhook là đã giao thành công – 
+không retry.  
+5. Goroutine n ền: Verify ch ữ ký HMAC -SHA512 v ới HashSecret. 
+Kiểm tra vnp_ResponseCode == "00"  (thành công). 
+Gọi bookingRepo.UpdateStatus(ctx, bookingID, "confirmed"). Ghi 
+audit log k ết quả. 
+Luồng 
+ngoạ i lệ Bước 5 (Ch ữ ký không h ợp lệ): Goroutine log l ỗi "Webhook: invalid 
+HMAC signature"  và dừng – không c ập nhật Database .  
+Bước 5 (Server crash sau bư ớc 3): Goroutine chưa k ịp cập nhật DB. 
+VNPay retry sau 5 phút. L ần retry: Idempotency check phát hiệ n 
+booking đã  confirmed  hoặc webhook đã đư ợc xử lý – skip an toàn.  
+Bước 3 (context.Background() thay r.Context()):  Nếu 
+dùng  r.Context(), context b ị cancel ngay khi response trả  về, goroutine 
+bị ngắt giữa chừng trư ớc khi update DB. 
+Hậu điều 
+kiện VNPay không retry (đã nh ận 200 OK). Booking đư ợc cập nhật 
+thành  confirmed  trong Database. Ngư ời dùng nh ận thấy vé đã đư ợc 
+xác nh ận khi truy c ập "Vé c ủa tôi". 
+ 
+8.6.3 Ứng dụ ng th ực tế trong d ự án 
+File: internal/handler/payment_handler.go  
+ 
+ 
+ 
+
+143 
+ 8.7. Domain Modeling Và Struct Tags  
+8.7.1 Lý thuy ết Struct Tags trong Go  
+Struct Tags là metadata g ắn vào t ừng field c ủa struct, đư ợc đọc bởi các thư vi ện 
+qua reflection  tại runtime. Go không có annotation như Java, nhưng struct tags cung 
+cấp chức năng tương t ự theo cách explicit hơn.  
+Các tag ph ổ biến: 
+• json:"name": Đi ều khi ển JSON serialization/deserialization.  
+• db:"col_name": Ánh x ạ column trong  database (sqlx). 
+• json:" -": Không serialze field này ra JSON. 
+• json:"omitempty": B ỏ qua field trong JSON n ếu giá trị  là zero value. 
+ 
+8.7.2 Lý thuy ết Pointer Semantics trong Domain Models  
+ 
+Go phân bi ệt rõ value types  và pointer types. S ử dụng *string  hoặc *time.Time  cho 
+phép phân bi ệt "không có giá trị  (nil)" v ới "có giá trị  là chu ỗi rỗng" – quan trọ ng cho 
+các field optional trong database (nullable columns). 
+ 
+8.7.3 Use Case ngườ i dùng  
+Thành 
+phần Cụ thể 
+Tên Use 
+Case  Đăng ký tài kho ản với thông tin tùy chọn và b ảo mật mật khẩu 
+Tác nhân  Người dùng m ới (chưa có tài kho ản) 
+Mô t ả ngắn 
+gọn Người dùng đi ền form đăng ký. S ố điện tho ại là tùy ch ọn (có th ể bỏ 
+trống). H ệ thống đảm bảo mật khẩu hash không bao gi ờ lộ ra ngoài 
+qua API response nh ờ struct tags. Các field tùy ch ọn được ánh x ạ 
+chính xác v ới NULL trong Database.  
+Điều kiện 
+tiên quy ết Email ngư ời dùng nh ập chưa t ồn tại trong h ệ thống. 
+144 
+ Luồng sự 
+kiện chính  1. Ngư ời dùng nh ập username,  email,  password. B ỏ trống 
+trường phone. Frontend g ửi JSON  {"username":" ...", "email":"...", 
+"phone": null}. 
+2. Go  json.Unmarshal  vào struct  User:  Phone *string  được 
+set nil (phân bi ệt rõ v ới "" – người dùng không nh ập). OTPCode 
+*string  là nil.  
+3. Service hash  password  bằng bcrypt, lưu vào  PasswordHash string. 
+4. Repository INSERT vào PostgreSQL – cột phone nhận NULL  (nil 
+pointer ánh x ạ chính xác).  
+5. Service g ửi OTP qua email đ ể xác th ực.  
+6. Handler serialize  User thành JSON đ ể trả response: json:"-
+" trên PasswordHash  → trư ờng này không xu ất hiện trong 
+JSON.  json:"phone"  với giá trị  nil → xu ất hiện như "phone": 
+null hoặc không có n ếu có omitempty. 
+Luồng 
+ngoạ i lệ Bước 2 (Email đã t ồn tại): Repository  INSERT  vi ph ạm unique 
+constraint, trả  về lỗi PostgreSQL. Service wrap l ỗi, Handler trả  
+về 409 Conflict: " Email đã đư ợc sử dụng". 
+Hậu điều 
+kiện Tài kho ản được tạo với is_verified = false. M ật khẩu hash không b ị 
+lộ trong b ất kỳ API response nào. Trư ờng phone = NULL  trong 
+Database thay vì chu ỗi rỗng. 
+ 
+  
+145 
+ 8.7.4 Ứng dụ ng th ực tế trong d ự án 
+File: internal/domain/models.go  – Struct Tags và Pointer Semantics  
+ 
+8.8. Graceful Shutdown Và Quả n Lý Vòng Đ ời Ứng D ụng 
+8.8.1 Lý thuy ết OS Signals và Context Cancellation  
+ 
+Linux/Windows gử i tín hiệ u (signal) cho process khi mu ốn dừng nó: 
+• SIGINT  (Ctrl+C): Interrupt signal. 
+• SIGTERM: Graceful termination (Docker stop, Kubernetes pod eviction).  
+Khi nhậ n SIGTERM, m ột server "thô" s ẽ dừng ngay, làm đ ứt các request đang x ử lý, 
+dẫn đến mất dữ liệu hoặ c incomplete transact ion. 
+Graceful Shutdown: Server ng ừng nh ận request m ới, chờ các request hi ện tại hoàn tấ t 
+trong m ột kho ảng timeout, sau đó đóng k ết nối. 
+context.WithTimeout  tạo một Context v ới deadline, t ự động cancel sau 
+timeout. http.Server.Shutdown(ctx) dừng server grac efully, block cho đ ến khi t ất cả 
+connections đóng hoặ c ctx b ị cancel.  
+ 
+ 
+ 
+
+146 
+ 8.8.2 Lý thuy ết defer  trong Go  
+ 
+Defer đảm bảo một lệnh đư ợc thực thi khi hàm ch ứa nó k ết thúc, b ất kể kết thúc bình 
+thường hay do panic. Đây là idiom "cleanup" ph ổ biến trong Go:  
+f := open("file.txt") 
+defer f.Close()        // Đ ảm bảo file đư ợc đóng dù hàm return ở  đâu 
+defer theo LIFO order (Last In, First Out) –  hữu ích khi c ần cleanup nhi ều tài nguyên 
+theo th ứ tự ngược lại với khởi tạo. 
+ 
+8.8.3 Use Case ngườ i dùng  
+Thành 
+phần Cụ thể 
+Tên Use 
+Case  Triển khai phiên b ản mới mà không làm gián đo ạn ngư ời dùng đang s ử 
+dụng 
+Tác nhân  DevOps / Kubernetes (h ệ thống tri ển khai)  
+Mô t ả 
+ngắn gọn Trong quy trình rolling update c ủa Kubernetes, container đang ch ạy 
+nhận tín hi ệu SIGTERM  để dừng gracefully. H ệ thống Go đ ảm bảo tất 
+cả request đang x ử lý đư ợc hoàn t ất, các k ết nối Database và Redis 
+được đóng đúng thứ  tự, trước khi process thoát. Ngư ời dùng đang s ử 
+dụng ứng dụng không c ảm nh ận bất kỳ gián đo ạn nào.  
+Điều 
+kiện tiên 
+quyết Phiên b ản mới đã đư ợc build và push lên registry. Kubernetes đang th ực 
+hiện rolling update –  khởi động pod m ới trước khi d ừng pod cũ.  
+Luồng sự 
+kiện 
+chính  1. Kubernetes g ửi SIGTERM  cho pod đang ch ạy.  
+2. Go Runtime giao signal t ới quit channel. Mai n goroutine (đang block 
+tại <-quit) nh ận signal và ti ếp tục chạy. 
+3. srv.Shutdown(shutdownCtx)  được gọi với context timeout 15 giây: 
+Server t ừ chối tất cả connection m ới, không ng ắt các connection đang 
+active.  
+147 
+ 4. Trong 15 giây: T ất cả goroutines đang x ử lý HTTP request hoàn t ất 
+việc của mình và trả  response v ề client. Booking transactions commit 
+thành công. Payment requests hoàn t ất.  
+5. srv.Shutdown()  trả về khi tất cả active connections đã đóng.  
+6. defer trong  main() thực thi theo LIFO:  logger.Sync() flush buffer log 
+→ rdb.Close() đóng Redis pool →  db.Close() đóng DB connection 
+pool. 7. Process thoát v ới exit code 0. Kubernetes ghi nh ận pod đã d ừng 
+gracefully và cân nh ắc tiếp tục rolling update. 
+Luồng 
+ngoạ i lệ Bước 4 (H ết 15 giây timeout):  shutdownCtx  bị 
+cancel, srv.Shutdown()  trả về dù còn request chưa xong. Các request đó 
+bị ngắt (connection reset). Process v ẫn thoát đ ể không block 
+deployment.   
+Bước 2 (SIGINT t ừ Ctrl+C trong development):  Xử lý giống hệt – 
+developer có th ể dừng server an toàn trong khi  đang test mà không m ất 
+dữ liệu. 
+Hậu điều 
+kiện Process đã thoát s ạch. Không có transaction nào b ị incomplete. T ất cả 
+connections DB/Redis đã đư ợc đóng đúng cách. Ngư ời dùng đang dùng 
+ứng dụ ng không gặ p lỗi nào trong su ốt quá trình này.  
+ 
+8.8.4 Ứng dụ ng th ực tế trong d ự án 
+ 
+ 
+
+148 
+ 8.9. CẤ U TRÚC L ỖI VÀ STATE MACHINE TRẠ NG THÁI Đ ẶT VÉ  
+8.9.1 Lý thuy ết Error Handling trong Go  
+ 
+Go không có exceptions. L ỗi là giá trị  trả về thông thư ờng (value type). Convention: 
+Hàm trả  về (result, error) – caller bắt buộc xử lý lỗi明確.  
+errors.New() tạo error v ới message c ố định. Đ ể so sánh l ỗi chính xác (không ph ải so 
+sánh string), dùng  sentinel errors  (biến global). T ại Handler, dùng  errors.Is() để phân 
+loại lỗi và quy ết định HTTP status code phù h ợp. 
+Error Wrapping  (fmt.Errorf("context: %w", err)): B ọc lỗi gốc với thêm 
+context. %w cho phép  errors.Is()  và errors.As() unwrap qua nhi ều layer. 
+ 
+8.9.2 Lý thuy ết State Machine cho Booking Status  
+ 
+Trạng thái đ ặt vé là m ột Finite State Machine (FSM):  
+[pending] ──thanh toán OK──→ [confirmed]  
+[pending] ──5 phút qua──────→ [expired/deleted]  
+[pending] ──h ủy bởi user───→ [cancelled] 
+[confirmed] ──không đ ổi────→ [confirmed]  
+State transitions ph ải được validate nghiêm ng ặt để tránh inconsistent state (ví d ụ: 
+không thể  từ confirmed  quay về  pending).  
+  
+149 
+ 8.9.3 Use Case ngườ i dùng  
+Thành ph ần Cụ thể 
+Tên Use 
+Case  Đặt vé cho su ất chiếu đã b ắt đầu và x ử lý vé h ết hạn giữ chỗ 
+Tác nhân  Người dùng đã đăng nh ập 
+Mô t ả ngắn 
+gọn Hệ thống sử dụng Sentinel Errors và ki ểm tra th ời gian rõ ràng đ ể từ 
+chối đặt vé cho các su ất chiếu đã b ắt đầu. Đồng th ời, State Machine 
+đảm bảo booking pending quá 5 phút t ự động không hiể n thị trong 
+danh sách vé, gi ải phóng gh ế cho ngư ời khác. 
+Điều kiện 
+tiên quy ết Người dùng đã đăng nh ập. Su ất chiếu tồn tại trong Database.  
+Luồng sự 
+kiện chính 
+(UC-A: Vé 
+hết hạn) 1. Ngư ời dùng đ ặt vé lúc 14:00, t ạo booking  pending. Đ ồng hồ đếm 
+ngược 5 phút b ắt đầu trên frontend.  
+2. Ngư ời dùng b ị phân tâm, không thanh toán. Đ ồng hồ  về 0:00 lúc 
+14:05, frontend hi ển thị thông báo "H ết thời gian gi ữ chỗ" và 
+redirect v ề trang ch ủ.  
+3. Lúc 14:10, ngư ời dùng vào "Vé c ủa tôi".  
+4. Repository th ực thi query v ới filter:  WHERE (status != 'pending' 
+OR created_at > NOW() -  INTERVAL '5 minutes'). Booking 14:00 
+với status  pend ing không thỏ a điều kiện (đã qua 10 phút).  
+5. Danh sách trả  về không có booking đó. Ngư ời dùng th ấy thông 
+báo "B ạn chưa có vé nào". Gh ế A5 đã trố ng cho ngườ i khác đ ặt. 
+Luồng sự 
+kiện chính 
+(UC-B: Đ ặt 
+vé su ất đã 
+bắt đầu) 1. Ngư ời dùng m ở trang đ ặt vé lúc 0 9:55 (su ất 10:00 chưa b ắt đầu). 
+2. Suy nghĩ 10 phút, nhấ n "Xác nh ận đặt vé" lúc 10:05. 3. 
+Repository truy v ấn start_time  từ DB. Go ki ểm 
+tra: startTime.Before(time.Now()) → 10:00.Before(10:05)  → true. 
+Trả về ErrShowtimeExpired. 4. Handler kiể m tra  errors.Is (err, 
+ErrShowtimeExpired), trả  về 400 Bad Request  với message rõ ràng. 
+Luồng ngo ại 
+lệ UC-A, Bư ớc 2 (User v ẫn ở trang thanh toán):  Đồng hồ đếm ngư ợc 
+được hệ thống tính t ừ booking.created_at (lưu trong DB) –  không b ị 
+150 
+ reset khi refresh trang. Khi v ề 0, frontend t ự redirect mà không c ần 
+gọi thêm API. UC-B (Frontend cache su ất chiếu cũ):  Frontend hi ển 
+thị "chưa b ắt đầu" nhưng thự c tế đã bắt đầu. Backend là source of 
+truth –  từ chối tại tầng Repository v ới ErrShowtimeExpired. 
+Hậu điều 
+kiện UC-A: Booking  pending  quá h ạn không xu ất hiện trong danh sách. 
+Ghế được giải phóng t ự động (không cầ n cronjo b). UC-B: Không 
+có booking nào đư ợc tạo. Ngư ời dùng th ấy thông báo l ỗi rõ ràng và 
+có th ể chọn suất chiếu khác.  
+ 
+8.9.4 Ứng dụ ng th ực tế trong d ự án 
+File: internal/repository/errors.go  
+ 
+File: internal/repository/postgres_booking_repository.go  
+ 
+ 
+ 
+ 
+ 
+  
+ 
+ 
+
+151 
+ CHƯƠNG 9:  KẾT QU Ả ĐẠT ĐƯ ỢC 
+9.1 Mức Độ Hoàn Thành Các Chứ c Năng  
+Nhìn l ại toàn b ộ quá trình phát tri ển, nhóm đã hoàn thành dự  án ở mức độ đáp ứng đầy 
+đủ các yêu c ầu chức năng c ốt lõi ban đầu. Dư ới đây là b ảng đánh giá chi ti ết từng 
+module:  
+Module  Chức Năng Đã Hoàn 
+Thành Mức Độ 
+Hoàn 
+Thành Ghi Chú  
+Quản lý 
+người dùng Đăng ký, đăng nhập, phân 
+quyền (user/admin), JWT 
+authentication  100%  Middleware xác thực hoạt động 
+ổn định  
+Quản lý 
+phim  CRUD đầy đủ, tìm kiếm 
+theo tên/thể loại, lọc theo 
+trạng thái  100%  Admin quản lý, user chỉ xem  
+Quản lý 
+rạp & 
+phòng Thêm/sửa rạp, tạo phòng 
+chiếu, quản lý sơ đồ ghế  100%  Hỗ trợ nhiều loại ghế (thường, 
+VIP)  
+Quản lý 
+suất chiếu  Tạo/xóa lịch chiếu, kiểm 
+tra trùng lịch phòng  100%  Validation tránh trùng suất  
+Đặt vé & 
+Thanh toán  Chọn ghế, tạo booking, 
+thanh toán, xem lịch sử vé  95% Chỉ hỗ trợ thanh toán nội bộ, 
+chưa tích hợp cổng thanh toán thực tế  
+Xử lý đồng 
+thời Ngăn 2 người cùng đặt 1 
+ghế (Race Condition)  100%  Sử dụng DB Transaction kết hợp 
+SELECT FOR UPDATE 
+Quản lý 
+trạng thái 
+ghế Cập nhật trạng thái ghế 
+trống/đã đặt sau mỗi giao dịch 100%  Đồng bộ ngay khi booking 
+chuyển sang trạng thái confirmed  
+Tổng thể  Toàn bộ chức năng cốt lõi 
+theo thiết kế ban đầu  ~98%  Phần còn lại là tích hợp cổng 
+thanh toán thực tế, xác định là 
+hướng phát triển tương lai  
+152 
+  
+9.2. Hệ Thống Đáp Ứng Ki ến Trúc Clean MVC  
+Dự án đư ợc xây d ựng theo ki ến trúc  MVC m ở rộng (Clean MVC), trong đó t ầng 
+Controller đư ợc tách thêm thành hai l ớp riêng biệ t là Service và Repository, nh ằm 
+đảm bảo mỗi tầng chỉ  chịu trách nhi ệm duy nh ất một nhiệm vụ. Kiến trúc này tuân th ủ 
+nguyên t ắc Separation of Concerns  - tách bi ệt rõ ràng gi ữa logic d ữ liệu, logic nghi ệp 
+vụ và logic trình bày.  
+Toàn b ộ luồng xử lý một request đi qua các t ầng theo th ứ tự sau: 
+HTTP Request  
+     | 
+     v 
+  Router (main.go / router.go)  
+     |         Phân lo ại request, g ắn middleware xác th ực JWT  
+     v 
+  Handler (internal/handlers/)          < -- Tầng Controller 
+     |         Nh ận request, validate đ ầu vào, g ọi Service  
+     v 
+  Service (internal/services/)          < -- Tầng nghi ệp vụ 
+     |         X ử lý logic, đi ều phố i giữa các Repository  
+     v 
+  Repo sitory (internal/repositories/)   < -- Tầng truy xu ất dữ liệu 
+     |         Vi ết câu truy v ấn SQL, tương tác v ới DB  
+     v 
+  Model (internal/models/)              < -- Tầng cấu trúc d ữ liệu 
+     |         Đ ịnh nghĩa struct ánh x ạ với bảng PostgreSQL  
+     v 
+  PostgreSQL Database  
+     | 
+     v 
+  JSON Response trả  về client           < -- Tầng View  
+153 
+ Tầng Model -  Cấu trúc d ữ liệu: 
+Toàn b ộ struct đ ịnh nghĩa th ực thể (User, Movie, Showtime, Booking, Seat...) n ằm 
+trong thư m ục internal/models/. M ỗi model ánh x ạ trực tiếp với một bảng trong 
+PostgreSQL thông qua GORM tag, đ ồng th ời khai báo các ràng bu ộc validation. T ầng 
+này không chứ a bất kỳ logic nghi ệp vụ nào - chỉ mô tả thuần túy c ấu trúc và quan h ệ 
+giữa các th ực thể dữ liệu. 
+Tầng Repository -  Truy xu ất dữ liệu: 
+Nằm trong  internal/repositories/, đây là t ầng duy nhấ t được phép vi ết câu truy v ấn 
+SQL hoặ c gọi GORM đ ể tương tác v ới PostgreSQL. M ỗi entity có m ột Repository 
+riêng (MovieRepository, BookingRepository, SeatRepository...). T ầng này không bi ết 
+gì về logic nghi ệp vụ - chỉ thực hiện các thao tác CRUD và trả  dữ liệu thô về  cho 
+Service. 
+Tầng Service -  Xử lý nghiệ p vụ: 
+Nằm trong  internal/services/, đây là nơi t ập trung toàn b ộ logic nghi ệp vụ phức tạp 
+của hệ thống. Ví d ụ, luồng đặt vé bao g ồm: ki ểm tra gh ế còn t rống, khóa gh ế bằng 
+transaction, tính t ổng tiền, tạo bản ghi booking và c ập nhật trạng thái -  toàn b ộ các 
+bước này ch ỉ được viết tại tầng Service. T ầng này không biế t gì v ề HTTP request hay 
+JSON response, ch ỉ nhận dữ liệu thu ần từ Handler và tr ả kết quả về. 
+Tầng Handler (Controller) -  Điều ph ối request: 
+Nằm trong  internal/handlers/, Handler đóng vai trò c ầu nối giữa HTTP và logic ứ ng 
+dụng. Nhi ệm vụ của Handler bao g ồm: đọc dữ liệu từ request (path param, query 
+param, body), g ọi Service tương ứng, rồi serial ize k ết quả trả về dạng JSON. 
+Handler không ch ứa logic nghi ệp vụ - nếu Handler c ần tự xử lý logic thay vì g ọi 
+Service, đó là d ấu hiệu kiế n trúc đang b ị vi ph ạm. 
+Tầng View -  JSON Response:  
+Vì đây là REST API thu ần túy, không có giao di ện HTML, t ầng View tươ ng đương 
+với cấu trúc JSON trả  về cho client. Nhóm đ ịnh nghĩa hai struct chu ẩn hóa dùng thố ng 
+nhất toàn d ự án: 
+go 
+// Phản hồi thành công  
+type SuccessResponse struct {  
+154 
+     Data    interface{} `json:"data"`  
+    Message string      `json:"message"`  
+} 
+ 
+// Phản hồi lỗi 
+type ErrorResponse struct { 
+    Error string `json:"error"`  
+    Code  int    `json:"code"`  
+} 
+Việc chu ẩn hóa response giúp Frontend luôn bi ết chính xác c ấu trúc d ữ liệu nhậ n về, 
+bất kể đang gọ i endpoint nào.  
+ 
+Bảng dư ới đây tóm t ắt trách nhi ệm của từng tầ ng và quy t ắc phân tầ ng nhóm tuân th ủ: 
+ 
+Tầng Thư M ục Trách 
+Nhiệm Được Phép  Không Đư ợc 
+Phép  
+Model  internal/models/  Định nghĩa 
+cấu trúc d ữ 
+liệu, ánh x ạ 
+DB Khai báo struct, 
+validation tag, quan 
+hệ bảng Viết logic, g ọi 
+DB trự c tiếp 
+Repository  internal/repositories/  Truy xu ất và 
+lưu trữ  dữ 
+liệu Viết SQL, dùng 
+GORM, truy v ấn DB Xử lý logic 
+nghiệp vụ, biết 
+về HTTP 
+Service  internal/services/  Xử lý toàn b ộ 
+logic nghi ệp 
+vụ Gọi Repository, x ử lý 
+transaction, tính toán  Biết về HTTP 
+request, vi ết 
+SQL trự c tiếp 
+Handler  internal/handlers/  Điều phối 
+request và 
+response  Đọc request, g ọi 
+Service, tr ả JSON  Viết logic 
+nghiệp vụ, gọi 
+Repository trự c 
+tiếp 
+155 
+ Tầng Thư M ục Trách 
+Nhiệm Được Phép  Không Đư ợc 
+Phép  
+View  (JSON Response)  Định nghĩa 
+cấu trúc ph ản 
+hồi Chuẩn hóa 
+SuccessResponse, 
+ErrorResponse  Chứa logic x ử lý 
+dữ liệu 
+ 
+Kết quả vận hành thự c tế: 
+ 
+Nhờ kiến trúc phân t ầng rõ ràng, khi m ột lỗi phát sinh trong quá trình phát tri ển, nhóm 
+xác đ ịnh ngay đư ợc tầng cầ n kiểm tra mà không ph ải dò toàn b ộ codebas e. Lỗi dữ liệu 
+sai cấu trúc tìm trong Model, l ỗi câu truy v ấn SQL tìm trong Repository, l ỗi tính toán 
+nghiệp vụ tìm trong Service, l ỗi đọc sai tham s ố request tìm trong Handler. Server Go 
+khởi động trong dư ới 1 giây, x ử lý đồng th ời nhiều request nh ờ cơ ch ế goroutine t ự 
+nhiên c ủa ngôn ng ữ, kết nối PostgreSQL qua connection pool v ới tối đa 25 connection 
+đồng th ời, không ghi nhậ n hiện tượng crash hay memory leak trong su ốt quá trình 
+kiểm thử. 
+ 
+9.3. Đánh Giá Quá Trình Làm Vi ệc Nhóm  
+ 
+9.3.1. Qu ản Lý Source Code V ới Git 
+ 
+Nhóm s ử dụng GitHub đ ể quản lý toàn b ộ source code v ới quy trình làm vi ệc có t ổ 
+chức. Dư ới đây là tóm t ắt từ Git History và Insights c ủa repository:  
+ Mẫu commit message nhóm s ử dụng (theo chu ẩn Conventional Commits):  
+ feat(booking): thêm logic ki ểm tra gh ế trống trư ớc khi đ ặt 
+fix(auth): s ửa lỗi token không đư ợc refresh đúng cách   
+refactor(movie): tách repository layer kh ỏi handler  
+156 
+ docs(api): c ập nhật swagger annotation cho /showtimes  
+test(booking): thêm test case cho t rường hợ p ghế  đã bị đặt 
+chore: c ập nhật .env.example và README hướ ng dẫ n cài đ ặt 
+ 
+Quy ư ớc commit message nh ất quán giúp nhìn vào l ịch sử Git là hi ểu ngay ai làm gì, 
+phần nào c ủa hệ thống thay đ ổi. 
+ 
+9.3.2. Mô Hình Phân Nhánh (Git Branching Model) 
+ 
+Nhóm áp dụ ng mô hình **GitHub Flow** - đơn gi ản hơn Git Flow nhưng phù hợp 
+với nhóm nh ỏ và deadline họ c thu ật: 
+ main (nhánh chính - luôn ở trạng thái có th ể chạy được) 
+ ├── develop ( nhánh phát tri ển tích h ợp) 
+ │    ├── feature/auth -jwt          ← Thành viên A làm module xác th ực 
+ │    ├── feature/movie -crud        ← Thành viên B làm qu ản lý phim  
+ │    ├── feature/booking -logic     ← Thành viên C làm đ ặt vé 
+ │    ├── feature/seat -management   ← Thành viên A làm quản lý gh ế 
+ │    └── fix/race -condition -booking ← Sử a lỗi cụ thể 
+ └── (merge vào main sau khi test  xong trên develop ) 
+ 
+Quy tắc làm việc với nhánh:  
+• Mỗi tính năng m ới hoặc bug fix t ạo một nhánh riêng t ừ develop , đặt tên theo 
+format feature/ten -tinh-nang  hoặc fix/mo -ta-loi. 
+• Khi hoàn thành, m ở Pull Request (PR) vào develop , ít nh ất 1 thành viên khác 
+review code trư ớc khi merge.  
+• Nhánh main  chỉ được cập nhật khi develop  đã qua ki ểm thử đầy đủ - đảm bảo 
+main  luôn là phiên b ản ổn định có t hể demo đư ợc bất cứ lúc nào.  
+• Xóa nhánh feature sau khi merge đ ể repository s ạch sẽ. 
+157 
+  
+9.3.3. Cách Gi ải Quy ết Conflict Khi Merge Code  
+Conflict (xung đột) xảy ra khi 2 người cùng sửa một file ở cùng vị trí. Nhóm đã gặp 
+và xử lý theo quy trình sau:  
+Conflict thường gặp nhất : File internal/router/router.go  - nơi đăng ký tất cả routes. 
+Khi nhiều người cùng thêm route mới, Git không biết giữ dòng nào. 
+Quy trình xử lý conflict:  
+Bước 1 - Phòng tránh bằng giao tiếp: Trước khi bắt đầu làm việc mỗi ngày, nhóm  
+thông báo trong nhóm chat xem ai đang làm file nào để tránh làm trùng.  
+Bước 2 - Cập nhật code mới nhất trước khi làm:  Trước khi code, luôn chạy git pull 
+origin develop  để lấy code mới nhất, giảm thiểu độ lệch với nhánh chính.  
+Bước 3 - Khi conflict xảy ra, giải quyết thủ công có chủ đích:  
+# Khi merge PR và có conflict  
+git checkout feature/my -branch  
+git rebase origin/develop   # Rebase thay vì merge đ ể lịch sử gọn hơn  
+ 
+# Git báo conflict ở  router.go  
+# Mở file, tìm đo ạn <<< HEAD ... === ... >>> origin/develop  
+# Giữ LẠI cả hai ph ần (cả route c ủa mình và route c ủa đồng đội) 
+# Xóa các marker <<<, ===, >>>  
+# Test lạ i, rồi commit  
+git add . 
+git rebase --continue  
+Bước 4 -  Họp nhanh khi conflict phức tạp:  Nếu conflict ở logic nghiệp vụ (không 
+chỉ là thêm  dòng), hai người liên quan sẽ ngồi lại cùng xem và quyết định giữ code 
+nào, đảm bảo không mất logic quan trọng.  
+158 
+ 9.4. Khó Khăn Và Cách Kh ắc Phục 
+9.4.1. Khó Khăn 1 - Kết Nối Go V ới PostgreSQL  
+Vấn đề gặp phải:  Ban đầu nhóm gặp lỗi pq: SSL is not enabled on the server  khi kết 
+nối từ Go đến PostgreSQL chạy local. Ngoài ra, khi load test với nhiều request đồng 
+thời, ứng dụng bị lỗi too many connections  vì mỗi request mở một connection mới mà 
+không đóng lại.  
+Nguyên nhân:  
+• PostgreSQL local m ặc định không b ật SSL, nhưng driver Go l ại yêu c ầu SSL 
+theo m ặc định. 
+• Không cấ u hình connection pool, d ẫn đến số lượng connection tăng không 
+kiểm soát. 
+Cách khắc phục:  
+// Thêm ?sslmode=disable vào connection string  
+dsn := "host =localhost user= postgres password =123456   
+         dbname =cinema_db port =5432  sslmode= disable"  
+ db, err :=  gorm .Open( postgres .Open( dsn), &gorm .Config {}) 
+ // Cấu hình connection pool  
+sqlDB , _ := db.DB()  
+sqlDB .SetMaxOpenConns(25)        // T ối đa 25 connection m ở đồng th ời 
+sqlDB .SetMaxIdleCo nns(10)        // Gi ữ sẵn 10 connection ở trạng thái idle  
+sqlDB .SetConnMaxLifetime(5  * time.Minute )  // Đóng connection sau 5 phút  
+```  Sau khi áp dụ ng, lỗi kết nối biến mất và ứ ng dụng xử  lý đư ợc nhi ều request đ ồng th ời 
+mà không bị  quá t ải. 
+ 
+159 
+ 9.4.2. Khó Khăn 2 - Xử Lý Transaction Đ ặt Vé (Race Condition)  
+ 
+Đây là v ấn đề phức tạp nhất của dự án. Khi 2 ngư ời dùng cùng lúc ch ọn cùng m ột ghế 
+và nh ấn "Đ ặt vé" trong cùng m ột mili -giây, h ệ thống không đư ợc để cả hai đ ặt thành 
+công. Tuy nhiên, n ếu xử lý khô ng khéo, có th ể xảy ra tình trạ ng **m ột ngư ời bị mất 
+tiền nhưng không có vé** (đã thanh toán nhưng booking bị  hủy sau đó).  
+ 
+Minh h ọa vấn đề (nếu không có transaction):  
+Thời điểm T1 : User A ki ểm tra gh ế 12 → kết quả: "available"  
+Thời điểm T1 : User B ki ểm tra gh ế 12 → kết quả: "available"   (đọc cùng lúc ) 
+Thời điểm T2 : User A t ạo booking cho gh ế 12 → thành công  
+Thời điểm T2 : User B t ạo booking cho gh ế 12 → cũng thành công ( ?!) 
+→ K ết quả: 2 người cùng gi ữ 1 ghế - dữ liệu bị sai 
+Cách khắc phục -  Sử dụng Database Transaction với SELECT FOR UPDATE:  
+func (s *BookingService ) CreateBooking( userID , showtimeID int, seatIDs []int) 
+(*Booking , error) { 
+     
+    // B ắt đầu transaction -  tất cả hoặc không có gì  
+    tx :=  s.db.Begin()  
+    if tx.Error != nil { 
+        return  nil, tx.Error 
+    } 
+     
+    // SELECT FOR UPDATE: Lock dòng ghế  lại,  
+    // ngăn không cho transaction khác đ ọc/sửa cho đ ến khi transaction này k ết thúc  
+    var seats []Seat  
+    result := tx.Set("gorm:query_option", "FOR UPDATE").  
+                  Where("id IN ? AND showtime_id = ? AND status = 'available'",  
+                        seatIDs , showtimeID ). 
+                  Find(& seats ) 
+160 
+      
+    // N ếu số ghế available ít hơn s ố ghế yêu c ầu → có gh ế đã bị đặt 
+    if len(seats ) < len(seatIDs ) { 
+        tx.Rollback() // Hủy toàn bộ , không thay đổ i gì 
+        return  nil, errors.New("M ột hoặc nhi ều ghế  đã đư ợc đặt bởi ngư ời khác")  
+    } 
+     
+    // C ập nhật trạng thái gh ế → booked  
+    tx.Model(& Seat{}).Where("id IN ?", seatIDs ).Update("status", "booked")  
+     
+    // T ạo bản ghi booking  
+    booking := &Booking { UserID : userID , ShowtimeID : showtimeID , Status : 
+"confirmed"  } 
+    tx.Create(booking )    
+    // Commit -  lưu tất cả thay đ ổi vào DB cùng lúc  
+    if err := tx.Commit().Erro r; err != nil { 
+        tx.Rollback()  
+        return  nil, err 
+    } 
+     
+    return  booking , nil 
+} 
+Kết quả: Với cơ chế SELECT FOR UPDATE , khi User A đang xử lý, hàng dữ liệu 
+của ghế bị lock lại. User B phải đợi cho đến khi transaction của A kết thúc. Nếu A 
+thành công, ghế chuyển sang booked , B kiểm tra lại → thấy không còn available  → 
+trả về lỗi rõ ràng. Không có trường hợp 2 người cùng đặ t thành công 1 ghế.  
+161 
+ 9.4.3. Khó Khăn 3 - Học Go Trong Khi Làm D ự Án 
+Vấn đề gặp phải: Một số thành viên trong nhóm chưa có nhiều kinh nghiệm với Go, 
+đặc biệt là các khái niệm như goroutine , channel , interface , và cách Go xử lý lỗi 
+(không có try -catch như Java/JavaScript). 
+Cách khắc phục:  
+• Nhóm t ổ chức buổi chia s ẻ nội bộ ngắn (30 phút) vào đầu tuần, thành viên đã 
+học được gì thì chia s ẻ lại. 
+• Đặt quy ư ớc: mọi đoạn code ph ức tạp phả i có comment gi ải thích b ằng tiếng 
+Việt để đồng độ i dễ hiểu. 
+• Tận dụng Go Playground ( https://go.dev/play/ ) để thử nghiệm nhanh các đo ạn 
+code nh ỏ trước khi tích h ợp vào d ự án. 
+• Khi g ặp bug khó, pair programming (ng ồi cùng nhau debug) hi ệu quả hơn 
+nhiều so v ới tự mình mò m ẫm một mình.  
+ 
+  
+162 
+ CHƯƠNG 10: HƯ ỚNG PHÁT TRI ỂN 
+10.1. Nâng Cấ p Tính Năng Ứng D ụng 
+10.1. 1. Gửi Vé Qua Email / SMS Sau Khi Thanh Toán  
+Hiện trạng:  Sau khi đặt vé thành công, người dùng chỉ nhận được response JSON. 
+Không có thông báo qua email hay SMS.  
+Kế hoạch thực hiện:  
+Gửi Email với Go và dịch vụ SendGrid:  
+import  "github.com/sendgrid/sendgrid -go/helpers/mail"  
+ 
+func (s *NotificationService ) SendTicketEmail(booking *Booking , user *User ) error { 
+    from :=  mail.NewEmail("Cinema App", "noreply@cinemaapp.vn")  
+    to :=  mail.NewEmail(user .Name , user.Email ) 
+    subject :=  fmt.Sprintf("Vé xem phim c ủa bạn - %s",  booking .MovieTitle ) 
+     
+    // HTML email v ới thiết kế đẹp, hiển thị QR code vé  
+    htmlContent :=  generateTicketEmailHTML(booking)  
+     
+    message := mail.NewSingleEmail(from , subject , to, "", htmlContent ) 
+    client :=  sendgrid .NewSendClient(os .Getenv("SENDGRID_API_KEY"))  
+    client.Send( message)  
+    return  nil 
+} 
+Gửi SMS với Twilio hoặc ESMS (dịch vụ SMS Việt Nam):  
+ 
+ 
+ 
+163 
+ // Gửi SMS xác nh ận đơn gi ản sau khi thanh toán  
+func (s *NotificationService ) SendTicketSMS(phone string, booking *Booking)  error 
+{ 
+    message := fmt.Sprintf( 
+        "VE PHIM: %s | Rap: %s | %s | Ghe: %s | Ma ve: %s", 
+        booking. MovieTitle , booking. CinemaName ,  
+        booking. StartTime .Format("15:04 02/01/2006"),  
+        booking. SeatCodes , booking .TicketCode , 
+    ) 
+    // G ọi API c ủa ESMS đ ể gửi SMS  
+    return  s.esmsClient .Send(phone,  message)  
+} 
+Tích hợp vào luồng đặt vé:  
+go 
+// Sau khi xác nh ận thanh toán thành công  
+go func() { 
+    // Ch ạy trong goroutine riêng đ ể không block response tr ả về cho ngư ời dùng 
+    s.notificationService .SendTicketEmail(booking , user) 
+    s.notificationService .SendTicketSMS( user.Phone,  booking ) 
+}()  Lý do dùng goroutine:  Gửi email/SMS có th ể mất 1-3 giây. N ếu chờ gửi xong m ới trả 
+response, ngư ời dùng sẽ  cảm thấy hệ thống ch ậm. Ch ạy song song trong goroutine 
+giúp ngư ời dùng nh ận được response ngay l ập tức trong khi email/SMS v ẫn đang 
+được gửi ở nền. 
+ 
+ 
+  
+ 
+164 
+ 10.2. Nâng C ấp Kiến Trúc Ph ần Mềm 
+10.2.1. Chuy ển Đổi Từ Monolithic Sang Microservices  
+ 
+Kiến trúc hi ện tại - Monolithic (Nguyên kh ối): 
+Toàn b ộ dự án hi ện tại là m ột ứng dụ ng Go duy nh ất chạy trên m ột server, x ử lý mọi 
+thứ: xác th ực ngư ời dùng, qu ản lý phim, đ ặt vé, thanh toán... Đây g ọi là ki ến trúc 
+Monolithic  (một khối). 
+ 
+Monolithic phù h ợp cho giai đo ạn đầu vì đơn gi ản, dễ phát tri ển, dễ debug. Tuy nhiên 
+khi hệ  thống lớ n lên, s ẽ phát sinh v ấn đề: 
+- Một lỗi nhỏ trong module Thanh toán có th ể làm s ập toàn bộ  hệ thống kể cả module 
+Xem phim.  
+- Không thể  mở rộng từng ph ần độc lập: vào d ịp lễ, module Đ ặt vé c ần nhi ều server 
+hơn, nhưng vì t ất cả trong 1 ứng dụ ng, ph ải nhân rộ ng cả  hệ thống - tốn kém và lãng 
+phí. 
+- Khi team lớ n hơn (10+ ngư ời), nhi ều ngư ời cùng s ửa một codebase gây ra conflict 
+liên t ục. 
+ 
+Kiến trúc tương lai -  Microservices (Đa d ịch vụ): 
+Tách ứ ng dụ ng th ành các **service đ ộc lập**, m ỗi service ch ịu trách nhi ệm một 
+nghiệp vụ cụ thể, có database riêng, deploy riêng:  
+Lợi ích cụ thể:  
+• Fault Isolation (Cô l ập lỗi): Nếu Payment Service b ị lỗi, ngư ời dùng v ẫn xem 
+được danh sách phim và su ất chiếu bình thư ờng - chỉ chức năng thanh toán b ị 
+ảnh hư ởng. 
+• Independent Scaling (M ở rộng độc lập): Dịp Tết khi lư ợng đặt vé tăng đ ột biến, 
+chỉ cần nhân s ố instance c ủa Booking Servi ce lên -  không c ần đụng đế n User 
+Service hay Movie Service. 
+165 
+ • Độc lập công nghệ : Booking Service dùng Go vì c ần hiệ u năng cao, User 
+Service có th ể dùng Node.js, Payment Service có th ể dùng Java n ếu team quen 
+hơn. 
+Thách thức khi chuyển đổi:  
+• Giao ti ếp giữa các  service c ần cơ ch ế mới: HTTP/gRPC cho sync call, Message 
+Queue (Kafka/RabbitMQ) cho async.  
+• Quản lý transaction phân tán (Distributed Transaction) ph ức tạp hơn nhi ều so 
+với transaction đơn trong m ột DB.  
+• Cần đầu tư vào infrastructure: Kubernetes đ ể orchestrate, Service Discovery, 
+Centralized Logging... 
+10.2.2. Ứng Dụ ng Redis Đ ể Caching  
+Redis là gì?  Redis (Remote Dictionary Server) là một cơ sở dữ liệu in -memory  - nghĩa 
+là nó lưu dữ liệu trực tiếp trên RAM thay vì ổ cứng. Điều này khiến tốc độ đọc/ghi của 
+Redis nhanh hơn PostgreSQL khoảng 100-1000 lần . Redis thường được dùng để 
+caching  - lưu tạm kết quả của các truy vấn thường xuyên và tốn tài nguyên.  
+Vấn đề hiện tạ i cần caching giải quyết:  
+Mỗi khi người dùng mở trang chủ xem danh sách phim, hệ thống phải:  
+1. Kết nối đến PostgreSQL. 
+2. Thực thi câu query SELECT * FROM movies WHERE status = 'showing' 
+ORDER BY created_at DESC . 
+3. PostgreSQL đ ọc từ ổ cứng, trả  về kết quả. 
+4. Go serialize k ết quả thành JSON.  
+5. Trả về cho ngư ời dùng.  
+Nếu có 1,000 người cùng lúc mở trang chủ → 1,000 lần query xuống PostgreSQL → 
+database bị quá tải dù dữ liệu danh sách phim gần như không thay đổi trong 1- 2 giờ . 
+ 
+166 
+ Giải pháp với Redis (Cache -Aside Pattern ): 
+func (s *MovieService ) GetNowShowingMovies() ([]Movie , error)  { 
+    cacheKey :=  "movies:now_showing"  
+     
+    // Bư ớc 1: Kiể m tra cache trư ớc 
+    cached , err :=  s.redis .Get(context .Background(), cacheKey ).Result() 
+    if err ==  nil { 
+        // Cache HIT -  có dữ liệu trong Redis, trả  về ngay  
+        // Không c ần đụng đến PostgreSQL  
+        var movies []Movie 
+        json.Unmarshal([]byte(cached ), &movies ) 
+        return  movies , nil 
+    } 
+     
+    // Bư ớc 2: Cache MISS -  không có trong Redis, t ruy vấ n PostgreSQL  
+    movies , err :=  s.movieRepo .FindNowShowing()  
+    if err !=  nil { 
+        return  nil, err 
+    } 
+     
+    // Bư ớc 3: Lưu k ết quả vào Redis đ ể những lầ n sau dùng l ại 
+    // TTL = 30 phút - sau 30 phút Redis t ự xóa, l ần sau s ẽ query DB l ại để lấy dữ liệu 
+mới 
+    data , _ := json.Marshal(movies ) 
+    s.redis .Set(context .Background(), cacheKey , data, 30*time.Minute)  
+     
+    return  movies , nil 
+} 
+ 
+// Khi admin c ập nhật thông tin phim, ph ải xóa cache cũ  
+167 
+ func (s *MovieService ) UpdateMovie(movieID int, input UpdateMovieInput ) error { 
+    err :=  s.movieRepo .Update(movieID , input ) 
+    if err !=  nil { 
+        return  err 
+    } 
+     
+    // Invalidate cache -  xóa cache đ ể lần sau load l ại từ DB v ới dữ liệu mới 
+    s.redis .Del(context .Background(), "movies:now_showing")  
+    s.redis .Del(context .Background(), fmt.Sprintf("movies:detail:%d", movieID )) 
+    return  nil 
+} 
+Các trường hợp nên dùng Redis trong dự án:  
+Dữ liệu Cache  Cache Key  TTL (Th ời 
+gian s ống) Lý do 
+Danh sách phim 
+đang chi ếu movies:now_showing  30 phút  Cập nhật không thư ờng 
+xuyên, nhi ều ngư ời 
+xem 
+Chi ti ết một bộ 
+phim  movies:detail:{id}  1 giờ Thông tin phim r ất ít 
+thay đ ổi 
+Danh sách r ạp 
+chiếu phim  cinemas:all  2 giờ Gần như không đ ổi 
+Sơ đồ ghế của suất 
+chiếu seats:showtime:{id}  2 phút  Cần cập nhật nhanh khi 
+có ngư ời đặt 
+Session ngư ời dùng 
+/ Token blacklist  session:{user_id}  = Th ời hạn 
+token  Quản lý đăng xu ất, 
+token bị  thu h ồi 
+Kết quả kỳ vọng sau khi áp dụng Redis:  
+• Giảm ~80 -90% số  lượng query xuống PostgreSQL cho các endpoint đ ọc 
+(GET). 
+168 
+ • Thời gian ph ản hồi của GET /movies  giảm từ ~50-100ms (query DB) xu ống 
+còn ~1 -5ms (đ ọc từ RAM).  
+• PostgreSQL đượ c giải phóng t ập trung x ử lý các transaction quan trọ ng như đặ t 
+vé, thay vì ph ải phục vụ hàng nghìn re quest đ ọc đơn gi ản mỗi giây. 
+Tổng kết hướng phát triển:  Những nâng cấp được đề xuất -  cổng thanh toán thực tế, 
+thông báo tự động, chuyển đổi sang Microservices và Redis caching -  đều được lên kế 
+hoạch theo thứ tự ưu tiên từ dễ đến khó, từ mang lại giá trị người dùng ngay lập tức 
+đến cải thiện khả năng mở rộng dài hạn. Với nền tảng kiến trúc MVC sạch mà nhóm 
+đã xây dựng, việc mở rộng dần từng bước là hoàn toàn khả thi. 
+ 

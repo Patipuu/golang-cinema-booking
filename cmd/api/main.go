@@ -61,7 +61,7 @@ func main() {
 	bookingRepo := repository.NewBookingRepository(db)
 	paymentRepo := repository.NewPaymentRepository(db)
 	paymentMethodRepo := repository.NewPaymentMethodRepository(db)
-
+	cinemasRepo := repository.NewCinemaRepository(db)
 	// 3. Services
 	emailSvc := service.NewEmailService(
 		cfg.SMTP.Host, cfg.SMTP.Port,
@@ -78,6 +78,7 @@ func main() {
 		paymentRepo, paymentMethodRepo, bookingRepo, rdb.GetRDB(),
 		cfg.VNPay.PayURL, cfg.VNPay.TmnCode, cfg.VNPay.HashSecret, cfg.VNPay.ReturnURL,
 	)
+	cineSvc := service.NewCinemaService(cinemasRepo)
 
 	// 4. Handlers
 	authHandler := handler.NewAuthHandler(authSvc)
@@ -85,7 +86,7 @@ func main() {
 	adminHandler := handler.NewAdminHandler(catalogSvc, authSvc, bookingSvc)
 	bookingHandler := handler.NewBookingHandler(bookingSvc)
 	paymentHandler := handler.NewPaymentHandler(paymentSvc)
-
+	cinemasHandler := handler.NewCinemaHandler(cineSvc)
 	// 5. Routing
 	r := chi.NewRouter()
 	r.Use(chimiddleware.RequestID)
@@ -114,6 +115,9 @@ func main() {
 		r.Get("/cinemas", catalogHandler.ListCinemas)
 		r.Get("/rooms", catalogHandler.ListRooms)
 		r.Get("/seats/room/{id}", catalogHandler.ListSeats)
+		// THÊM CHO BÀI TẬP
+		r.Get("/cinemas/{cinemaId}/rooms/filter", cinemasHandler.FilterRooms)
+		// 
 
 		// Showtime
 		r.Get("/showtimes", catalogHandler.ListShowtimes)

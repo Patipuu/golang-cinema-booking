@@ -4,8 +4,10 @@ import (
 	"booking_cinema_golang/internal/domain"
 	"booking_cinema_golang/internal/service"
 	"booking_cinema_golang/internal/utils/helpers"
+	"booking_cinema_golang/pkg/utils"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -90,4 +92,21 @@ func (h *CinemaHandler) ListSeatsByCinema(w http.ResponseWriter, r *http.Request
 		return
 	}
 	helpers.WriteJSON(w, http.StatusOK, true, "Danh sách ghế", seats)
+}
+
+
+// Bài tập lọc phòng chiếu theo rạp
+func (h *CinemaHandler) FilterRooms(w http.ResponseWriter, r *http.Request) {
+	cinemaID := chi.URLParam(r, "cinemaId")
+	minSeatsStr := r.URL.Query().Get("min_seats")
+	roomType := r.URL.Query().Get("room_type")
+
+	minSeats, _ := strconv.Atoi(minSeatsStr)
+	rooms, err := h.svc.FilterRooms(r.Context(), cinemaID, minSeats, roomType)
+	if err != nil {
+		utils.JSONInternal(w, err.Error())
+		return
+	}
+
+	utils.JSONSuccess(w, rooms, "Danh sách phòng chiếu đã lọc")
 }

@@ -4,6 +4,7 @@ import (
 	"booking_cinema_golang/internal/database"
 	"booking_cinema_golang/internal/domain"
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -79,4 +80,35 @@ func (r *CinemaRepositoryImpl) ListSeatsByCinema(ctx context.Context, cinemaID s
         seats = append(seats, s)
     }
     return seats, nil
+}
+
+// Thêm cho method lọc trong bài tập
+func (r *CinemaRepositoryImpl) FilterRooms(ctx context.Context, cinemaID string, minSeats int, roomType string) ([]domain.ScreeningRoom, error) {
+    query := `
+        SELECT id::text, cinema_id::text, name, room_type, total_seats
+        FROM screening_rooms
+        WHERE cinema_id = $1 AND total_seats >= $2
+        `
+    args := []any{cinemaID, minSeats}
+
+    if roomType != "" {
+        query += " AND room_type = $3"
+        args = append(args, roomType)
+    }
+
+    row, err := r.db.Pool.Query(ctx, query, args...)
+    if err != nil {
+        return nil, fmt.Errorf("cinema: filter rooms: %w", err)
+    }
+    defer row.Close()
+
+    out := make([]domain.ScreeningRoom, 0) // Tránh nil slice
+    for row.Next() {
+        var sr domain.ScreeningRoom
+        if err := row.Scan(&sr.ID, &sr.CinemaID, &sr.Name, &sr.RoomType, &sr.TotalSeats); err != nil {
+            return nil, fmt.Errorf("cinema: filter rooms: scan row: %w", err)
+        }
+        out = append(out, sr)
+    }
+    return out, nil
 }

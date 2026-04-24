@@ -30,3 +30,8 @@ func (s *cinemaService) ListShowtimes(cinemaID string, date time.Time) ([]domain
 func (s *cinemaService) ListSeatsByCinema(cinemaID string) ([]domain.Seat, error) {
     return s.repo.ListSeatsByCinema(context.Background(), cinemaID)
 }
+
+// Thêm cho method lọc trong bài tập
+func (s *cinemaService) FilterRooms(ctx context.Context, cinemaID string, minSeats int, roomType string) ([]domain.ScreeningRoom, error) {
+    return s.repo.FilterRooms(ctx, cinemaID, minSeats, roomType)
+}

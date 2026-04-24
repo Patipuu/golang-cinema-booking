@@ -13,4 +13,6 @@ type CinemaRepository interface {
 	ListAll(ctx context.Context, page domain.Page) ([]domain.Cinema, domain.PageResult, error)
 	ListShowtimes(ctx context.Context, cinemaID string, date time.Time) ([]domain.Showtime, error)
 	ListSeatsByCinema(ctx context.Context, cinemaID string) ([]domain.Seat, error)
+	// Thêm cho method lọc trong bài tập
+	FilterRooms(ctx context.Context, cinemaID string, minSeats int, roomType string) ([]domain.ScreeningRoom, error)
 }

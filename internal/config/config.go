@@ -84,7 +84,7 @@ func Load() (*Config, error) {
 
 	cfg := &Config{
 		Server: ServerConfig{
-			Port: getStr(v, "PORT", "8080"),
+			Port: getStr(v, "PORT", "8081"),
 			Env:  getStr(v, "ENV", "development"),
 		},
 		Database: DatabaseConfig{
@@ -118,7 +118,7 @@ func Load() (*Config, error) {
 			PayURL:    getStr(v, "VNPAY_PAY_URL", "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"),
 			TmnCode:   getStr(v, "VNPAY_TMN_CODE", "GJQAO3Y6"),
 			HashSecret: getStr(v, "VNPAY_HASH_SECRET", "FVN21HE81C05RF4FIBIH8HIZZ4EMTU6D"),
-			ReturnURL: getStr(v, "VNPAY_RETURN_URL", "http://localhost:8080/api/payments/callback"),
+			ReturnURL: getStr(v, "VNPAY_RETURN_URL", "http://localhost:8081/api/v1/payments/callback"),
 		},
 	}
 	return cfg, nil

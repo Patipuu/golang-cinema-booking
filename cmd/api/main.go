@@ -12,6 +12,7 @@ import (
 	"booking_cinema_golang/internal/config"
 	"booking_cinema_golang/internal/database"
 	"booking_cinema_golang/internal/handler"
+	"booking_cinema_golang/internal/infrastructure/redis"
 	"booking_cinema_golang/internal/middleware"
 	"booking_cinema_golang/internal/repository"
 	"booking_cinema_golang/internal/service"
@@ -21,7 +22,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
-	"github.com/redis/go-redis/v9"
 )
 
 func main() {
@@ -45,40 +45,24 @@ func main() {
 	}
 	defer db.Close()
 
-	// Kết nối Redis (bắt buộc cho idempotency)
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     cfg.Redis.Addr,     // ví dụ: "localhost:6379"
-		Password: cfg.Redis.Password, // nếu có
-		DB:       cfg.Redis.DB,
-	})
-	if err := rdb.Ping(ctx).Err(); err != nil {
-		logger.Fatal("redis connect failed", zap.Error(err))
+	// 1. Infrastructure
+	rdb, err := redis.NewClient(cfg.Redis)
+	if err != nil {
+		logger.Fatal("redis connect", zap.Error(err))
 	}
 	defer rdb.Close()
 
-	// Khởi tạo repositories
-	paymentRepo := repository.NewPaymentRepository(db)
-	bookingRepo := repository.NewBookingRepository(db) 
-	paymentMethodRepo := repository.NewPaymentMethodRepository(db)
-	// Khởi tạo PaymentService với config VNPay từ cfg
-	svc := service.NewPaymentService(
-		paymentRepo,
-		paymentMethodRepo,
-		bookingRepo,
-		rdb,
-		cfg.VNPay.PayURL,     // "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
-		cfg.VNPay.TmnCode,    // ví dụ: "YOURTMN00"
-		cfg.VNPay.HashSecret, // secret từ VNPay
-		cfg.VNPay.ReturnURL,  // "http://localhost:8080/api/payments/callback"
-	)
+	hub := handler.NewHub()
+	go hub.Run()
 
-	// Handlers (inject repos/services when implemented)
-	// authHandler := &handler.AuthHandler{}
-	// cinemaHandler := &handler.CinemaHandler{}
-	// bookingHandler := &handler.BookingHandler{}
-	paymentHandler := handler.NewPaymentHandler(svc)
-	// Wire dependencies
+	// 2. Repositories
 	userRepo := repository.NewUserRepository(db.Pool)
+	catalogRepo := repository.NewCatalogRepository(db)
+	bookingRepo := repository.NewBookingRepository(db)
+	paymentRepo := repository.NewPaymentRepository(db)
+	paymentMethodRepo := repository.NewPaymentMethodRepository(db)
+
+	// 3. Services
 	emailSvc := service.NewEmailService(
 		cfg.SMTP.Host, cfg.SMTP.Port,
 		cfg.SMTP.User, cfg.SMTP.Password, cfg.SMTP.From,
@@ -87,89 +71,109 @@ func main() {
 		userRepo, emailSvc,
 		cfg.JWT.Secret, cfg.JWT.ExpiryHours, cfg.OTP.ExpiryMinutes,
 	)
-	authHandler := handler.NewAuthHandler(authSvc)
-	cinemaRepo := repository.NewCinemaRepository(db)
-	cinemaSvc := service.NewCinemaService(cinemaRepo)
-	cinemaHandler := handler.NewCinemaHandler(cinemaSvc)
-	// bookingRepo := repository.NewBookingRepository(db)
-	bookingSvc := service.NewBookingService(bookingRepo)
-	bookingHandler := handler.NewBookingHandler(bookingSvc)
-	userSvc := service.NewUserService(userRepo, cfg)
-	userHandler := handler.NewUserHandler(userSvc)
+	catalogSvc := service.NewCatalogService(catalogRepo)
+	pricingSvc := service.NewPricingService()
+	bookingSvc := service.NewBookingService(bookingRepo, rdb, pricingSvc, hub)
+	paymentSvc := service.NewPaymentService(
+		paymentRepo, paymentMethodRepo, bookingRepo, rdb.GetRDB(),
+		cfg.VNPay.PayURL, cfg.VNPay.TmnCode, cfg.VNPay.HashSecret, cfg.VNPay.ReturnURL,
+	)
 
+	// 4. Handlers
+	authHandler := handler.NewAuthHandler(authSvc)
+	catalogHandler := handler.NewCatalogHandler(catalogSvc)
+	adminHandler := handler.NewAdminHandler(catalogSvc, authSvc, bookingSvc)
+	bookingHandler := handler.NewBookingHandler(bookingSvc)
+	paymentHandler := handler.NewPaymentHandler(paymentSvc)
+
+	// 5. Routing
 	r := chi.NewRouter()
 	r.Use(chimiddleware.RequestID)
 	r.Use(chimiddleware.RealIP)
 	r.Use(middleware.LoggerMiddleware(logger))
 	r.Use(chimiddleware.Recoverer)
-	r.Use(chimiddleware.Timeout(30 * time.Second))
+	r.Use(chimiddleware.Timeout(60 * time.Second))
 
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"status":"ok"}`))
+	r.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
+		handler.ServeWs(hub, w, r)
 	})
 
-	r.Route("/api", func(r chi.Router) {
-		r.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			_, _ = w.Write([]byte(`{"message":"hello"}`))
-		})
+	// Standardized API v1
+	r.Route("/api/v1", func(r chi.Router) {
+		// Public Auth
+		r.Post("/register", authHandler.Register)
+		r.Post("/login", authHandler.Login)
+		r.Post("/verify-otp", authHandler.VerifyOTP)
+		r.Post("/logout", authHandler.Logout)
 
-		// Auth (public)
-		r.Post("/auth/register", authHandler.Register)
-		r.Post("/auth/login", authHandler.Login)
-		r.Post("/auth/verify-otp", authHandler.VerifyOTP)
-		r.Post("/auth/resend-verification", authHandler.ResendVerification)
+		// Movie
+		r.Get("/movies", catalogHandler.ListMovies)
+		r.Get("/movies/{id}", catalogHandler.GetMovie)
 
-		// Cinema (public for listing)
-		r.Get("/cinemas", cinemaHandler.ListCinemas)
-		r.Get("/cinemas/{id}", cinemaHandler.GetCinema)
+		// Cinema
+		r.Get("/cinemas", catalogHandler.ListCinemas)
+		r.Get("/rooms", catalogHandler.ListRooms)
+		r.Get("/seats/room/{id}", catalogHandler.ListSeats)
 
-		// Showtime (public for listing & CRUD)
-		showtimeRepo := repository.NewShowtimeRepository(db)
-		showtimeSvc := service.NewShowtimeService(showtimeRepo)
-		showtimeHandler := handler.NewShowtimeHandler(showtimeSvc)
+		// Showtime
+		r.Get("/showtimes", catalogHandler.ListShowtimes)
+		r.Get("/seats/showtime/{id}", bookingHandler.GetTakenSeats)
 
-		r.Get("/showtimes", showtimeHandler.ListShowtimesByCinema)
-		r.Get("/showtimes/search", showtimeHandler.SearchShowtimes)
-		r.Get("/showtimes/{id}", showtimeHandler.GetShowtime)
-		r.Post("/showtimes", showtimeHandler.CreateShowtime)
-		r.Put("/showtimes/{id}", showtimeHandler.UpdateShowtime)
-		r.Delete("/showtimes/{id}", showtimeHandler.DeleteShowtime)
-
-		// Nếu có lấy theo cinemaId:
-		r.Get("/showtimes/cinema/{cinemaId}", showtimeHandler.ListShowtimesByCinema)
-
-		// Ghế đã đặt
-		r.Get("/showtimes/{id}/seats", bookingHandler.GetTakenSeats)
-
-		// Protected: booking & payment (require JWT)
+		// Callback cho cổng thanh toán
+		r.Get("/payments/callback", paymentHandler.HandleVNPayCallback)
+		// Protected - User
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.AuthMiddleware(cfg.JWT.Secret))
-
-			r.Get("/users/me", userHandler.GetProfile)
-			r.Put("/users/me", userHandler.UpdateProfile)
-			r.Put("/users/me/password", userHandler.ChangePassword)
-
 			r.Post("/bookings", bookingHandler.CreateBooking)
+			r.Post("/bookings/lock", bookingHandler.LockSeat)
+			r.Post("/bookings/unlock", bookingHandler.UnlockSeat)
 			r.Get("/bookings/{id}", bookingHandler.GetBooking)
-			//r.Post("/payments", paymentHandler.CreatePayment)  Tạm thời không cần token jwt để test api trước
-			// r.Get("/payments/{id}", paymentHandler.GetPayment)
+			r.Get("/bookings/my", bookingHandler.ListMyBookings)
+			r.Delete("/bookings/{id}", bookingHandler.CancelBooking)
+			
+			r.Get("/payments/methods", paymentHandler.GetPaymentMethods)
+			r.Post("/payment", paymentHandler.CreatePayment)
+			
 		})
-		
-		r.Get("/payments/methods", paymentHandler.GetPaymentMethods)
-		r.Post("/payments", paymentHandler.CreatePayment)
-		r.Get("/payments/callback", paymentHandler.HandleVNPayCallback)
 
+		// Protected - Admin
+		r.Route("/admin", func(r chi.Router) {
+			r.Use(middleware.AuthMiddleware(cfg.JWT.Secret))
+			// Admin Movie/Cinema
+			r.Get("/cinemas", adminHandler.ListAllCinemas)
+			r.Post("/cinemas", adminHandler.CreateCinema)
+			r.Put("/cinemas/{id}", adminHandler.UpdateCinema)
+			r.Delete("/cinemas/{id}", adminHandler.DeleteCinema)
+			r.Get("/rooms", adminHandler.ListRooms)
+
+			
+			r.Get("/movies", adminHandler.ListAllMovies)
+			r.Post("/movies", adminHandler.CreateMovie)
+			r.Put("/movies/{id}", adminHandler.UpdateMovie)
+			
+			r.Get("/showtimes", adminHandler.ListAllShowtimes)
+			r.Post("/showtimes", adminHandler.CreateShowtime)
+			r.Put("/showtimes/{id}", adminHandler.UpdateShowtime)
+			r.Delete("/showtimes/{id}", adminHandler.DeleteShowtime)
+			r.Get("/stats", adminHandler.GetStats)
+
+			// Admin Users
+			r.Get("/users", adminHandler.ListUsers)
+			r.Put("/users/{id}/role", adminHandler.UpdateUserRole)
+		})
 	})
+
+	// Static Frontend
+	fs := http.FileServer(http.Dir("./frontend"))
+	r.Handle("/*", fs)
 
 	addr := ":" + cfg.Server.Port
 	srv := &http.Server{Addr: addr, Handler: r}
 
 	go func() {
-		logger.Info("server started", zap.String("addr", addr))
+		logger.Info("Cinema Server Started", zap.String("addr", addr))
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Fatal("server", zap.Error(err))
+			logger.Fatal("server error", zap.Error(err))
 		}
 	}()
 
@@ -177,10 +181,8 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		logger.Error("shutdown", zap.Error(err))
-	}
-	logger.Info("server stopped")
+	srv.Shutdown(shutdownCtx)
+	logger.Info("Cinema Server Stopped")
 }

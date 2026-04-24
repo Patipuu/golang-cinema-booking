@@ -1,0 +1,272 @@
+// ==============================================================================
+// BÀI TẬP 1: TÌM KIẾM LỊCH CHIẾU NÂNG CAO (SHOWTIME)
+// ==============================================================================
+
+// DTO Response để format chuẩn kết quả đầu ra
+type ShowtimeResponse struct {
+	ID        string  `json:"id"`
+	MovieID   string  `json:"movie_id"`
+	CinemaID  string  `json:"cinema_id"`
+	StartTime string  `json:"start_time"`
+	Price     float64 `json:"price"`
+	Status    string  `json:"status"`
+}
+
+func (h *ShowtimeHandler) AdvancedSearchShowtimes(c *gin.Context) {
+	// Lấy params từ URL
+	maxPriceStr := c.Query("max_price")
+	minBasePriceStr := c.Query("min_base_price")
+
+	maxPrice, _ := strconv.ParseFloat(maxPriceStr, 64)
+	minBasePrice, _ := strconv.ParseFloat(minBasePriceStr, 64)
+
+	var showtimes []Showtime
+	// Query DB với GORM
+	err := h.DB.Where("price <= ? AND base_price >= ? AND status = ?", maxPrice, minBasePrice, "open").Find(&showtimes).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi truy vấn dữ liệu"})
+		return
+	}
+
+	if len(showtimes) == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"data":    []ShowtimeResponse{},
+			"message": "Không tìm thấy lịch chiếu nào phù hợp với tiêu chí của bạn.",
+		})
+		return
+	}
+
+	// Map dữ liệu sang DTO để trả về đúng các field yêu cầu
+	var result []ShowtimeResponse
+	for _, st := range showtimes {
+		result = append(result, ShowtimeResponse{
+			ID:        st.ID,
+			MovieID:   st.MovieID,
+			CinemaID:  st.CinemaID,
+			StartTime: st.StartTime.Format(time.RFC3339),
+			Price:     st.Price,
+			Status:    st.Status,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": result})
+}
+
+
+// ==============================================================================
+// BÀI TẬP 2: LỌC PHÒNG CHIẾU THEO RẠP (CINEMA)
+// ==============================================================================
+
+type RoomResponse struct {
+	ID         string `json:"id"`
+	CinemaID   string `json:"cinema_id"`
+	Name       string `json:"name"`
+	RoomType   string `json:"room_type"`
+	TotalSeats int    `json:"total_seats"`
+}
+
+func (h *CinemaHandler) FilterRooms(c *gin.Context) {
+	cinemaID := c.Param("id")
+	minSeatsStr := c.Query("min_seats")
+	roomType := c.Query("room_type")
+
+	minSeats, _ := strconv.Atoi(minSeatsStr)
+
+	var rooms []ScreeningRoom
+	query := h.DB.Where("cinema_id = ? AND total_seats >= ?", cinemaID, minSeats)
+
+	// Thêm điều kiện nếu có truyền room_type
+	if roomType != "" {
+		query = query.Where("room_type = ?", roomType)
+	}
+
+	query.Find(&rooms)
+
+	// Trả về mảng rỗng nếu không có dữ liệu
+	var result []RoomResponse
+	for _, r := range rooms {
+		result = append(result, RoomResponse{
+			ID:         r.ID,
+			CinemaID:   r.CinemaID,
+			Name:       r.Name,
+			RoomType:   r.RoomType,
+			TotalSeats: r.TotalSeats,
+		})
+	}
+
+	if result == nil {
+		result = []RoomResponse{} // Đảm bảo trả về [] chứ không phải null
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+
+// ==============================================================================
+// BÀI TẬP 3: LỌC ĐƠN HÀNG ĐẶC THÙ (BOOKING)
+// ==============================================================================
+
+type BookingResponse struct {
+	ID          string  `json:"id"`
+	UserID      string  `json:"user_id"`
+	PromotionID *string `json:"promotion_id"`
+	Status      string  `json:"status"`
+	TotalPrice  float64 `json:"total_price"`
+}
+
+func (h *BookingHandler) FilterPromotionalBookings(c *gin.Context) {
+	minTotalStr := c.Query("min_total")
+	maxTotalStr := c.Query("max_total")
+
+	minTotal, _ := strconv.ParseFloat(minTotalStr, 64)
+	maxTotal, _ := strconv.ParseFloat(maxTotalStr, 64)
+
+	var bookings []Booking
+	h.DB.Where("status = ? AND promotion_id IS NOT NULL AND total_price BETWEEN ? AND ?", "paid", minTotal, maxTotal).Find(&bookings)
+
+	var result []BookingResponse
+	for _, b := range bookings {
+		result = append(result, BookingResponse{
+			ID:          b.ID,
+			UserID:      b.UserID,
+			PromotionID: b.PromotionID,
+			Status:      b.Status,
+			TotalPrice:  b.TotalPrice,
+		})
+	}
+
+	if result == nil {
+		c.JSON(http.StatusOK, gin.H{"data": []BookingResponse{}, "count": 0})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": result, "count": len(result)})
+}
+
+
+// ==============================================================================
+// BÀI TẬP 4: REVIEW ĐÁNH GIÁ (REVIEW)
+// ==============================================================================
+
+func (h *ReviewHandler) GetQualityReviews(c *gin.Context) {
+	movieID := c.Param("movie_id")
+	
+	// Khởi tạo giá trị mặc định
+	minRating, _ := strconv.Atoi(c.DefaultQuery("min_rating", "4"))
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+
+	offset := (page - 1) * limit
+
+	var reviews []Review
+	var totalCount int64
+
+	// Tạo query base
+	baseQuery := h.DB.Model(&Review{}).Where("movie_id = ? AND rating >= ? AND comment != ?", movieID, minRating, "")
+
+	// Lấy tổng số lượng (để làm metadata)
+	baseQuery.Count(&totalCount)
+
+	// Lấy dữ liệu phân trang
+	baseQuery.Offset(offset).Limit(limit).Find(&reviews)
+
+	if reviews == nil {
+		reviews = []Review{}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": reviews,
+		"meta": PageResult{
+			Page:       page,
+			Limit:      limit,
+			TotalCount: int(totalCount),
+		},
+	})
+}
+
+
+// ==============================================================================
+// BÀI TẬP 5: KHUYẾN MÃI HIỆN CÓ (PROMOTION)
+// ==============================================================================
+
+// Tạo DTO để ẩn UsedCount
+type PromotionResponse struct {
+	ID             string     `json:"id"`
+	Code           string     `json:"code"`
+	DiscountType   string     `json:"discount_type"`
+	DiscountValue  float64    `json:"discount_value"`
+	MinOrderAmount float64    `json:"min_order_amount"`
+	MaxUses        *int       `json:"max_uses,omitempty"`
+	ExpiresAt      *time.Time `json:"expires_at,omitempty"`
+	IsActive       bool       `json:"is_active"`
+}
+
+func (h *PromotionHandler) GetAvailablePromotions(c *gin.Context) {
+	now := time.Now()
+	var promotions []Promotion
+
+	// Logic: is_active = true VÀ (chưa hết hạn HOẶC không có hạn) VÀ (chưa dùng hết HOẶC không giới hạn lượt)
+	h.DB.Where("is_active = ?", true).
+		Where("expires_at > ? OR expires_at IS NULL", now).
+		Where("used_count < max_uses OR max_uses IS NULL").
+		Find(&promotions)
+
+	var result []PromotionResponse
+	for _, p := range promotions {
+		result = append(result, PromotionResponse{
+			ID:             p.ID,
+			Code:           p.Code,
+			DiscountType:   p.DiscountType,
+			DiscountValue:  p.DiscountValue,
+			MinOrderAmount: p.MinOrderAmount,
+			MaxUses:        p.MaxUses,
+			ExpiresAt:      p.ExpiresAt,
+			IsActive:       p.IsActive,
+		})
+	}
+
+	if result == nil {
+		result = []PromotionResponse{}
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+
+// ==============================================================================
+// BÀI TẬP 6: LỌC GHẾ ĐẶC BIỆT (SEAT)
+// ==============================================================================
+
+type SeatResponse struct {
+	SeatNumber string `json:"seat_number"`
+	RowName    string `json:"row_name"`
+}
+
+func (h *SeatHandler) GetAvailableSeatsByType(c *gin.Context) {
+	roomID := c.Param("room_id")
+	seatType := c.Query("seat_type")
+
+	// Validate tham số
+	if seatType != "vip" && seatType != "couple" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Chỉ hỗ trợ lọc theo loại ghế vip hoặc couple."})
+		return
+	}
+
+	var seats []Seat
+	h.DB.Where("room_id = ? AND seat_type = ? AND status = ?", roomID, seatType, "available").Find(&seats)
+
+	var result []SeatResponse
+	for _, s := range seats {
+		result = append(result, SeatResponse{
+			SeatNumber: s.SeatNumber,
+			RowName:    s.RowName,
+		})
+	}
+
+	if result == nil {
+		result = []SeatResponse{}
+	}
+
+	c.JSON(http.StatusOK, result)
+}

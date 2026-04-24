@@ -230,6 +230,49 @@ func (p *VNPayProvider) HandleWebhook(ctx context.Context, headers http.Header, 
     return nil
 }
 
+// CashProvider implementation
+type CashProvider struct {
+    isActive bool
+}
+
+func NewCashProvider() *CashProvider {
+    return &CashProvider{isActive: true}
+}
+
+func (p *CashProvider) GetName() string {
+    return "CASH"
+}
+
+func (p *CashProvider) IsActive() bool {
+    return p.isActive
+}
+
+func (p *CashProvider) CreatePayment(ctx context.Context, booking *domain.Booking, paymentDetails map[string]interface{}, clientIP string) (*domain.Payment, string, error) {
+    transactionID := "CASH-" + strconv.FormatInt(time.Now().UnixNano(), 10)
+    
+    // Tạo payment với status = paid luôn cho phương thức CASH
+    now := time.Now()
+    payment := &domain.Payment{
+        ID:            uuid.New().String(),
+        BookingID:     booking.ID,
+        PaymentMethod: "CASH",
+        Amount:        booking.TotalPrice,
+        Status:        "paid", // Trực tiếp đánh dấu đã thanh toán
+        TransactionID: transactionID,
+        PaidAt:        &now,
+        CreatedAt:     now,
+        UpdatedAt:     now,
+    }
+    
+    // CASH không cần redirect url
+    return payment, "", nil
+}
+
+func (p *CashProvider) HandleWebhook(ctx context.Context, headers http.Header, body []byte, query url.Values) error {
+    // CASH không có webhook
+    return nil
+}
+
 // NewPaymentService tạo service mới
 func NewPaymentService(
     paymentRepo repository.PaymentRepository,
@@ -271,6 +314,9 @@ func NewPaymentService(
     }
     s.providers["VNPAY"] = NewVNPayProvider(vnpConfig, redis)
     
+    // Đăng ký CASH provider
+    s.providers["CASH"] = NewCashProvider()
+
     // TODO: Đăng ký thêm các provider khác như MOMO, ZaloPay, v.v.
 
     return s
@@ -441,6 +487,11 @@ func (s *paymentService) CreatePayment(
     // Lưu payment vào database
     if err := s.paymentRepo.Create(ctx, payment); err != nil {
         return nil, "", fmt.Errorf("không thể lưu payment: %w", err)
+    }
+
+    // Nếu payment đã được thanh toán luôn (ví dụ: CASH), cập nhật trạng thái booking
+    if payment.Status == "paid" {
+        _ = s.bookingRepo.UpdateStatus(ctx, payment.BookingID, "confirmed")
     }
 
     // Cache kết quả nếu có idempotency key

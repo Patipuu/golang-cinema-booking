@@ -40,11 +40,20 @@ func TestBookingCreateRaceCondition(t *testing.T) {
 
 	userID1 := mustInsertUser(t, ctx, db, "user_race_1_"+runID, "user1_race_"+runID+"@example.com")
 	userID2 := mustInsertUser(t, ctx, db, "user_race_2_"+runID, "user2_race_"+runID+"@example.com")
+	// cinemaID := mustInsertCinema(t, ctx, db, "cinema_race_"+runID, "Somewhere", "CityRace", 10)
+	// movieID := mustInsertMovie(t, ctx, db, "movie_race_"+runID, "genre", 90, "G")
+
+	// // Seats.
+	// mustInsertSeat(t, ctx, db, cinemaID, "A1", "A", "regular")
 	cinemaID := mustInsertCinema(t, ctx, db, "cinema_race_"+runID, "Somewhere", "CityRace", 10)
+	
+	// THÊM DÒNG NÀY: Tạo 1 phòng chiếu thuộc về rạp chiếu phim vừa tạo
+	// roomID := mustInsertRoom(t, ctx, db, cinemaID, "Room 1")
+
 	movieID := mustInsertMovie(t, ctx, db, "movie_race_"+runID, "genre", 90, "G")
 
-	// Seats.
-	mustInsertSeat(t, ctx, db, cinemaID, "A1", "A", "regular")
+	// SỬA DÒNG NÀY: Truyền roomID thay vì cinemaID
+	mustInsertSeat(t, ctx, db, movieID, "A1", "A", "regular")
 
 	// Showtime.
 	showtimeID := mustInsertShowtime(t, ctx, db, cinemaID, movieID, time.Now().UTC().Format("2006-01-02"), "19:00:00", 75000)
@@ -92,7 +101,19 @@ func TestBookingCreateRaceCondition(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetTakenSeatIDsForShowtime failed: %v", err)
 	}
-	if !contains(taken, "A1") {
+	// if !contains(taken, "A1") {
+	// 	t.Fatalf("expected taken seats to contain A1, got: %v", taken)
+	// }
+	// ĐOẠN CODE MỚI ĐỂ THAY THẾ
+	found := false
+	for k, v := range taken {
+		if k == "A1" || v == "A1" {
+			found = true
+			break
+		}
+	}
+
+	if !found {
 		t.Fatalf("expected taken seats to contain A1, got: %v", taken)
 	}
 
@@ -172,12 +193,24 @@ func mustInsertCinema(t *testing.T, ctx context.Context, db *database.DB, name, 
 	return id
 }
 
-func mustInsertSeat(t *testing.T, ctx context.Context, db *database.DB, cinemaID, seatNumber, rowName, seatType string) {
+// func mustInsertSeat(t *testing.T, ctx context.Context, db *database.DB, cinemaID, seatNumber, rowName, seatType string) {
+// 	t.Helper()
+// 	_, err := db.Pool.Exec(ctx, `
+// 		INSERT INTO seats (cinema_id, seat_number, row_name, seat_type)
+// 		VALUES ($1, $2, $3, $4)
+// 	`, cinemaID, seatNumber, rowName, seatType)
+// 	if err != nil {
+// 		t.Fatalf("insert seat failed: %v", err)
+// 	}
+// }
+func mustInsertSeat(t *testing.T, ctx context.Context, db *database.DB, roomID, seatNumber, rowName, seatType string) {
 	t.Helper()
+	// Đã đổi cinema_id thành room_id và thêm trường status (mặc định set là 'available')
 	_, err := db.Pool.Exec(ctx, `
-		INSERT INTO seats (cinema_id, seat_number, row_name, seat_type)
-		VALUES ($1, $2, $3, $4)
-	`, cinemaID, seatNumber, rowName, seatType)
+		INSERT INTO seats (room_id, seat_number, row_name, seat_type, status)
+		VALUES ($1, $2, $3, $4, $5)
+	`, roomID, seatNumber, rowName, seatType, "available")
+	
 	if err != nil {
 		t.Fatalf("insert seat failed: %v", err)
 	}
@@ -241,3 +274,18 @@ func summarizeErrors(errs []error) []string {
 	return out
 }
 
+// Thêm hàm này
+// func mustInsertRoom(t *testing.T, ctx context.Context, db *database.DB, cinemaID, name string) string {
+// 	t.Helper()
+// 	var id string
+// 	// Giả định bảng rooms có cột cinema_id và name. Nếu database của bạn có thêm cột bắt buộc nào khác, bạn nhớ thêm vào nhé.
+// 	err := db.Pool.QueryRow(ctx, `
+// 		INSERT INTO rooms (cinema_id, name)
+// 		VALUES ($1, $2)
+// 		RETURNING id::text
+// 	`, cinemaID, name).Scan(&id)
+// 	if err != nil {
+// 		t.Fatalf("insert room failed: %v", err)
+// 	}
+// 	return id
+// }

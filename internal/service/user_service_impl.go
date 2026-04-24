@@ -72,7 +72,10 @@ func (s *userService) CreateUser(ctx context.Context, user *domain.User) error {
 	user.Email = strings.TrimSpace(strings.ToLower(user.Email))
 	user.Username = strings.TrimSpace(user.Username)
 	user.FullName = strings.TrimSpace(user.FullName)
-	user.Phone = strings.TrimSpace(user.Phone)
+	if user.Phone != nil {
+		phoneStr := strings.TrimSpace(*user.Phone)
+		user.Phone = &phoneStr
+	}
 
 	if user.Email == "" {
 		return fmt.Errorf("email is required")
@@ -141,7 +144,12 @@ func (s *userService) UpdateProfile(ctx context.Context, userID, fullName, phone
 	}
 
 	u.FullName = strings.TrimSpace(fullName)
-	u.Phone = strings.TrimSpace(phone)
+	if phone != "" {
+		phoneStr := strings.TrimSpace(phone)
+		u.Phone = &phoneStr
+	} else {
+		u.Phone = nil
+	}
 	u.AvatarURL = strings.TrimSpace(avatarURL)
 
 	if err := s.userRepo.Update(ctx, u); err != nil {

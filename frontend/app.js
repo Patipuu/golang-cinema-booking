@@ -1,637 +1,750 @@
-const { useState, useEffect } = React;
+// ============================================================
+// CinemaGo Frontend – Pure Vanilla JS
+// Covers ALL backend APIs: Auth, Catalog, Booking, Payment, WS
+// ============================================================
 
-const API_BASE = "/api"; // chỉnh lại nếu backend của bạn dùng prefix khác
+const API = '/api/v1';
+let token = localStorage.getItem('token') || '';
+let currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+let selectedCinemaId = '';
+let selectedCinemaName = '';
+let selectedShowtime = null;
+let selectedSeats = new Set();
+let lastBooking = null;
+let ws = null;
 
-async function apiRequest(path, options = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
-    credentials: "include",
-    ...options,
+// ===== UTILITY =====
+function headers(extra = {}) {
+  const h = { 'Content-Type': 'application/json', ...extra };
+  if (token) h['Authorization'] = 'Bearer ' + token;
+  return h;
+}
+
+async function api(method, path, body, extraHeaders = {}) {
+  const opts = { method, headers: headers(extraHeaders) };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    const msg = data?.message || data?.error || `Error ${res.status}`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+function toast(msg, type = 'info') {
+  const c = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast toast-' + type;
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('#mainNav button').forEach(b => b.classList.remove('active'));
+  const page = document.getElementById('page-' + id);
+  if (page) page.classList.add('active');
+  const nav = document.querySelector(`#mainNav button[data-page="${id}"]`);
+  if (nav) nav.classList.add('active');
+}
+
+function shortId(id) {
+  if (!id) return '-';
+  return id.length > 8 ? id.substring(0, 8) + '…' : id;
+}
+
+function formatDate(d) {
+  if (!d) return '-';
+  return new Date(d).toLocaleString('vi-VN');
+}
+
+function formatCurrency(v) {
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v || 0);
+}
+
+function statusBadge(status) {
+  const map = {
+    now_showing: ['Đang chiếu', 'success'],
+    coming_soon: ['Sắp chiếu', 'info'],
+    ended: ['Ngừng chiếu', 'muted'],
+    open: ['Mở bán', 'success'],
+    closed: ['Đóng', 'muted'],
+    cancelled: ['Hủy', 'danger'],
+    pending: ['Chờ', 'warn'],
+    confirmed: ['Đã xác nhận', 'success'],
+    paid: ['Đã thanh toán', 'success'],
+    failed: ['Thất bại', 'danger'],
+  };
+  const [label, cls] = map[status] || [status, 'muted'];
+  return `<span class="badge badge-${cls}">${label}</span>`;
+}
+
+// ===== AUTH STATE =====
+function updateAuthUI() {
+  const area = document.getElementById('authArea');
+  const navBooking = document.getElementById('nav-booking');
+  const navMyBookings = document.getElementById('nav-my-bookings');
+  const navAdmin = document.getElementById('nav-admin');
+
+  if (currentUser) {
+    area.innerHTML = `
+      <span class="username">${currentUser.username || currentUser.email}</span>
+      <button class="btn-logout" id="btnLogout">Đăng xuất</button>
+    `;
+    document.getElementById('btnLogout').onclick = logout;
+    navBooking.style.display = '';
+    navMyBookings.style.display = '';
+    // Show admin only for users with the 'admin' role
+    if (currentUser && currentUser.role === 'admin') {
+      navAdmin.style.display = '';
+    } else {
+      navAdmin.style.display = 'none';
+    }
+  } else {
+    area.innerHTML = `<button class="btn btn-primary btn-sm" id="btnShowAuth">Đăng nhập</button>`;
+    document.getElementById('btnShowAuth').onclick = () => showPage('auth');
+    navBooking.style.display = 'none';
+    navMyBookings.style.display = 'none';
+    navAdmin.style.display = 'none';
+  }
+}
+
+function setAuth(user, tok) {
+  currentUser = user;
+  token = tok;
+  localStorage.setItem('token', tok);
+  localStorage.setItem('user', JSON.stringify(user));
+  updateAuthUI();
+}
+
+function logout() {
+  currentUser = null;
+  token = '';
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  updateAuthUI();
+  showPage('home');
+  toast('Đã đăng xuất', 'info');
+}
+
+// ===== WEBSOCKET =====
+function connectWS() {
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(`${protocol}//${location.host}/ws`);
+  ws.onmessage = (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      if (data.type === 'seat_update') {
+        handleSeatUpdate(data.showtime_id, data.seat_id, data.status);
+      }
+    } catch (err) { /* ignore */ }
+  };
+  ws.onclose = () => setTimeout(connectWS, 3000);
+  ws.onerror = () => ws.close();
+}
+
+function handleSeatUpdate(showtimeId, seatId, status) {
+  if (selectedShowtime && selectedShowtime.id === showtimeId) {
+    const seatEl = document.querySelector(`.seat[data-id="${seatId}"]`);
+    if (seatEl) {
+      seatEl.classList.remove('taken', 'holding', 'selected');
+      if (status === 'locked' || status === 'pending') seatEl.classList.add('holding');
+      else if (status === 'sold' || status === 'confirmed' || status === 'taken' || status === 'paid') seatEl.classList.add('taken');
+      
+      if (!seatEl.classList.contains('selected')) {
+        selectedSeats.delete(seatId);
+        updateBookingSummary();
+      }
+    }
+  }
+}
+
+// ===== PAGE: HOME – Cinema List =====
+async function loadCinemas() {
+  const el = document.getElementById('cinemaList');
+  try {
+    const data = await api('GET', '/cinemas');
+    const cinemas = data.data || data || [];
+    if (!cinemas.length) {
+      el.innerHTML = '<div class="empty">Chưa có rạp nào</div>';
+      return;
+    }
+    el.innerHTML = cinemas.map(c => `
+      <div class="card" style="cursor:pointer;transition:.2s" 
+           onmouseover="this.style.borderColor='var(--accent)'" 
+           onmouseout="this.style.borderColor='var(--border)'"
+           onclick="selectCinema('${c.id}','${escHtml(c.name)}')">
+        <h2 style="margin-bottom:4px">🏢 ${escHtml(c.name)}</h2>
+        <p style="font-size:.82rem;color:var(--text2)">📍 ${escHtml(c.location || '')} – ${escHtml(c.city || '')}</p>
+        ${c.hotline ? `<p style="font-size:.78rem;color:var(--text2)">📞 ${escHtml(c.hotline)}</p>` : ''}
+      </div>
+    `).join('');
+  } catch (err) {
+    el.innerHTML = `<div class="empty">Lỗi: ${err.message}</div>`;
+  }
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function selectCinema(id, name) {
+  selectedCinemaId = id;
+  selectedCinemaName = name;
+  document.getElementById('selectedCinemaName').textContent = '🏢 ' + name;
+  const dateInput = document.getElementById('showtimeDate');
+  if (dateInput && !dateInput.value) {
+    dateInput.value = new Date().toISOString().split('T')[0];
+  }
+  showPage('movies');
+  loadMovies();
+}
+
+// ===== PAGE: MOVIES =====
+async function loadMovies() {
+  const el = document.getElementById('movieList');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const dateInput = document.getElementById('showtimeDate');
+  if (dateInput) {
+    dateInput.onchange = () => loadMovies();
+  }
+  try {
+    let url = '/movies';
+    const params = [];
+    if (selectedCinemaId) params.push('cinema_id=' + selectedCinemaId);
+    if (dateInput && dateInput.value) params.push('date=' + dateInput.value);
+    if (params.length) url += '?' + params.join('&');
+    
+    const data = await api('GET', url);
+    const movies = data.data || data || [];
+    if (!movies.length) {
+      el.innerHTML = '<div class="empty">Chưa có phim nào</div>';
+      return;
+    }
+    el.innerHTML = '<div class="movie-grid">' + movies.map(m => {
+      const genres = (m.genre || []).join(', ');
+      const showtimesHtml = (m.showtimes || []).map(st => {
+        const isPast = new Date(st.start_time) < new Date();
+        const onclick = isPast ? '' : `onclick="selectShowtime(event, '${st.id}', '${escHtml(m.title_vi)}', '${formatDate(st.start_time)}', ${st.base_price || 0})"`;
+        const cls = isPast ? 'showtime-chip disabled' : 'showtime-chip';
+        return `<span class="${cls}" ${onclick}>${new Date(st.start_time).toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit'})}</span>`;
+      }).join('');
+      return `
+        <div class="movie-card">
+          <div class="poster">
+            ${m.poster_url ? `<img src="${escHtml(m.poster_url)}" alt="${escHtml(m.title_vi)}" onerror="this.parentElement.innerHTML='🎬'">` : '🎬'}
+          </div>
+          <div class="info">
+            <h3>${escHtml(m.title_vi)}</h3>
+            <div class="meta">${m.duration_mins || '?'} phút • ${escHtml(genres)} • ${statusBadge(m.status)} ${m.rating_label ? `<span class="badge badge-warn">${m.rating_label}</span>` : ''}</div>
+            ${m.director ? `<div class="meta">🎬 ${escHtml(m.director)}</div>` : ''}
+            ${showtimesHtml ? `<div class="showtimes-list">${showtimesHtml}</div>` : '<div class="meta" style="margin-top:6px">Chưa có suất chiếu</div>'}
+          </div>
+        </div>
+      `;
+    }).join('') + '</div>';
+  } catch (err) {
+    el.innerHTML = `<div class="empty">Lỗi: ${err.message}</div>`;
+  }
+}
+
+function selectShowtime(e, id, movieName, time, basePrice) {
+  e.stopPropagation();
+  if (!currentUser) {
+    toast('Vui lòng đăng nhập để đặt vé', 'error');
+    showPage('auth');
+    return;
+  }
+  selectedShowtime = { id, movieName, time, basePrice };
+  selectedSeats.clear();
+  document.getElementById('bookingMovieInfo').textContent = `🎬 ${movieName} – ⏰ ${time}`;
+  showPage('booking');
+  renderSeatMap();
+}
+
+// ===== PAGE: BOOKING – Seat Map =====
+async function renderSeatMap() {
+  const grid = document.getElementById('seatGrid');
+  grid.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  
+  // Fetch taken seats: { "A1": "confirmed", "A2": "pending" }
+  let seatStatuses = {};
+  try {
+    const res = await api('GET', '/seats/showtime/' + selectedShowtime.id);
+    seatStatuses = res.data?.taken || res.taken || {};
+  } catch (err) {
+    console.error('Failed to load taken seats:', err);
+  }
+
+  // Generate a simple 8-row x 10-col seat map
+  const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+  const cols = 10;
+  let html = '';
+  rows.forEach(row => {
+    html += '<div class="seat-row">';
+    html += `<span class="row-label">${row}</span>`;
+    for (let c = 1; c <= cols; c++) {
+      const seatId = `${row}${c}`;
+      const status = seatStatuses[seatId]; // "confirmed", "pending", "paid"
+      let cls = 'seat';
+      if (status === 'confirmed' || status === 'paid') cls += ' taken';
+      else if (status === 'pending') cls += ' holding';
+      else if (selectedSeats.has(seatId)) cls += ' selected';
+      
+      const seatType = (row === 'G' || row === 'H') ? 'vip' : 'standard';
+      html += `<div class="${cls}" data-id="${seatId}" data-type="${seatType}" onclick="toggleSeat('${seatId}')" title="${seatId} (${seatType})">${c}</div>`;
+    }
+    html += '</div>';
+  });
+  grid.innerHTML = html;
+  updateBookingSummary();
+}
+
+async function toggleSeat(seatId) {
+  const el = document.querySelector(`.seat[data-id="${seatId}"]`);
+  if (!el || el.classList.contains('taken')) return;
+  // If holding but not selected by us, it belongs to someone else
+  if (el.classList.contains('holding') && !selectedSeats.has(seatId)) return;
+
+  if (selectedSeats.has(seatId)) {
+    // Unlock
+    selectedSeats.delete(seatId);
+    el.classList.remove('selected');
+    try {
+      await api('POST', '/bookings/unlock', {
+        showtime_id: selectedShowtime.id,
+        seat_id: seatId
+      });
+    } catch (err) {
+      // Ignore unlock errors
+    }
+  } else {
+    // Lock
+    try {
+      const res = await api('POST', '/bookings/lock', {
+        showtime_id: selectedShowtime.id,
+        seat_id: seatId
+      });
+      selectedSeats.add(seatId);
+      el.classList.add('selected');
+    } catch (err) {
+      toast('Ghế đã bị khóa: ' + err.message, 'error');
+    }
+  }
+  updateBookingSummary();
+}
+
+function updateBookingSummary() {
+  const summary = document.getElementById('bookingSummary');
+  const content = document.getElementById('summaryContent');
+  if (selectedSeats.size === 0) {
+    summary.style.display = 'none';
+    return;
+  }
+  summary.style.display = 'block';
+  const seats = Array.from(selectedSeats);
+  const basePrice = selectedShowtime.basePrice || 75000;
+  let subtotal = 0;
+  seats.forEach(s => {
+    const el = document.querySelector(`.seat[data-id="${s}"]`);
+    const type = el ? el.dataset.type : 'standard';
+    let price = basePrice;
+    if (type === 'vip') price *= 1.2;
+    else if (type === 'couple') price *= 1.5;
+    subtotal += price;
+  });
+  const vat = subtotal * 0.1;
+  const total = subtotal + vat;
+
+  content.innerHTML = `
+    <div class="summary-row"><span>Ghế:</span><span>${seats.join(', ')}</span></div>
+    <div class="summary-row"><span>Số lượng:</span><span>${seats.length}</span></div>
+    <div class="summary-row"><span>Tạm tính:</span><span>${formatCurrency(subtotal)}</span></div>
+    <div class="summary-row"><span>VAT (10%):</span><span>${formatCurrency(vat)}</span></div>
+    <div class="summary-row summary-total"><span>Tổng cộng:</span><span>${formatCurrency(total)}</span></div>
+  `;
+  // Store for payment
+  lastBooking = { seats, subtotal, vat, total };
+}
+
+async function confirmBooking() {
+  if (!selectedShowtime || selectedSeats.size === 0) {
+    toast('Vui lòng chọn ít nhất 1 ghế', 'error');
+    return;
+  }
+  try {
+    const res = await api('POST', '/bookings', {
+      showtime_id: selectedShowtime.id,
+      seats: Array.from(selectedSeats)
+    });
+    const booking = res.data || res;
+    lastBooking = { ...lastBooking, bookingId: booking.id, booking };
+    toast('Đặt vé thành công! Chuyển đến thanh toán...', 'success');
+    showPaymentPage(booking);
+  } catch (err) {
+    toast('Lỗi đặt vé: ' + err.message, 'error');
+  }
+}
+
+// ===== PAGE: PAYMENT =====
+let paymentTimer = null;
+
+function startPaymentTimer(createdAt) {
+  if (paymentTimer) clearInterval(paymentTimer);
+  const expiry = new Date(createdAt).getTime() + (5 * 60 * 1000);
+  
+  const timerEl = document.getElementById('paymentTimer');
+  const update = () => {
+    const now = new Date().getTime();
+    const diff = expiry - now;
+    if (diff <= 0) {
+      clearInterval(paymentTimer);
+      timerEl.innerHTML = '<b style="color:var(--danger)">Hết thời gian giữ chỗ!</b>';
+      toast('Suất đặt vé của bạn đã hết hạn.', 'error');
+      setTimeout(() => showPage('home'), 2000);
+      return;
+    }
+    const mins = Math.floor(diff / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+    timerEl.innerHTML = `⏳ Bạn còn <b>${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}</b> để hoàn tất thanh toán`;
+  };
+  update();
+  paymentTimer = setInterval(update, 1000);
+}
+
+function showPaymentPage(booking) {
+  showPage('payment');
+  const info = document.getElementById('paymentInfo');
+  info.innerHTML = `
+    <div id="paymentTimer" style="margin-bottom:12px;text-align:center;padding:10px;background:var(--bg3);border-radius:var(--radius)"></div>
+    <div class="summary-row"><span>Mã booking:</span><span style="font-family:monospace">${booking.id || '-'}</span></div>
+    <div class="summary-row"><span>Trạng thái:</span><span>${statusBadge(booking.status)}</span></div>
+    <div class="summary-row"><span>Tổng tiền:</span><span style="font-weight:700;color:var(--accent2)">${formatCurrency(booking.total_price || lastBooking?.total || 0)}</span></div>
+  `;
+  startPaymentTimer(booking.created_at || new Date());
+}
+
+async function processPayment() {
+  if (!lastBooking?.bookingId) {
+    toast('Không có booking để thanh toán', 'error');
+    return;
+  }
+  const method = document.getElementById('paymentMethod').value;
+  try {
+    const res = await api('POST', '/payment', {
+      booking_id: lastBooking.bookingId,
+      payment_method: method,
+      amount: lastBooking.booking?.total_price || lastBooking.total || 0
+    }, { 'Idempotency-Key': 'pay-' + Date.now() });
+    const paymentData = res.data || res;
+    if (paymentData.redirect_url) {
+      toast('Đang chuyển đến cổng thanh toán...', 'info');
+      window.open(paymentData.redirect_url, '_blank');
+    } else {
+      toast('Thanh toán thành công!', 'success');
+      showPage('my-bookings');
+      loadMyBookings();
+    }
+  } catch (err) {
+    toast('Lỗi thanh toán: ' + err.message, 'error');
+  }
+}
+
+let myBookingsList = [];
+function resumePayment(id) {
+  const b = myBookingsList.find(x => x.id === id);
+  if (!b) return;
+  lastBooking = { bookingId: b.id, booking: b };
+  showPaymentPage(b);
+}
+
+// ===== PAGE: MY BOOKINGS =====
+async function loadMyBookings() {
+  const el = document.getElementById('bookingResult');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const res = await api('GET', '/bookings/my');
+    myBookingsList = res.data || res || [];
+    const bookings = myBookingsList;
+    
+    if (bookings.length === 0) {
+      el.innerHTML = '<div class="empty">Bạn chưa có vé nào.</div>';
+      return;
+    }
+
+    el.innerHTML = bookings.map(b => `
+      <div class="card" style="margin-bottom: 10px;">
+        <div class="summary-row"><span>Mã booking:</span><span style="font-family:monospace">${b.id}</span></div>
+        <div class="summary-row"><span>Ghế:</span><span style="font-weight:700;color:var(--accent)">${(b.seats || []).join(', ')}</span></div>
+        <div class="summary-row"><span>Showtime ID:</span><span style="font-family:monospace">${shortId(b.showtime_id)}</span></div>
+        <div class="summary-row"><span>Trạng thái:</span><span>${statusBadge(b.status)}</span></div>
+        <div class="summary-row"><span>Tạm tính:</span><span>${formatCurrency(b.subtotal)}</span></div>
+        <div class="summary-row"><span>Giảm giá:</span><span>${formatCurrency(b.discount_amount)}</span></div>
+        <div class="summary-row"><span>VAT:</span><span>${formatCurrency(b.vat_amount)}</span></div>
+        <div class="summary-row summary-total"><span>Tổng cộng:</span><span>${formatCurrency(b.total_price)}</span></div>
+        <div class="summary-row"><span>Ngày đặt:</span><span>${formatDate(b.created_at)}</span></div>
+        ${b.status === 'pending' ? `<button class="btn btn-primary btn-sm btn-block" style="margin-top:10px" onclick="resumePayment('${b.id}')">💳 Thanh toán ngay</button>` : ''}
+        ${b.qr_code ? `<div style="text-align:center;margin-top:10px"><img src="${b.qr_code}" alt="QR" style="max-width:150px"></div>` : ''}
+      </div>
+    `).join('');
+  } catch (err) {
+    el.innerHTML = `<div class="empty">Không thể tải danh sách vé: ${err.message}</div>`;
+  }
+}
+
+// ===== PAGE: AUTH =====
+async function login() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if (!email || !password) { toast('Nhập đủ email và mật khẩu', 'error'); return; }
+  try {
+    const res = await api('POST', '/login', { email, password });
+    const d = res.data || res;
+    setAuth(d.user, d.token);
+    toast('Đăng nhập thành công!', 'success');
+    if (d.user && d.user.role === 'admin') {
+      window.location.href = './admin.html';
+    } else {
+      showPage('home');
+    }
+
+  } catch (err) {
+    toast('Đăng nhập thất bại: ' + err.message, 'error');
+  }
+}
+
+async function register() {
+  const email = document.getElementById('regEmail').value.trim();
+  const username = document.getElementById('regUsername').value.trim();
+  const full_name = document.getElementById('regFullname').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const password = document.getElementById('regPassword').value;
+  if (!email || !username || !full_name || !phone || !password) {
+    toast('Vui lòng điền đầy đủ thông tin', 'error');
+    return;
+  }
+  if (password.length < 8) {
+    toast('Mật khẩu tối thiểu 8 ký tự', 'error');
+    return;
+  }
+  try {
+    const res = await api('POST', '/register', { email, password, username, full_name, phone });
+    const d = res.data || res;
+    console.log("Registration success data:", d);
+    const userId = d.id || d.user_id;
+    toast('Đăng ký thành công! Vui lòng kiểm tra mã OTP.', 'info');
+    document.getElementById('verifyUserId').value = userId;
+    document.getElementById('registerCard').style.display = 'none';
+    document.getElementById('verifyCard').style.display = '';
+  } catch (err) {
+    toast('Đăng ký thất bại: ' + err.message, 'error');
+  }
+}
+
+async function verifyOTP() {
+  const user_id = document.getElementById('verifyUserId').value;
+  const otp_code = document.getElementById('verifyOtp').value.trim();
+  if (!otp_code) { toast('Vui lòng nhập mã OTP', 'error'); return; }
+  try {
+    await api('POST', '/verify-otp', { user_id, otp_code });
+    toast('Xác thực thành công! Bạn có thể đăng nhập.', 'success');
+    document.getElementById('verifyCard').style.display = 'none';
+    document.getElementById('loginCard').style.display = '';
+  } catch (err) {
+    toast('Xác thực thất bại: ' + err.message, 'error');
+  }
+}
+
+
+// ===== PAGE: ADMIN =====
+async function loadAdminStats() {
+  try {
+    const res = await api('GET', '/admin/stats');
+    const stats = res.data || res;
+    const grid = document.getElementById('statsGrid');
+    grid.innerHTML = `
+      <div class="stat-card">
+        <div class="stat-value">${formatCurrency(stats.today_revenue || 0)}</div>
+        <div class="stat-label">Doanh thu hôm nay</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${stats.occupancy_rate || '0%'}</div>
+        <div class="stat-label">Tỷ lệ lấp đầy</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${(stats.top_movies || []).length}</div>
+        <div class="stat-label">Top phim</div>
+      </div>
+    `;
+  } catch (err) {
+    document.getElementById('statsGrid').innerHTML = `<div class="empty">Lỗi: ${err.message}</div>`;
+  }
+}
+
+async function loadAdminCinemas() {
+  try {
+    const res = await api('GET', '/admin/cinemas');
+    const list = res.data || res || [];
+    const tbody = document.getElementById('adminCinemaTable');
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty">Chưa có rạp</td></tr>';
+      return;
+    }
+    tbody.innerHTML = list.map(c => `
+      <tr>
+        <td style="font-family:monospace;font-size:.75rem">${shortId(c.id)}</td>
+        <td>${escHtml(c.name)}</td>
+        <td>${escHtml(c.location || '')}</td>
+        <td>${escHtml(c.city || '')}</td>
+        <td>${escHtml(c.hotline || '')}</td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    document.getElementById('adminCinemaTable').innerHTML = `<tr><td colspan="5" class="empty">${err.message}</td></tr>`;
+  }
+}
+
+async function loadAdminMovies() {
+  try {
+    const res = await api('GET', '/admin/movies');
+    const list = res.data || res || [];
+    const tbody = document.getElementById('adminMovieTable');
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">Chưa có phim</td></tr>';
+      return;
+    }
+    tbody.innerHTML = list.map(m => `
+      <tr>
+        <td style="font-family:monospace;font-size:.75rem">${shortId(m.id)}</td>
+        <td>${escHtml(m.title_vi)}</td>
+        <td>${escHtml(m.director || '')}</td>
+        <td>${m.duration_mins || '?'} phút</td>
+        <td>${statusBadge(m.status)}</td>
+        <td><span class="badge badge-warn">${m.rating_label || '-'}</span></td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    document.getElementById('adminMovieTable').innerHTML = `<tr><td colspan="6" class="empty">${err.message}</td></tr>`;
+  }
+}
+
+async function createCinema() {
+  const name = document.getElementById('cinemaName').value.trim();
+  const location = document.getElementById('cinemaLocation').value.trim();
+  const city = document.getElementById('cinemaCity').value.trim();
+  const hotline = document.getElementById('cinemaHotline').value.trim();
+  if (!name) { toast('Tên rạp không được trống', 'error'); return; }
+  try {
+    await api('POST', '/admin/cinemas', { name, location, city, hotline });
+    toast('Tạo rạp thành công!', 'success');
+    document.getElementById('addCinemaForm').style.display = 'none';
+    loadAdminCinemas();
+    loadCinemas(); // refresh home
+  } catch (err) {
+    toast('Lỗi: ' + err.message, 'error');
+  }
+}
+
+async function createMovie() {
+  const title_vi = document.getElementById('movieTitleVI').value.trim();
+  const title_en = document.getElementById('movieTitleEN').value.trim();
+  const director = document.getElementById('movieDirector').value.trim();
+  const cast_members = document.getElementById('movieCast').value.trim();
+  const duration_mins = parseInt(document.getElementById('movieDuration').value) || 120;
+  const language = document.getElementById('movieLanguage').value.trim();
+  const genre = document.getElementById('movieGenre').value.split(',').map(g => g.trim()).filter(Boolean);
+  const rating_label = document.getElementById('movieRating').value;
+  const status = document.getElementById('movieStatus').value;
+  const subtitle = document.getElementById('movieSubtitle').value.trim();
+  const description = document.getElementById('movieDescription').value.trim();
+  const poster_url = document.getElementById('moviePoster').value.trim();
+  const trailer_url = document.getElementById('movieTrailer').value.trim();
+  if (!title_vi) { toast('Tên phim không được trống', 'error'); return; }
+  try {
+    await api('POST', '/admin/movies', {
+      title_vi, title_en, director, cast_members, duration_mins,
+      language, genre, rating_label, status, subtitle, description,
+      poster_url, trailer_url
+    });
+    toast('Tạo phim thành công!', 'success');
+    document.getElementById('addMovieForm').style.display = 'none';
+    loadAdminMovies();
+  } catch (err) {
+    toast('Lỗi: ' + err.message, 'error');
+  }
+}
+
+// ===== EVENT BINDINGS =====
+function init() {
+  // Navigation
+  document.querySelectorAll('#mainNav button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const page = btn.dataset.page;
+      showPage(page);
+      if (page === 'home') loadCinemas();
+      if (page === 'movies') loadMovies();
+      if (page === 'admin') { loadAdminStats(); loadAdminCinemas(); loadAdminMovies(); }
+      if (page === 'my-bookings') loadMyBookings();
+    });
   });
 
-  if (!res.ok) {
-    let message = `HTTP ${res.status}`;
-    try {
-      const data = await res.json();
-      message = data.message || data.error || message;
-    } catch (_) {
-      // ignore
-    }
-    throw new Error(message);
-  }
-
-  try {
-    return await res.json();
-  } catch (_) {
-    return null;
-  }
-}
-
-function AuthPanel({ user, onAuthChange }) {
-  const [mode, setMode] = useState("login"); // "login" | "register"
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [status, setStatus] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const disabled = loading || !email || !password || (mode === "register" && !fullName);
-
-  const handleSubmit = async (e) => {
+  // Auth
+  document.getElementById('btnLogin').onclick = login;
+  document.getElementById('btnRegister').onclick = register;
+  document.getElementById('showRegister').onclick = (e) => {
     e.preventDefault();
-    setLoading(true);
-    setStatus(null);
-    try {
-      if (mode === "login") {
-        const data = await apiRequest("/auth/login", {
-          method: "POST",
-          body: JSON.stringify({ email, password }),
-        });
-        onAuthChange(data.user || data);
-        setStatus({ type: "success", message: "Đăng nhập thành công." });
-      } else {
-        const data = await apiRequest("/auth/register", {
-          method: "POST",
-          body: JSON.stringify({ email, password, full_name: fullName }),
-        });
-        onAuthChange(data.user || data);
-        setStatus({ type: "success", message: "Đăng ký thành công." });
-      }
-    } catch (err) {
-      setStatus({ type: "error", message: err.message });
-    } finally {
-      setLoading(false);
-    }
+    document.getElementById('loginCard').style.display = 'none';
+    document.getElementById('registerCard').style.display = '';
+  };
+  document.getElementById('showLogin').onclick = (e) => {
+    e.preventDefault();
+    document.getElementById('registerCard').style.display = 'none';
+    document.getElementById('loginCard').style.display = '';
+  };
+  document.getElementById('btnVerify').onclick = verifyOTP;
+  document.getElementById('backToRegister').onclick = (e) => {
+    e.preventDefault();
+    document.getElementById('verifyCard').style.display = 'none';
+    document.getElementById('registerCard').style.display = '';
   };
 
-  const handleLogout = () => {
-    onAuthChange(null);
+
+  // Enter key login/register
+  document.getElementById('loginPassword').addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
+  document.getElementById('regPassword').addEventListener('keydown', (e) => { if (e.key === 'Enter') register(); });
+
+  // Booking
+  document.getElementById('btnConfirmBooking').onclick = confirmBooking;
+
+  // Payment
+  document.getElementById('btnPay').onclick = processPayment;
+
+  // Admin - Cinema form
+  document.getElementById('btnShowAddCinema').onclick = () => {
+    document.getElementById('addCinemaForm').style.display = '';
   };
-
-  return (
-    <div className="panel">
-      <div className="panel-header">
-        <div className="panel-title">
-          <span>{user ? "Tài khoản" : "Đăng nhập / Đăng ký"}</span>
-        </div>
-        <span className="badge">Auth</span>
-      </div>
-      <div className="panel-body">
-        {user ? (
-          <>
-            <div className="user-pill">
-              Đang đăng nhập: <strong>{user.full_name || user.email}</strong>
-            </div>
-            <div className="spacer" />
-            <button className="btn btn-ghost btn-sm" onClick={handleLogout}>
-              Đăng xuất
-            </button>
-          </>
-        ) : (
-          <>
-            <div className="tabs">
-              <button
-                className={`tab ${mode === "login" ? "tab-active" : ""}`}
-                onClick={() => setMode("login")}
-              >
-                Đăng nhập
-              </button>
-              <button
-                className={`tab ${mode === "register" ? "tab-active" : ""}`}
-                onClick={() => setMode("register")}
-              >
-                Đăng ký
-              </button>
-            </div>
-            <form onSubmit={handleSubmit}>
-              <div className="fields-grid">
-                <div className="field">
-                  <label>Email</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                  />
-                </div>
-                <div className="field">
-                  <label>Mật khẩu</label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                  />
-                </div>
-                {mode === "register" && (
-                  <div className="field">
-                    <label>Họ tên</label>
-                    <input
-                      type="text"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Nguyễn Văn A"
-                    />
-                  </div>
-                )}
-              </div>
-              <div className="spacer" />
-              <button type="submit" className="btn btn-primary" disabled={disabled}>
-                {loading
-                  ? "Đang xử lý..."
-                  : mode === "login"
-                  ? "Đăng nhập"
-                  : "Tạo tài khoản"}
-              </button>
-            </form>
-            {status && (
-              <div className="status-bar">
-                <span className="hint">
-                  {mode === "login" ? "Sử dụng tài khoản đã đăng ký." : "Thông tin tài khoản mới."}
-                </span>
-                <span
-                  className={
-                    "status-badge " +
-                    (status.type === "success"
-                      ? "status-badge-success"
-                      : "status-badge-error")
-                  }
-                >
-                  {status.message}
-                </span>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function CinemaAndShowtimePanel({
-  selectedCinema,
-  onSelectCinema,
-  selectedShowtime,
-  onSelectShowtime,
-  date,
-  setDate,
-}) {
-  const [cinemas, setCinemas] = useState([]);
-  const [showtimes, setShowtimes] = useState([]);
-  const [loadingCinemas, setLoadingCinemas] = useState(false);
-  const [loadingShowtimes, setLoadingShowtimes] = useState(false);
-  const [status, setStatus] = useState(null);
-
-  useEffect(() => {
-    const loadCinemas = async () => {
-      setLoadingCinemas(true);
-      setStatus(null);
-      try {
-        const data = await apiRequest("/cinemas");
-        setCinemas(data || []);
-      } catch (err) {
-        setStatus({ type: "error", message: err.message });
-      } finally {
-        setLoadingCinemas(false);
-      }
-    };
-    loadCinemas();
-  }, []);
-
-  useEffect(() => {
-    if (!selectedCinema || !date) {
-      setShowtimes([]);
-      return;
-    }
-    const loadShowtimes = async () => {
-      setLoadingShowtimes(true);
-      setStatus(null);
-      try {
-        const data = await apiRequest(
-          `/showtimes?cinema_id=${encodeURIComponent(
-            selectedCinema.id || selectedCinema.ID,
-          )}&date=${encodeURIComponent(date)}`,
-        );
-        setShowtimes(data || []);
-      } catch (err) {
-        setStatus({ type: "error", message: err.message });
-      } finally {
-        setLoadingShowtimes(false);
-      }
-    };
-    loadShowtimes();
-  }, [selectedCinema, date]);
-
-  return (
-    <div className="panel">
-      <div className="panel-header">
-        <div className="panel-title">
-          <span>Chọn rạp & suất chiếu</span>
-        </div>
-        <span className="badge">Step 1</span>
-      </div>
-      <div className="panel-body">
-        <div className="fields-grid">
-          <div className="field">
-            <label>Ngày chiếu</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="spacer" />
-        <div className="field">
-          <label>Danh sách rạp</label>
-          {loadingCinemas ? (
-            <div className="hint">Đang tải danh sách rạp...</div>
-          ) : (
-            <div className="cinema-list">
-              {cinemas.map((c) => (
-                <button
-                  key={c.id || c.ID}
-                  type="button"
-                  className={
-                    "cinema-item " +
-                    ((selectedCinema && (selectedCinema.id || selectedCinema.ID) === (c.id || c.ID))
-                      ? "active"
-                      : "")
-                  }
-                  onClick={() => onSelectCinema(c)}
-                >
-                  <div>{c.name || c.Name}</div>
-                  <div className="cinema-location">{c.location || c.Location}</div>
-                </button>
-              ))}
-              {!cinemas.length && <div className="hint">Chưa có rạp nào.</div>}
-            </div>
-          )}
-        </div>
-        <div className="spacer" />
-        <div className="field">
-          <label>Suất chiếu</label>
-          {loadingShowtimes ? (
-            <div className="hint">Đang tải suất chiếu...</div>
-          ) : (
-            <div className="showtime-row">
-              {showtimes.map((s) => {
-                const id = s.id || s.ID;
-                const time = s.show_time || s.showTime || s.ShowTime;
-                return (
-                  <div
-                    key={id}
-                    className={
-                      "chip " +
-                      (selectedShowtime && (selectedShowtime.id || selectedShowtime.ID) === id
-                        ? "chip-active"
-                        : "")
-                    }
-                    onClick={() => onSelectShowtime(s)}
-                  >
-                    {time}
-                  </div>
-                );
-              })}
-              {!showtimes.length && <div className="hint">Chọn rạp và ngày để xem suất chiếu.</div>}
-            </div>
-          )}
-        </div>
-        {status && (
-          <div className="status-bar">
-            <span className="hint">API /cinemas, /showtimes</span>
-            <span
-              className={
-                "status-badge " +
-                (status.type === "error" ? "status-badge-error" : "status-badge-info")
-              }
-            >
-              {status.message}
-            </span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function SeatPanel({ selectedShowtime, selectedSeats, setSelectedSeats, pricePerSeat }) {
-  const [takenSeats, setTakenSeats] = useState([]);
-  const [status, setStatus] = useState(null);
-
-  useEffect(() => {
-    if (!selectedShowtime) {
-      setTakenSeats([]);
-      return;
-    }
-    const loadTaken = async () => {
-      setStatus(null);
-      try {
-        const id = selectedShowtime.id || selectedShowtime.ID;
-        const data = await apiRequest(`/showtimes/${id}/seats`);
-        setTakenSeats(data.taken || data || []);
-      } catch (err) {
-        setStatus({ type: "error", message: err.message });
-      }
-    };
-    loadTaken();
-  }, [selectedShowtime]);
-
-  const toggleSeat = (code) => {
-    if (takenSeats.includes(code)) return;
-    if (selectedSeats.includes(code)) {
-      setSelectedSeats(selectedSeats.filter((s) => s !== code));
-    } else {
-      setSelectedSeats([...selectedSeats, code]);
-    }
+  document.getElementById('btnCancelCinema').onclick = () => {
+    document.getElementById('addCinemaForm').style.display = 'none';
   };
+  document.getElementById('btnCreateCinema').onclick = createCinema;
 
-  // Tạo layout ghế đơn giản A1-A8, B1-B8, C1-C8
-  const rows = ["A", "B", "C", "D"];
-  const cols = Array.from({ length: 8 }, (_, i) => i + 1);
-
-  return (
-    <div className="panel">
-      <div className="panel-header">
-        <div className="panel-title">
-          <span>Chọn ghế</span>
-        </div>
-        <span className="badge">Step 2</span>
-      </div>
-      <div className="panel-body">
-        {!selectedShowtime ? (
-          <div className="hint">Hãy chọn rạp & suất chiếu trước.</div>
-        ) : (
-          <>
-            <div className="screen-label">Màn hình</div>
-            <div className="screen-indicator" />
-            <div className="seat-grid">
-              {rows.map((r) =>
-                cols.map((c) => {
-                  const code = `${r}${c}`;
-                  const isTaken = takenSeats.includes(code);
-                  const isSelected = selectedSeats.includes(code);
-                  return (
-                    <div
-                      key={code}
-                      className={
-                        "seat " +
-                        (isTaken ? "unavailable " : "") +
-                        (isSelected ? "selected" : "")
-                      }
-                      onClick={() => toggleSeat(code)}
-                    >
-                      {code}
-                    </div>
-                  );
-                }),
-              )}
-            </div>
-            <div className="status-bar">
-              <span className="hint">Ghế chấm phá = đã có người đặt.</span>
-              <span className="hint">
-                Giá vé: <strong>{pricePerSeat.toLocaleString("vi-VN")} đ/ghế</strong>
-              </span>
-            </div>
-            {status && (
-              <div className="status-bar">
-                <span />
-                <span
-                  className={
-                    "status-badge " +
-                    (status.type === "error" ? "status-badge-error" : "status-badge-info")
-                  }
-                >
-                  {status.message}
-                </span>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function SummaryAndPaymentPanel({
-  user,
-  selectedCinema,
-  selectedShowtime,
-  selectedSeats,
-  pricePerSeat,
-}) {
-  const [paymentMethod, setPaymentMethod] = useState("CASH");
-  const [bookingStatus, setBookingStatus] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const totalPrice = selectedSeats.length * pricePerSeat;
-
-  const canBook = user && selectedCinema && selectedShowtime && selectedSeats.length > 0;
-
-  const handleBook = async () => {
-    if (!canBook) return;
-    setLoading(true);
-    setBookingStatus(null);
-    try {
-      const showtimeId = selectedShowtime.id || selectedShowtime.ID;
-      const cinemaId = selectedCinema.id || selectedCinema.ID;
-
-      // 1. Tạo booking
-      const booking = await apiRequest("/bookings", {
-        method: "POST",
-        body: JSON.stringify({
-          cinema_id: cinemaId,
-          showtime_id: showtimeId,
-          seats: selectedSeats,
-        }),
-      });
-
-      // 2. Thanh toán
-      const payment = await apiRequest("/payments", {
-        method: "POST",
-        body: JSON.stringify({
-          booking_id: booking.id || booking.ID,
-          amount: totalPrice,
-          payment_method: paymentMethod,
-        }),
-      });
-
-      setBookingStatus({
-        type: "success",
-        message: `Đặt vé thành công. Mã thanh toán: ${
-          payment.transaction_id || payment.transactionId || "-"
-        }`,
-      });
-    } catch (err) {
-      setBookingStatus({ type: "error", message: err.message });
-    } finally {
-      setLoading(false);
-    }
+  // Admin - Movie form
+  document.getElementById('btnShowAddMovie').onclick = () => {
+    document.getElementById('addMovieForm').style.display = '';
   };
+  document.getElementById('btnCancelMovie').onclick = () => {
+    document.getElementById('addMovieForm').style.display = 'none';
+  };
+  document.getElementById('btnCreateMovie').onclick = createMovie;
 
-  return (
-    <div className="panel">
-      <div className="panel-header">
-        <div className="panel-title">
-          <span>Tóm tắt & Thanh toán</span>
-        </div>
-        <span className="badge">Step 3</span>
-      </div>
-      <div className="panel-body">
-        <ul className="summary-list">
-          <li>
-            <span className="summary-label">Tài khoản</span>
-            <span className="summary-value">
-              {user ? user.full_name || user.email : "Chưa đăng nhập"}
-            </span>
-          </li>
-          <li>
-            <span className="summary-label">Rạp</span>
-            <span className="summary-value">
-              {selectedCinema ? selectedCinema.name || selectedCinema.Name : "-"}
-            </span>
-          </li>
-          <li>
-            <span className="summary-label">Suất chiếu</span>
-            <span className="summary-value">
-              {selectedShowtime
-                ? selectedShowtime.show_time ||
-                  selectedShowtime.showTime ||
-                  selectedShowtime.ShowTime
-                : "-"}
-            </span>
-          </li>
-          <li>
-            <span className="summary-label">Ghế</span>
-            <span className="summary-value">
-              {selectedSeats.length ? selectedSeats.join(", ") : "-"}
-            </span>
-          </li>
-        </ul>
-
-        <div className="summary-total">
-          <span>Tổng thanh toán</span>
-          <span>{totalPrice.toLocaleString("vi-VN")} đ</span>
-        </div>
-
-        <div className="spacer" />
-        <div className="field">
-          <label>Phương thức thanh toán</label>
-          <select
-            value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value)}
-          >
-            <option value="CASH">Tiền mặt</option>
-            <option value="CREDIT_CARD">Thẻ tín dụng</option>
-            <option value="DEBIT_CARD">Thẻ ghi nợ</option>
-            <option value="BANK_TRANSFER">Chuyển khoản</option>
-            <option value="E_WALLET">Ví điện tử</option>
-          </select>
-        </div>
-
-        <div className="spacer" />
-        <button
-          className="btn btn-primary"
-          disabled={!canBook || loading}
-          onClick={handleBook}
-        >
-          {loading ? "Đang xử lý..." : "Xác nhận đặt vé"}
-        </button>
-
-        <div className="status-bar">
-          <span className="hint">Flow: /bookings → /payments</span>
-          {bookingStatus ? (
-            <span
-              className={
-                "status-badge " +
-                (bookingStatus.type === "success"
-                  ? "status-badge-success"
-                  : "status-badge-error")
-              }
-            >
-              {bookingStatus.message}
-            </span>
-          ) : (
-            <span className="status-badge status-badge-info">
-              Chọn đầy đủ thông tin để đặt vé.
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+  // Init
+  updateAuthUI();
+  loadCinemas();
+  connectWS();
 }
 
-function App() {
-  const [user, setUser] = useState(null);
-  const [selectedCinema, setSelectedCinema] = useState(null);
-  const [selectedShowtime, setSelectedShowtime] = useState(null);
-  const [date, setDate] = useState("");
-  const [selectedSeats, setSelectedSeats] = useState([]);
-  const [pricePerSeat] = useState(75000); // có thể mapping từ showtime.price nếu backend trả về
-
-  useEffect(() => {
-    // Reset showtime & seats khi đổi rạp hoặc ngày
-    setSelectedShowtime(null);
-    setSelectedSeats([]);
-  }, [selectedCinema, date]);
-
-  useEffect(() => {
-    // Reset ghế khi đổi suất chiếu
-    setSelectedSeats([]);
-  }, [selectedShowtime]);
-
-  return (
-    <div className="app">
-      <header className="app-header">
-        <div className="logo">
-          <span className="logo-dot" />
-          <span>CINEMA BOOKING</span>
-        </div>
-        <div className="header-actions">
-          <span className="hint">
-            {user ? "Sẵn sàng đặt vé 🎬" : "Đăng nhập để lưu vé theo tài khoản."}
-          </span>
-        </div>
-      </header>
-      <main className="app-body">
-        <div className="app-shell">
-          <div>
-            <CinemaAndShowtimePanel
-              selectedCinema={selectedCinema}
-              onSelectCinema={setSelectedCinema}
-              selectedShowtime={selectedShowtime}
-              onSelectShowtime={setSelectedShowtime}
-              date={date}
-              setDate={setDate}
-            />
-            <div className="spacer" />
-            <SeatPanel
-              selectedShowtime={selectedShowtime}
-              selectedSeats={selectedSeats}
-              setSelectedSeats={setSelectedSeats}
-              pricePerSeat={pricePerSeat}
-            />
-          </div>
-          <div>
-            <AuthPanel user={user} onAuthChange={setUser} />
-            <div className="spacer" />
-            <SummaryAndPaymentPanel
-              user={user}
-              selectedCinema={selectedCinema}
-              selectedShowtime={selectedShowtime}
-              selectedSeats={selectedSeats}
-              pricePerSeat={pricePerSeat}
-            />
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-}
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-
+document.addEventListener('DOMContentLoaded', init);

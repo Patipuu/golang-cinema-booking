@@ -1,34 +1,36 @@
 package service
 
 import (
-    "context"
-    "crypto/hmac"
-    "crypto/sha512"
-    "encoding/hex"
-    "encoding/json"
-    "errors"
-    "fmt"
-    "net/http"
-    "net/url"
-    "sort"
-    "strconv"
-    "strings"
-    "sync"
-    "time"
+	"context"
+	"crypto/hmac"
+	"crypto/sha512"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"net/url"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+    "log"
 
-    "github.com/google/uuid"
-    "github.com/redis/go-redis/v9"
-    "golang.org/x/sync/singleflight"
+	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
+	"golang.org/x/sync/singleflight"
 
-    "booking_cinema_golang/internal/domain"
-    "booking_cinema_golang/internal/repository"
-    "booking_cinema_golang/internal/utils/constants"
+	"booking_cinema_golang/internal/domain"
+	"booking_cinema_golang/internal/repository"
+	"booking_cinema_golang/internal/utils/constants"
 )
 
 // paymentService triển khai PaymentService
 type paymentService struct {
     paymentRepo repository.PaymentRepository
-    bookingSvc  BookingService
+    paymentMethodRepo repository.PaymentMethodRepository
+    bookingRepo repository.BookingRepository
     redis       *redis.Client
 
     // Single flight để tránh duplicate requests
@@ -123,7 +125,7 @@ func (p *VNPayProvider) CreatePayment(ctx context.Context, booking *domain.Booki
         Amount:        booking.TotalPrice,
         Status:        "pending",
         TransactionID: transactionID,
-        CreatedAt:     time.Now(),
+        CreatedAt:     time.Now(),  
         UpdatedAt:     time.Now(),
     }
     
@@ -228,52 +230,11 @@ func (p *VNPayProvider) HandleWebhook(ctx context.Context, headers http.Header, 
     return nil
 }
 
-// MockProvider cho các phương thức thanh toán không cần tích hợp thật
-type MockProvider struct {
-    name string
-}
-
-func NewMockProvider(name string) *MockProvider {
-    return &MockProvider{name: name}
-}
-
-func (p *MockProvider) GetName() string {
-    return p.name
-}
-
-func (p *MockProvider) IsActive() bool {
-    return true
-}
-
-func (p *MockProvider) CreatePayment(ctx context.Context, booking *domain.Booking, paymentDetails map[string]interface{}, clientIP string) (*domain.Payment, string, error) {
-    payment := &domain.Payment{
-        ID:            uuid.New().String(),
-        BookingID:     booking.ID,
-        PaymentMethod: p.name,
-        Amount:        booking.TotalPrice,
-        Status:        "paid", // Tự động paid cho dễ test
-        TransactionID: strconv.FormatInt(time.Now().UnixNano(), 10),
-        CreatedAt:     time.Now(),
-        UpdatedAt:     time.Now(),
-    }
-    
-    // Momo có thể mock trả redirect url giả
-    redirectURL := ""
-    if p.name == "MOMO" {
-        redirectURL = "https://momo.vn/mock-payment?amount=" + fmt.Sprintf("%f", booking.TotalPrice)
-    }
-
-    return payment, redirectURL, nil
-}
-
-func (p *MockProvider) HandleWebhook(ctx context.Context, headers http.Header, body []byte, query url.Values) error {
-    return nil
-}
-
 // NewPaymentService tạo service mới
 func NewPaymentService(
     paymentRepo repository.PaymentRepository,
-    bookingSvc BookingService,
+    paymentMethodRepo repository.PaymentMethodRepository,
+    bookingRepo repository.BookingRepository,
     redis *redis.Client,
     vnpPayURL, vnpTmnCode, vnpSecret, vnpReturn string,
 ) PaymentService {
@@ -283,7 +244,8 @@ func NewPaymentService(
 
     s := &paymentService{
         paymentRepo: paymentRepo,
-        bookingSvc:  bookingSvc,
+        paymentMethodRepo: paymentMethodRepo,
+        bookingRepo: bookingRepo,
         redis:       redis,
         providers:   make(map[string]PaymentProvider),
     }
@@ -309,9 +271,7 @@ func NewPaymentService(
     }
     s.providers["VNPAY"] = NewVNPayProvider(vnpConfig, redis)
     
-    // Đăng ký MOMO và CASH providers
-    s.providers["MOMO"] = NewMockProvider("MOMO")
-    s.providers["CASH"] = NewMockProvider("CASH")
+    // TODO: Đăng ký thêm các provider khác như MOMO, ZaloPay, v.v.
 
     return s
 }
@@ -319,7 +279,7 @@ func NewPaymentService(
 // ProcessPayment - API: tạo payment pending (dùng cho flow không cần redirect ngay)
 func (s *paymentService) ProcessPayment(ctx context.Context, bookingID, paymentMethod string, amount float64) (*domain.Payment, error) {
     // Kiểm tra booking
-    booking, err := s.bookingSvc.GetBooking(ctx, bookingID)
+    booking, err := s.bookingRepo.FindByID(ctx, bookingID)
     if err != nil || booking == nil {
         return nil, errors.New(constants.ErrBookingNotFound)
     }
@@ -366,49 +326,34 @@ func (s *paymentService) ProcessPayment(ctx context.Context, bookingID, paymentM
 }
 
 // GetPaymentMethods lấy danh sách cổng thanh toán với cache
-func (s *paymentService) GetPaymentMethods(ctx context.Context) ([]domain.PaymentMethod, error) {
+func (s *paymentService) GetPaymentMethods(ctx context.Context, id string) ([]domain.PaymentMethod, error) {
+    // Không cache khi lọc theo id
+    if id != "" {
+        return s.paymentMethodRepo.FindAll(ctx, id)
+    }
     // Sử dụng single flight để tránh duplicate requests
     v, err, _ := s.requestGroup.Do("payment_methods", func() (interface{}, error) {
-        // Kiểm tra cache
         cacheKey := constants.PaymentMethodsKey
         var methods []domain.PaymentMethod
-        
         cached, err := s.redis.Get(ctx, cacheKey).Bytes()
         if err == nil {
             if json.Unmarshal(cached, &methods) == nil {
                 return methods, nil
             }
         }
-
-        // Tạo danh sách methods từ providers
-        s.mu.RLock()
-        methods = make([]domain.PaymentMethod, 0, len(s.providers))
-        for name, provider := range s.providers {
-            if provider.IsActive() {
-                methods = append(methods, domain.PaymentMethod{
-                    ID:        uuid.New().String(),
-                    Name:      name,
-                    Code:      strings.ToLower(name),
-                    IsActive:  true,
-                    CreatedAt: time.Now(),
-                })
-            }
+        methods, err = s.paymentMethodRepo.FindAll(ctx, "")
+        if err != nil {
+            return nil, err
         }
-        s.mu.RUnlock()
-
-        // Cache kết quả
         if len(methods) > 0 {
             jsonData, _ := json.Marshal(methods)
             s.redis.Set(ctx, cacheKey, jsonData, time.Duration(constants.PaymentMethodsTTL)*time.Second)
         }
-
         return methods, nil
     })
-
     if err != nil {
         return nil, err
     }
-
     return v.([]domain.PaymentMethod), nil
 }
 
@@ -421,9 +366,11 @@ func (s *paymentService) CreatePayment(
     paymentDetails map[string]interface{},
 ) (*domain.Payment, string, error) {
     
-    // Kiểm tra idempotency
+    // Kiểm tra idempotency: key gồm cả bookingID để chỉ chặn trùng với cùng booking
+    idemKey := idempotencyKey
     if idempotencyKey != "" {
-        payment, redirectURL, err := s.checkIdempotency(ctx, idempotencyKey)
+        idemKey = fmt.Sprintf("%s:%s", idempotencyKey, bookingID)
+        payment, redirectURL, err := s.checkIdempotency(ctx, idemKey)
         if err == nil && payment != nil {
             return payment, redirectURL, nil
         }
@@ -440,7 +387,7 @@ func (s *paymentService) CreatePayment(
 
     // Acquire lock để tránh race condition
     if idempotencyKey != "" {
-        lockKey := constants.IdempotencyLock.BuildKey(idempotencyKey)
+        lockKey := constants.IdempotencyLock.BuildKey(idemKey)
         locked, err := s.redis.SetNX(ctx, lockKey, "1", time.Duration(constants.IdempotencyLockTTL)*time.Second).Result()
         if err != nil {
             return nil, "", fmt.Errorf("không thể acquire lock: %w", err)
@@ -448,13 +395,13 @@ func (s *paymentService) CreatePayment(
         if !locked {
             // Retry sau 100ms nếu không lock được
             time.Sleep(100 * time.Millisecond)
-            return s.checkIdempotency(ctx, idempotencyKey)
+            return s.checkIdempotency(ctx, idemKey)
         }
         defer s.redis.Del(ctx, lockKey)
     }
 
     // Kiểm tra booking
-    booking, err := s.bookingSvc.GetBooking(ctx, bookingID)
+    booking, err := s.bookingRepo.FindByID(ctx, bookingID)
     if err != nil || booking == nil {
         return nil, "", errors.New(constants.ErrBookingNotFound)
     }
@@ -496,14 +443,9 @@ func (s *paymentService) CreatePayment(
         return nil, "", fmt.Errorf("không thể lưu payment: %w", err)
     }
 
-	// Nếu payment đã thành công (từ MockProvider), cập nhật trạng thái booking
-	if payment.Status == "paid" {
-		_ = s.bookingSvc.UpdateBookingStatus(ctx, bookingID, "confirmed")
-	}
-
     // Cache kết quả nếu có idempotency key
     if idempotencyKey != "" {
-        s.cacheResult(ctx, idempotencyKey, payment, redirectURL)
+        s.cacheResult(ctx, idemKey, payment, redirectURL)
     }
 
     return payment, redirectURL, nil
@@ -665,30 +607,50 @@ func (s *paymentService) BuildVNPayRedirectURL(payment *domain.Payment, clientIP
 
 // HandleVNPayCallback - API: xử lý callback CODE THÊM SAU!!!!
 func (s *paymentService) HandleVNPayCallback(ctx context.Context, query url.Values) (*domain.Payment, error) {
+    // 1. Kiểm tra chữ ký hợp lệ
     if !s.VerifyVNPaySignature(query) {
-        return nil, errors.New("invalid signature")
+        return nil, errors.New("Chữ ký VNPay không hợp lệ")
     }
 
-    // transactionID := query.Get("vnp_TxnRef")
+    // 2. Lấy transactionID từ vnp_TxnRef
+    transactionID := query.Get("vnp_TxnRef")
+    if transactionID == "" {
+        return nil, errors.New("Thiếu transactionID (vnp_TxnRef)")
+    }
+
+    // 3. Tìm payment theo transactionID
+    payment, err := s.paymentRepo.FindByTransactionID(ctx, transactionID)
+    if err != nil || payment == nil {
+        return nil, errors.New("Không tìm thấy payment với transactionID")
+    }
+
+    // 4. Kiểm tra response code
     responseCode := query.Get("vnp_ResponseCode")
-    
-    // Tìm payment theo transactionID
-    // TODO: Cần thêm method FindByTransactionID
-    
     if responseCode == "00" {
-        // Thanh toán thành công
-        // Update payment status
+        // Thành công, cập nhật trạng thái payment
+        if payment.Status != "paid" {
+            _ = s.UpdatePaymentStatus(ctx, payment.ID, "paid")
+            payment.Status = "paid"
+        }
     } else {
-        // Thanh toán thất bại
+        // Thất bại, cập nhật trạng thái payment
+        if payment.Status != "failed" {
+            _ = s.UpdatePaymentStatus(ctx, payment.ID, "failed")
+            payment.Status = "failed"
+        }
+        return payment, errors.New("Thanh toán thất bại (" + responseCode + ")")
     }
 
-    return nil, errors.New("chưa triển khai callback")
+    return payment, nil
 }
 
 // VerifyVNPaySignature - API: kiểm tra chữ ký
 func (s *paymentService) VerifyVNPaySignature(query url.Values) bool {
     secureHash := query.Get("vnp_SecureHash")
-
+    log.Printf("[VNPay] SecureHash: %s", secureHash)
+    log.Printf("[VNPay] Raw query: %s", query.Encode())
+    log.Printf("[VNPay] Params: %+v", query)
+    log.Printf("[VNPay] SecretKey: %s", s.vnp.SecretKey)
     params := map[string]string{}
     for k, v := range query {
         if k == "vnp_SecureHash" || k == "vnp_SecureHashType" {
@@ -705,18 +667,23 @@ func (s *paymentService) VerifyVNPaySignature(query url.Values) bool {
 
     var hashData strings.Builder
     for i, k := range keys {
-        value := url.QueryEscape(params[k])
+        // Giải mã trước, rồi encode lại đúng chuẩn
+        rawValue, _ := url.QueryUnescape(params[k])
+        value := url.QueryEscape(rawValue)
         if i > 0 {
             hashData.WriteString("&")
         }
         hashData.WriteString(k + "=" + value)
     }
-
+    log.Printf("[VNPay] hashData: %s", hashData.String())
+    
+    log.Printf("[VNPay] received: %s", secureHash)
     h := hmac.New(sha512.New, []byte(s.vnp.SecretKey))
     h.Write([]byte(hashData.String()))
     expected := strings.ToUpper(hex.EncodeToString(h.Sum(nil)))
+    log.Printf("[VNPay] expected: %s", expected)
 
-    return expected == secureHash
+    return strings.EqualFold(expected, secureHash)
 }
 
 // Helper methods

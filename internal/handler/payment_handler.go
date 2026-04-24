@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"bytes"
 	"encoding/json"
 	"io"
 	"log"
@@ -25,22 +24,22 @@ func NewPaymentHandler(svc service.PaymentService) *PaymentHandler {
 }
 
 // GetPaymentMethods xử lý GET /api/payments/methods
-// Lấy danh sách cổng thanh toán đang hoạt động
+// Lấy danh sách cổng thanh toán từ database
 func (h *PaymentHandler) GetPaymentMethods(w http.ResponseWriter, r *http.Request) {
-    methods, err := h.svc.GetPaymentMethods(r.Context())
+    // Lấy param id từ query nếu có
+    id := r.URL.Query().Get("id")
+    methods, err := h.svc.GetPaymentMethods(r.Context(), id)
     if err != nil {
         helpers.WriteError(w, err)
         return
     }
-
     helpers.WriteJSON(w, http.StatusOK, true, "Danh sách cổng thanh toán", methods)
 }
 
 // CreatePayment xử lý POST /api/payments
 func (h *PaymentHandler) CreatePayment(w http.ResponseWriter, r *http.Request) {
-    // Log request
     log.Printf("[DEBUG] CreatePayment called with headers: %v", r.Header)
-    
+
     // Kiểm tra idempotency key
     idempotencyKey := r.Header.Get("Idempotency-Key")
     if idempotencyKey == "" {
@@ -52,43 +51,26 @@ func (h *PaymentHandler) CreatePayment(w http.ResponseWriter, r *http.Request) {
     var req struct {
         BookingID      string                 `json:"booking_id"`
         PaymentMethod  string                 `json:"payment_method"`
-        Amount         float64                 `json:"amount"`
-        PaymentDetails map[string]interface{} `json:"payment_details,omitempty"`
+        Amount         float64                `json:"amount"`
+        PaymentDetails map[string]interface{} `json:"payment_details"`
     }
-
-    // Log raw body
     body, _ := io.ReadAll(r.Body)
     log.Printf("[DEBUG] Raw request body: %s", string(body))
-    r.Body = io.NopCloser(bytes.NewBuffer(body)) // Reset body
-
     if err := json.Unmarshal(body, &req); err != nil {
-        log.Printf("[ERROR] Failed to parse JSON: %v", err)
-        helpers.WriteJSON(w, http.StatusBadRequest, false, constants.ErrInvalidJSON, nil)
+        log.Printf("[ERROR] Invalid request body: %v", err)
+        helpers.WriteJSON(w, http.StatusBadRequest, false, "Dữ liệu gửi lên không hợp lệ", nil)
         return
     }
-
     log.Printf("[DEBUG] Parsed request: %+v", req)
-
-    // Validate input
-    validator := helpers.NewValidator()
-    validator.Required("booking_id", req.BookingID)
-    validator.Required("payment_method", req.PaymentMethod)
-    validator.PositiveNumber("amount", req.Amount)
-    
-    if !validator.IsValid() {
-        log.Printf("[ERROR] Validation failed: %+v", validator.Errors)
-        helpers.WriteJSON(w, http.StatusBadRequest, false, constants.ErrMissingFields, validator.Errors)
-        return
-    }
 
     clientIP := helpers.GetClientIP(r)
     log.Printf("[DEBUG] Client IP: %s", clientIP)
 
-    // Gọi service để tạo payment
+    // Chuyển payment method thành chữ hoa để đồng bộ với service
     payment, redirectURL, err := h.svc.CreatePayment(
         r.Context(),
         req.BookingID,
-        strings.ToUpper(req.PaymentMethod), // Chuyển thành chữ hoa
+        strings.ToUpper(req.PaymentMethod),
         req.Amount,
         clientIP,
         idempotencyKey,
@@ -97,7 +79,10 @@ func (h *PaymentHandler) CreatePayment(w http.ResponseWriter, r *http.Request) {
 
     if err != nil {
         log.Printf("[ERROR] CreatePayment failed: %v", err)
-        helpers.WriteError(w, err)
+        helpers.WriteJSON(w, http.StatusBadRequest, false, err.Error(), map[string]interface{}{
+            "payment":      payment,
+            "redirect_url": redirectURL,
+        })
         return
     }
 
@@ -110,7 +95,6 @@ func (h *PaymentHandler) CreatePayment(w http.ResponseWriter, r *http.Request) {
 
     helpers.WriteJSON(w, http.StatusCreated, true, "Tạo yêu cầu thanh toán thành công", responseData)
 }
-
 // CreateVNPayPayment xử lý POST /api/payments/vnpay (giữ lại để tương thích ngược)
 // Tạo yêu cầu thanh toán VNPay
 func (h *PaymentHandler) CreateVNPayPayment(w http.ResponseWriter, r *http.Request) {

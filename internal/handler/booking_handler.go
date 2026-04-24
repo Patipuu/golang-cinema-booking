@@ -2,18 +2,16 @@ package handler
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
+	"booking_cinema_golang/internal/domain"
 	"booking_cinema_golang/internal/middleware"
-	"booking_cinema_golang/internal/repository"
 	"booking_cinema_golang/internal/service"
+	"booking_cinema_golang/pkg/utils"
 
 	"github.com/go-chi/chi/v5"
-	"booking_cinema_golang/internal/utils"
 )
 
-// BookingHandler groups HTTP handlers for bookings.
 type BookingHandler struct {
 	bookingService service.BookingService
 }
@@ -22,87 +20,116 @@ func NewBookingHandler(bookingService service.BookingService) *BookingHandler {
 	return &BookingHandler{bookingService: bookingService}
 }
 
-// CreateBooking handles booking creation requests.
+func (h *BookingHandler) LockSeat(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		ShowtimeID string `json:"showtime_id"`
+		SeatID     string `json:"seat_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.JSONBadRequest(w, "invalid request", err.Error())
+		return
+	}
+
+	ok, err := h.bookingService.LockSeat(r.Context(), req.ShowtimeID, req.SeatID)
+	if err != nil {
+		utils.JSONInternal(w, err.Error())
+		return
+	}
+	if !ok {
+		utils.JSONBadRequest(w, "seat is already locked", nil)
+		return
+	}
+	utils.JSONSuccess(w, nil, "seat locked")
+}
+
+func (h *BookingHandler) UnlockSeat(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		ShowtimeID string `json:"showtime_id"`
+		SeatID     string `json:"seat_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.JSONBadRequest(w, "invalid request", err.Error())
+		return
+	}
+
+	if err := h.bookingService.UnlockSeat(r.Context(), req.ShowtimeID, req.SeatID); err != nil {
+		utils.JSONInternal(w, err.Error())
+		return
+	}
+	utils.JSONSuccess(w, nil, "seat unlocked")
+}
+
 func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
-	type createBookingRequest struct {
-		CinemaID   string   `json:"cinema_id"`
+	var req struct {
 		ShowtimeID string   `json:"showtime_id"`
 		Seats      []string `json:"seats"`
 	}
-
-	var req createBookingRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.JSONBadRequest(w, "invalid json body")
-		return
-	}
-	if req.ShowtimeID == "" {
-		utils.JSONBadRequest(w, "showtime_id is required")
-		return
-	}
-	if len(req.Seats) == 0 {
-		utils.JSONBadRequest(w, "seats must not be empty")
+		utils.JSONBadRequest(w, "invalid request", err.Error())
 		return
 	}
 
 	claims := middleware.GetClaims(r.Context())
-	if claims == nil || claims.UserID == "" {
-		utils.JSONUnauthorized(w, "missing user claims")
-		return
+	userID := ""
+	if claims != nil {
+		userID = claims.UserID
 	}
 
-	booking, err := h.bookingService.CreateBooking(r.Context(), claims.UserID, req.ShowtimeID, req.Seats)
+	booking, err := h.bookingService.CreateBooking(r.Context(), userID, req.ShowtimeID, req.Seats)
 	if err != nil {
-		// Map expected business errors to API codes.
-		switch {
-		case errors.Is(err, repository.ErrSeatLockConflict):
-			utils.WriteJSON(w, http.StatusConflict, map[string]any{"error": "ghế đang được người khác xử lý, vui lòng thử lại"})
-		case errors.Is(err, repository.ErrSeatAlreadyTaken):
-			utils.WriteJSON(w, http.StatusConflict, map[string]any{"error": "ghế đã có người đặt, vui lòng chọn ghế khác"})
-		case errors.Is(err, repository.ErrSeatNotFound):
-			utils.JSONBadRequest(w, "một hoặc nhiều ghế không tồn tại")
-		default:
-			utils.JSONInternal(w, "internal error")
-		}
+		utils.JSONInternal(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(booking)
+	utils.JSONCreated(w, booking, "booking created")
 }
 
-// GetBooking handles fetching a single booking.
 func (h *BookingHandler) GetBooking(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	if id == "" {
-		utils.JSONBadRequest(w, "id is required")
-		return
-	}
-
 	booking, err := h.bookingService.GetBooking(r.Context(), id)
 	if err != nil {
 		utils.JSONNotFound(w, "booking not found")
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(booking)
+	utils.JSONSuccess(w, booking, "")
 }
 
-// GetTakenSeats handles GET /api/showtimes/{id}/seats (returns taken seat IDs for a showtime).
 func (h *BookingHandler) GetTakenSeats(w http.ResponseWriter, r *http.Request) {
 	showtimeID := chi.URLParam(r, "id")
-	if showtimeID == "" {
-		utils.JSONBadRequest(w, "showtime id is required")
-		return
-	}
-
 	taken, err := h.bookingService.GetTakenSeatIDsForShowtime(r.Context(), showtimeID)
 	if err != nil {
-		utils.JSONInternal(w, "internal error")
+		utils.JSONInternal(w, err.Error())
+		return
+	}
+	utils.JSONSuccess(w, map[string]any{"taken": taken}, "")
+}
+
+func (h *BookingHandler) ListMyBookings(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r.Context())
+	if claims == nil || claims.UserID == "" {
+		utils.WriteJSON(w, http.StatusUnauthorized, utils.Response{Success: false, Message: "không tìm thấy thông tin xác thực"})
+		return
+	}
+	userID := claims.UserID
+
+	page := domain.Page{Limit: 50, Page: 1} // Limit tạm thời
+	list, _, err := h.bookingService.ListByUserID(r.Context(), userID, page)
+	if err != nil {
+		utils.WriteJSON(w, http.StatusInternalServerError, utils.Response{Success: false, Message: err.Error()})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{"taken": taken})
+	utils.JSONSuccess(w, list, "")
 }
+
+func (h *BookingHandler) CancelBooking(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	// In production, verify user owns booking if not admin
+	if err := h.bookingService.CancelBooking(r.Context(), id); err != nil {
+		utils.JSONInternal(w, err.Error())
+		return
+	}
+	utils.JSONSuccess(w, nil, "Hủy đơn đặt vé thành công. Ghế đã được giải phóng.")
+}
+
 

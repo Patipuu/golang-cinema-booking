@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin - Cinema Booking</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="logo"><span>🎬</span> CinemaGo Admin</div>
+    <nav>
+      <a href="./index.html" class="btn btn-outline btn-sm">← Về trang chính</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <!-- Stats -->
+    <div class="card">
+      <h2>📊 Thống kê tổng quan</h2>
+      <div class="stats-grid" id="statsGrid">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Cinemas -->
+    <div class="card">
+      <h2>🏢 Quản lý rạp chiếu</h2>
+      <button class="btn btn-primary btn-sm" id="btnToggleCinemaForm">+ Thêm rạp</button>
+      <div id="cinemaForm" style="display:none;margin:14px 0;padding:14px;background:var(--bg3);border-radius:var(--radius)">
+        <input type="hidden" id="cId">
+        <div class="form-row">
+          <div class="form-group"><label>Tên rạp</label><input id="cName"></div>
+          <div class="form-group"><label>Địa chỉ</label><input id="cLocation"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Thành phố</label><input id="cCity"></div>
+          <div class="form-group"><label>Hotline</label><input id="cHotline"></div>
+        </div>
+        <button class="btn btn-success btn-sm" id="btnSaveCinema">💾 Lưu</button>
+      </div>
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead><tr><th>ID</th><th>Tên</th><th>Địa chỉ</th><th>Thành phố</th><th>Hotline</th><th>Thao tác</th></tr></thead>
+          <tbody id="cinemaTable"><tr><td colspan="6" class="loading"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Movies -->
+    <div class="card">
+      <h2>🎬 Quản lý phim</h2>
+      <button class="btn btn-primary btn-sm" id="btnToggleMovieForm">+ Thêm phim</button>
+      <div id="movieForm" style="display:none;margin:14px 0;padding:14px;background:var(--bg3);border-radius:var(--radius)">
+        <input type="hidden" id="mId">
+        <div class="form-row">
+          <div class="form-group"><label>Tên phim (VI)</label><input id="mTitleVI"></div>
+          <div class="form-group"><label>Tên phim (EN)</label><input id="mTitleEN"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Đạo diễn</label><input id="mDirector"></div>
+          <div class="form-group"><label>Diễn viên</label><input id="mCast"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Thời lượng (phút)</label><input type="number" id="mDuration" value="120"></div>
+          <div class="form-group"><label>Thể loại (phẩy)</label><input id="mGenre"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Xếp hạng</label><select id="mRating"><option>P</option><option>C13</option><option>C16</option><option>C18</option></select></div>
+          <div class="form-group"><label>Trạng thái</label><select id="mStatus"><option value="now_showing">Đang chiếu</option><option value="coming_soon">Sắp chiếu</option><option value="ended">Ngừng</option></select></div>
+        </div>
+        <div class="form-group"><label>Mô tả</label><textarea id="mDesc"></textarea></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-success btn-sm" id="btnSaveMovie">💾 Lưu</button>
+          <button class="btn btn-outline btn-sm" id="btnCancelMovie">Hủy</button>
+        </div>
+      </div>
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead><tr><th>ID</th><th>Tên phim</th><th>Đạo diễn</th><th>Thời lượng</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+          <tbody id="movieTable"><tr><td colspan="6" class="loading"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Showtimes -->
+    <div class="card">
+      <h2>📅 Quản lý suất chiếu</h2>
+      <div id="showtimeForm" style="margin:14px 0;padding:14px;background:var(--bg3);border-radius:var(--radius)">
+        <div class="form-row">
+          <div class="form-group"><label>Chọn Phim</label><select id="stMovie"></select></div>
+          <div class="form-group"><label>Chọn Rạp</label><select id="stCinema"></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Phòng chiếu</label><select id="stRoom"><option value="">Chọn rạp trước...</option></select></div>
+          <div class="form-group"><label>Giá vé (VND)</label><input type="number" id="stPrice" value="100000"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Giờ bắt đầu</label><input type="datetime-local" id="stStart"></div>
+          <div class="form-group"><label>Giờ kết thúc</label><input type="datetime-local" id="stEnd"></div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="btnSaveShowtime">➕ Tạo suất chiếu</button>
+      </div>
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead><tr><th>ID</th><th>Phim</th><th>Rạp/Phòng</th><th>Bắt đầu</th><th>Giá</th><th>Thao tác</th></tr></thead>
+          <tbody id="showtimeTable"><tr><td colspan="6" class="loading"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="./admin.js"></script>
+</body>
+</html>

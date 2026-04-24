@@ -25,4 +25,5 @@ type PaymentRepository interface {
     
     // Stats
     GetPaymentStats(ctx context.Context, from, to time.Time) (map[string]interface{}, error)
+
 }

@@ -37,10 +37,10 @@ func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 
 	// Remove sensitive info
 	user.PasswordHash = ""
-	user.OTPCode = ""
+	user.OTPCode = nil
 	user.OTPExpiry = nil
 
-	utils.JSONSuccess(w, user)
+	utils.JSONSuccess(w, user, "Success")
 }
 
 // UpdateProfileRequest defines the allowed fields to update.
@@ -60,7 +60,7 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 
 	var req UpdateProfileRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.JSONBadRequest(w, "invalid request body")
+		utils.JSONBadRequest(w, "invalid request body", nil)
 		return
 	}
 
@@ -75,10 +75,10 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.PasswordHash = ""
-	user.OTPCode = ""
+	user.OTPCode = nil
 	user.OTPExpiry = nil
 
-	utils.JSONSuccess(w, user)
+	utils.JSONSuccess(w, user, "Success")
 }
 
 // ChangePasswordRequest payload for changing password.
@@ -97,18 +97,18 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 
 	var req ChangePasswordRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.JSONBadRequest(w, "invalid request body")
+		utils.JSONBadRequest(w, "invalid request body", nil)
 		return
 	}
 	if req.OldPassword == "" || req.NewPassword == "" {
-		utils.JSONBadRequest(w, "old_password and new_password are required")
+		utils.JSONBadRequest(w, "old_password and new_password are required", nil)
 		return
 	}
 
 	err := h.userSvc.ChangePassword(r.Context(), claims.UserID, req.OldPassword, req.NewPassword)
 	if err != nil {
 		if err.Error() == "incorrect old password" {
-			utils.JSONBadRequest(w, err.Error())
+			utils.JSONBadRequest(w, err.Error(), nil)
 			return
 		}
 		if err == service.ErrUserNotFound {
@@ -119,5 +119,5 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.JSONSuccess(w, map[string]string{"message": "password updated successfully"})
+	utils.JSONSuccess(w, map[string]string{"message": "password updated successfully"}, "Success")
 }

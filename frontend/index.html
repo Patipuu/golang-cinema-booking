@@ -1,19 +1,246 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Cinema Booking App</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="./styles.css" />
-    <!-- React via CDN (no build tool needed) -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  </head>
-  <body>
-    <div id="root"></div>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cinema Booking System</title>
+  <meta name="description" content="Hệ thống đặt vé xem phim trực tuyến">
+  <link rel="stylesheet" href="./styles.css?v=2.4">
+</head>
+<body>
 
-    <script type="text/babel" src="./app.js"></script>
-  </body>
+<!-- ===== HEADER ===== -->
+<header class="app-header">
+  <div class="logo"><span>🎬</span> CinemaGo</div>
+  <nav id="mainNav">
+    <button data-page="home" class="active" id="nav-home">🏠 Trang chủ</button>
+    <button data-page="movies" id="nav-movies">🎥 Phim</button>
+    <button data-page="booking" id="nav-booking" style="display:none">🎟️ Đặt vé</button>
+    <button data-page="my-bookings" id="nav-my-bookings" style="display:none">📋 Vé của tôi</button>
+    <button data-page="admin" id="nav-admin" style="display:none">⚙️ Admin</button>
+  </nav>
+  <div class="user-info" id="userInfo">
+    <span id="authArea"></span>
+  </div>
+</header>
+
+<!-- ===== TOAST ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ===== MAIN ===== -->
+<main class="main">
+
+  <!-- PAGE: HOME -->
+  <section class="page active" id="page-home">
+    <div class="card">
+      <h2>🏠 Chọn rạp chiếu phim</h2>
+      <div id="cinemaList" class="loading"><div class="spinner"></div></div>
+    </div>
+  </section>
+
+  <!-- PAGE: MOVIES -->
+  <section class="page" id="page-movies">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <h2>🎥 Phim đang chiếu</h2>
+        <div class="date-filter">
+          <label style="font-size:0.8rem;margin-right:8px">Lịch:</label>
+          <input type="date" id="showtimeDate" style="padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:var(--bg2);color:var(--text)">
+        </div>
+      </div>
+      <p style="font-size:.8rem;color:var(--text2);margin-bottom:14px" id="selectedCinemaName"></p>
+      <div id="movieList" class="loading"><div class="spinner"></div></div>
+    </div>
+  </section>
+
+  <!-- PAGE: BOOKING (Seat selection) -->
+  <section class="page" id="page-booking">
+    <div class="card">
+      <h2>🎟️ Chọn ghế</h2>
+      <p style="font-size:.85rem;color:var(--text2)" id="bookingMovieInfo"></p>
+      <div class="seat-map-container">
+        <div class="screen-label">MÀN HÌNH</div>
+        <div class="seat-grid" id="seatGrid"></div>
+        <div class="seat-legend">
+          <span><span class="dot" style="background:var(--bg3);border:1px solid var(--border)"></span> Trống</span>
+          <span><span class="dot" style="background:var(--accent)"></span> Đã chọn</span>
+          <span><span class="dot" style="background:var(--warn)"></span> Đang giữ</span>
+          <span><span class="dot" style="background:var(--danger);border:1px solid var(--danger);position:relative"><span style="position:absolute;top:-1px;left:3px;color:#fff;font-size:10px">✕</span></span> Đã bán</span>
+        </div>
+      </div>
+
+      <!-- Booking Summary -->
+      <div class="booking-summary" id="bookingSummary" style="display:none">
+        <h3>Thông tin đặt vé</h3>
+        <div id="summaryContent"></div>
+        <div style="margin-top:14px;display:flex;gap:8px">
+          <button class="btn btn-primary btn-block" id="btnConfirmBooking">✅ Xác nhận đặt vé</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: MY BOOKINGS -->
+  <section class="page" id="page-my-bookings">
+    <div class="card">
+      <h2>📋 Vé đã đặt</h2>
+      <div id="bookingResult"></div>
+    </div>
+  </section>
+
+  <!-- PAGE: ADMIN -->
+  <section class="page" id="page-admin">
+    <!-- Stats -->
+    <div class="card">
+      <h2>📊 Thống kê</h2>
+      <div class="stats-grid" id="statsGrid"></div>
+    </div>
+
+    <!-- Manage Cinemas -->
+    <div class="card">
+      <h2>🏢 Quản lý rạp</h2>
+      <button class="btn btn-primary btn-sm" id="btnShowAddCinema" style="margin-bottom:12px">+ Thêm rạp</button>
+      <div id="addCinemaForm" style="display:none;margin-bottom:14px;padding:14px;background:var(--bg3);border-radius:var(--radius)">
+        <div class="form-row">
+          <div class="form-group"><label>Tên rạp</label><input id="cinemaName" placeholder="CGV Vincom"></div>
+          <div class="form-group"><label>Địa chỉ</label><input id="cinemaLocation" placeholder="123 Nguyễn Huệ"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Thành phố</label><input id="cinemaCity" placeholder="Hồ Chí Minh"></div>
+          <div class="form-group"><label>Hotline</label><input id="cinemaHotline" placeholder="1900 xxxx"></div>
+        </div>
+        <button class="btn btn-success btn-sm" id="btnCreateCinema">💾 Lưu</button>
+        <button class="btn btn-outline btn-sm" id="btnCancelCinema">Hủy</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Tên rạp</th><th>Địa chỉ</th><th>Thành phố</th><th>Hotline</th></tr></thead>
+          <tbody id="adminCinemaTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Manage Movies -->
+    <div class="card">
+      <h2>🎬 Quản lý phim</h2>
+      <button class="btn btn-primary btn-sm" id="btnShowAddMovie" style="margin-bottom:12px">+ Thêm phim</button>
+      <div id="addMovieForm" style="display:none;margin-bottom:14px;padding:14px;background:var(--bg3);border-radius:var(--radius)">
+        <div class="form-row">
+          <div class="form-group"><label>Tên phim (VI)</label><input id="movieTitleVI" placeholder="Kung Fu Panda 4"></div>
+          <div class="form-group"><label>Tên phim (EN)</label><input id="movieTitleEN" placeholder="Kung Fu Panda 4"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Đạo diễn</label><input id="movieDirector" placeholder="Mike Mitchell"></div>
+          <div class="form-group"><label>Diễn viên</label><input id="movieCast" placeholder="Jack Black, Awkwafina"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Thời lượng (phút)</label><input id="movieDuration" type="number" value="120"></div>
+          <div class="form-group"><label>Ngôn ngữ</label><input id="movieLanguage" placeholder="Tiếng Anh"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Thể loại (phân cách bằng dấu phẩy)</label><input id="movieGenre" placeholder="Hành động, Hài"></div>
+          <div class="form-group"><label>Xếp hạng</label>
+            <select id="movieRating">
+              <option value="P">P - Phổ biến</option>
+              <option value="C13">C13</option>
+              <option value="C16">C16</option>
+              <option value="C18">C18</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Trạng thái</label>
+            <select id="movieStatus">
+              <option value="now_showing">Đang chiếu</option>
+              <option value="coming_soon">Sắp chiếu</option>
+              <option value="ended">Ngừng chiếu</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Phụ đề</label><input id="movieSubtitle" placeholder="Tiếng Việt"></div>
+        </div>
+        <div class="form-group"><label>Mô tả</label><textarea id="movieDescription" placeholder="Mô tả phim..."></textarea></div>
+        <div class="form-row">
+          <div class="form-group"><label>Poster URL</label><input id="moviePoster" placeholder="https://..."></div>
+          <div class="form-group"><label>Trailer URL</label><input id="movieTrailer" placeholder="https://..."></div>
+        </div>
+        <button class="btn btn-success btn-sm" id="btnCreateMovie">💾 Lưu</button>
+        <button class="btn btn-outline btn-sm" id="btnCancelMovie">Hủy</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Tên phim</th><th>Đạo diễn</th><th>Thời lượng</th><th>Trạng thái</th><th>Xếp hạng</th></tr></thead>
+          <tbody id="adminMovieTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: AUTH (Login / Register) -->
+  <section class="page" id="page-auth">
+    <div style="max-width:400px;margin:0 auto">
+      <!-- Login -->
+      <div class="card" id="loginCard">
+        <h2>🔐 Đăng nhập</h2>
+        <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="email@example.com"></div>
+        <div class="form-group"><label>Mật khẩu</label><input type="password" id="loginPassword" placeholder="********"></div>
+        <button class="btn btn-primary btn-block" id="btnLogin">Đăng nhập</button>
+        <p style="text-align:center;margin-top:10px;font-size:.82rem;color:var(--text2)">
+          Chưa có tài khoản? <a href="#" id="showRegister">Đăng ký</a>
+        </p>
+      </div>
+
+      <!-- Register -->
+      <div class="card" id="registerCard" style="display:none">
+        <h2>📝 Đăng ký</h2>
+        <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="email@example.com"></div>
+        <div class="form-group"><label>Tên đăng nhập</label><input id="regUsername" placeholder="username"></div>
+        <div class="form-group"><label>Họ tên</label><input id="regFullname" placeholder="Nguyễn Văn A"></div>
+        <div class="form-group"><label>Số điện thoại</label><input id="regPhone" placeholder="0901234567"></div>
+        <div class="form-group"><label>Mật khẩu (tối thiểu 8 ký tự)</label><input type="password" id="regPassword" placeholder="********"></div>
+        <button class="btn btn-primary btn-block" id="btnRegister">Đăng ký</button>
+        <p style="text-align:center;margin-top:10px;font-size:.82rem;color:var(--text2)">
+          Đã có tài khoản? <a href="#" id="showLogin">Đăng nhập</a>
+        </p>
+      </div>
+
+      <!-- Verify OTP -->
+      <div class="card" id="verifyCard" style="display:none">
+        <h2>📧 Xác thực Email</h2>
+        <p style="margin-bottom:10px;font-size:.85rem;color:var(--text2)">
+          Chúng tôi đã gửi mã OTP đến email của bạn (hoặc xem tại Log của server).
+        </p>
+        <input type="hidden" id="verifyUserId">
+        <div class="form-group"><label>Mã OTP (6 số)</label><input id="verifyOtp" placeholder="123456" maxlength="6"></div>
+        <button class="btn btn-primary btn-block" id="btnVerify">Xác nhận</button>
+        <p style="text-align:center;margin-top:10px;font-size:.82rem;color:var(--text2)">
+          Sai email? <a href="#" id="backToRegister">Đăng ký lại</a>
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- PAGE: PAYMENT -->
+  <section class="page" id="page-payment">
+    <div style="max-width:480px;margin:0 auto">
+      <div class="card">
+        <h2>💳 Thanh toán</h2>
+        <div id="paymentInfo"></div>
+        <div class="form-group" style="margin-top:14px">
+          <label>Phương thức thanh toán</label>
+          <select id="paymentMethod">
+            <option value="VNPAY">VNPay</option>
+            <option value="MOMO">MoMo</option>
+            <option value="CASH">Tiền mặt</option>
+          </select>
+        </div>
+        <button class="btn btn-success btn-block" id="btnPay">💰 Thanh toán</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script src="./app.js?v=3.2"></script>
+</body>
 </html>
-

@@ -5,47 +5,87 @@ import (
 	"net/http"
 )
 
-// JSON response envelope.
+// Response is the standard JSON response format.
 type Response struct {
-	Success bool        `json:"success"`
-	Data    interface{} `json:"data,omitempty"`
-	Error   string      `json:"error,omitempty"`
-	Message string      `json:"message,omitempty"`
+	Success bool   `json:"success"`
+	Message string `json:"message,omitempty"`
+	Data    any    `json:"data,omitempty"`
+	Error   string `json:"error,omitempty"`
+	Errors  any    `json:"errors,omitempty"`
 }
 
-// WriteJSON writes status and JSON body to w.
-func WriteJSON(w http.ResponseWriter, status int, data interface{}) {
+// WriteJSON sends a JSON response with the given status code.
+func WriteJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(data)
 }
 
-// JSONSuccess sends success response with data.
-func JSONSuccess(w http.ResponseWriter, data interface{}) {
-	WriteJSON(w, http.StatusOK, Response{Success: true, Data: data})
+// JSONSuccess sends a successful Response.
+func JSONSuccess(w http.ResponseWriter, data any, message string) {
+	WriteJSON(w, http.StatusOK, Response{
+		Success: true,
+		Message: message,
+		Data:    data,
+	})
+}
+
+// JSONCreated sends a 201 Created Response.
+func JSONCreated(w http.ResponseWriter, data any, message string) {
+	WriteJSON(w, http.StatusCreated, Response{
+		Success: true,
+		Message: message,
+		Data:    data,
+	})
 }
 
 // JSONError sends error response with message and status.
 func JSONError(w http.ResponseWriter, message string, status int) {
-	WriteJSON(w, status, Response{Success: false, Error: message})
+	WriteJSON(w, status, Response{Success: false, Error: message, Message: message})
 }
 
-// JSONBadRequest sends 400.
-func JSONBadRequest(w http.ResponseWriter, message string) {
-	JSONError(w, message, http.StatusBadRequest)
+// JSONBadRequest sends a 400 Bad Request Error.
+func JSONBadRequest(w http.ResponseWriter, message string, errors any) {
+	WriteJSON(w, http.StatusBadRequest, Response{
+		Success: false,
+		Message: message,
+		Error:   message,
+		Errors:  errors,
+	})
 }
 
-// JSONUnauthorized sends 401.
+// JSONUnauthorized sends a 401 Unauthorized Error.
 func JSONUnauthorized(w http.ResponseWriter, message string) {
-	JSONError(w, message, http.StatusUnauthorized)
+	WriteJSON(w, http.StatusUnauthorized, Response{
+		Success: false,
+		Message: message,
+		Error:   message,
+	})
 }
 
-// JSONNotFound sends 404.
+// JSONForbidden sends a 403 Forbidden Error.
+func JSONForbidden(w http.ResponseWriter, message string) {
+	WriteJSON(w, http.StatusForbidden, Response{
+		Success: false,
+		Message: message,
+		Error:   message,
+	})
+}
+
+// JSONNotFound sends a 404 Not Found Error.
 func JSONNotFound(w http.ResponseWriter, message string) {
-	JSONError(w, message, http.StatusNotFound)
+	WriteJSON(w, http.StatusNotFound, Response{
+		Success: false,
+		Message: message,
+		Error:   message,
+	})
 }
 
-// JSONInternal sends 500.
+// JSONInternal sends a 500 Internal Server Error.
 func JSONInternal(w http.ResponseWriter, message string) {
-	JSONError(w, message, http.StatusInternalServerError)
+	WriteJSON(w, http.StatusInternalServerError, Response{
+		Success: false,
+		Message: message,
+		Error:   message,
+	})
 }

@@ -1,0 +1,62 @@
+BÀI T ẬP KIỂM TRA TH ỰC HÀNH  
+Dành cho:  
+1. ĐỀ BÀI 
+Mục tiêu: M ở rộng ch ức năng tìm ki ếm phòng tr ọ hiện có trong đ ồ án. 
+ 
+Trong báo cáo, các b ạn đã xây d ựng ch ức năng tìm ki ếm theo s ố phòng 
+(search_roomsNumber). Bài t ập này yêu c ầu các b ạn phát tri ển một tính năng 'Tìm 
+kiếm nâng cao' cho phép ngư ời dùng tìm các phòng còn tr ống dựa trên nhi ều tiêu chí 
+phức tạp hơn.  
+ 
+Các bư ớc thực hiện: 
+1. Tạo một URL m ới, ví d ụ: `path('rooms/advanced_search/', 
+views.advanced_search_rooms, name='advanced_search')`.  
+2. Trong file `room/views.py`, t ạo một function view m ới tên là 
+`advanced_search_rooms`.  
+3. View này s ẽ nhận các tham s ố từ URL GET request, ví d ụ: 
+`?max_price=3000000&min_acreage=20`.  
+4. Sử dụng Django ORM đ ể truy v ấn model `Room`. Câu truy v ấn phải lọc ra các 
+phòng th ỏa mãn T ẤT CẢ các đi ều kiện sau:  
+    - Giá phòng (`price`) ph ải nhỏ hơn ho ặc bằng `max_price`.  
+    - Diện tích (`acreage`) ph ải lớn hơn ho ặc bằng `min_acreage`.  
+    - Phòng ph ải đang ở trạng thái 'tr ống' (t ức là không có khách nào đang thuê phòng 
+đó - gợi ý: ki ểm tra m ối quan h ệ với model `Guests`).  
+5. Render k ết quả ra một template HTML m ới để hiển thị danh sách các phòng tìm 
+được. 
+2. DỮ LIỆU ĐẦU VÀO (INPUT)  
+Sinh viên s ử dụng đo ạn dữ liệu/code sau đ ể thực hiện: 
+Dữ liệu đầu vào s ẽ được truy ền qua URL dư ới dạng tham s ố GET. Sinh viên c ần xử 
+lý các tham s ố này trong view. Dư ới đây là đo ạn code m ẫu định nghĩa model `Room` 
+và `Guests` mà các b ạn đã thi ết kế, dùng đ ể tham kh ảo khi xây d ựng câu truy v ấn 
+ORM:  
+ 
+```python  
+# room/models.py  
+ 
+class House(models.Model):  
+    # ... các trư ờng của House ...  
+    pass 
+ 
+class Room(models.Model):  
+    house = models.ForeignKey(House, on_delete=models.CASCADE)  
+    roomsNumber = models.CharField(max_length=50)  
+    price = models.IntegerField()  
+    acreage = models.FloatField() # Di ện tích  
+    # ... các trư ờng khác ...  
+ 
+class Guests(models.Model):  
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)  
+    fullname = models.CharField(max_length=100)  
+    # ... các trư ờng khác ...  
+``` 
+ 
+Ví dụ URL ngư ời dùng truy c ập: 
+`http://127.0.0.1:8000/rooms/advanced_search/?max_price=300 0000&min_acreage=2
+0` 
+3. YÊU C ẦU KẾT QU Ả (OUTPUT)  
+Chương trình c ần trả về một trang web HTML hi ển thị kết quả tìm ki ếm. 
+- Tiêu đ ề trang: "K ết quả tìm ki ếm phòng nâng cao".  
+- Nếu có phòng phù h ợp, hiển thị một danh sách các phòng. M ỗi phòng c ần hiển thị ít 
+nhất các thông tin sau: Tên nhà, S ố phòng, Giá thuê, Di ện tích.  
+- Nếu không tìm th ấy phòng nào th ỏa mãn đi ều kiện, hiển thị thông báo: "Không tìm 
+thấy phòng nào phù h ợp với tiêu chí c ủa bạn." 

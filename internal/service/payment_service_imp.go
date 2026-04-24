@@ -28,7 +28,7 @@ import (
 // paymentService triển khai PaymentService
 type paymentService struct {
     paymentRepo repository.PaymentRepository
-    bookingRepo repository.BookingRepository
+    bookingSvc  BookingService
     redis       *redis.Client
 
     // Single flight để tránh duplicate requests
@@ -228,10 +228,52 @@ func (p *VNPayProvider) HandleWebhook(ctx context.Context, headers http.Header, 
     return nil
 }
 
+// MockProvider cho các phương thức thanh toán không cần tích hợp thật
+type MockProvider struct {
+    name string
+}
+
+func NewMockProvider(name string) *MockProvider {
+    return &MockProvider{name: name}
+}
+
+func (p *MockProvider) GetName() string {
+    return p.name
+}
+
+func (p *MockProvider) IsActive() bool {
+    return true
+}
+
+func (p *MockProvider) CreatePayment(ctx context.Context, booking *domain.Booking, paymentDetails map[string]interface{}, clientIP string) (*domain.Payment, string, error) {
+    payment := &domain.Payment{
+        ID:            uuid.New().String(),
+        BookingID:     booking.ID,
+        PaymentMethod: p.name,
+        Amount:        booking.TotalPrice,
+        Status:        "paid", // Tự động paid cho dễ test
+        TransactionID: strconv.FormatInt(time.Now().UnixNano(), 10),
+        CreatedAt:     time.Now(),
+        UpdatedAt:     time.Now(),
+    }
+    
+    // Momo có thể mock trả redirect url giả
+    redirectURL := ""
+    if p.name == "MOMO" {
+        redirectURL = "https://momo.vn/mock-payment?amount=" + fmt.Sprintf("%f", booking.TotalPrice)
+    }
+
+    return payment, redirectURL, nil
+}
+
+func (p *MockProvider) HandleWebhook(ctx context.Context, headers http.Header, body []byte, query url.Values) error {
+    return nil
+}
+
 // NewPaymentService tạo service mới
 func NewPaymentService(
     paymentRepo repository.PaymentRepository,
-    bookingRepo repository.BookingRepository,
+    bookingSvc BookingService,
     redis *redis.Client,
     vnpPayURL, vnpTmnCode, vnpSecret, vnpReturn string,
 ) PaymentService {
@@ -241,7 +283,7 @@ func NewPaymentService(
 
     s := &paymentService{
         paymentRepo: paymentRepo,
-        bookingRepo: bookingRepo,
+        bookingSvc:  bookingSvc,
         redis:       redis,
         providers:   make(map[string]PaymentProvider),
     }
@@ -267,7 +309,9 @@ func NewPaymentService(
     }
     s.providers["VNPAY"] = NewVNPayProvider(vnpConfig, redis)
     
-    // TODO: Đăng ký thêm các provider khác như MOMO, ZaloPay, v.v.
+    // Đăng ký MOMO và CASH providers
+    s.providers["MOMO"] = NewMockProvider("MOMO")
+    s.providers["CASH"] = NewMockProvider("CASH")
 
     return s
 }
@@ -275,7 +319,7 @@ func NewPaymentService(
 // ProcessPayment - API: tạo payment pending (dùng cho flow không cần redirect ngay)
 func (s *paymentService) ProcessPayment(ctx context.Context, bookingID, paymentMethod string, amount float64) (*domain.Payment, error) {
     // Kiểm tra booking
-    booking, err := s.bookingRepo.FindByID(ctx, bookingID)
+    booking, err := s.bookingSvc.GetBooking(ctx, bookingID)
     if err != nil || booking == nil {
         return nil, errors.New(constants.ErrBookingNotFound)
     }
@@ -410,7 +454,7 @@ func (s *paymentService) CreatePayment(
     }
 
     // Kiểm tra booking
-    booking, err := s.bookingRepo.FindByID(ctx, bookingID)
+    booking, err := s.bookingSvc.GetBooking(ctx, bookingID)
     if err != nil || booking == nil {
         return nil, "", errors.New(constants.ErrBookingNotFound)
     }
@@ -451,6 +495,11 @@ func (s *paymentService) CreatePayment(
     if err := s.paymentRepo.Create(ctx, payment); err != nil {
         return nil, "", fmt.Errorf("không thể lưu payment: %w", err)
     }
+
+	// Nếu payment đã thành công (từ MockProvider), cập nhật trạng thái booking
+	if payment.Status == "paid" {
+		_ = s.bookingSvc.UpdateBookingStatus(ctx, bookingID, "confirmed")
+	}
 
     // Cache kết quả nếu có idempotency key
     if idempotencyKey != "" {

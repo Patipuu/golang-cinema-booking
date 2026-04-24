@@ -3,7 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"booking_cinema_golang/internal/domain"
@@ -31,21 +33,28 @@ type userResponse struct {
 	Email      string    `json:"email"`
 	FullName   string    `json:"full_name"`
 	Phone      string    `json:"phone"`
+	Role       string    `json:"role"`
 	IsVerified bool      `json:"is_verified"`
 	CreatedAt  time.Time `json:"created_at"`
 }
 
 func toUserResponse(u *domain.User) userResponse {
+	phone := ""
+	if u.Phone != nil {
+		phone = *u.Phone
+	}
 	return userResponse{
 		ID:         u.ID,
 		Username:   u.Username,
 		Email:      u.Email,
 		FullName:   u.FullName,
-		Phone:      u.Phone,
+		Phone:      phone,
+		Role:       u.Role,
 		IsVerified: u.IsVerified,
 		CreatedAt:  u.CreatedAt,
 	}
 }
+
 
 // Register handles POST /api/auth/register
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -57,11 +66,11 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		Phone    string `json:"phone"     validate:"required"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.JSONBadRequest(w, "invalid request body")
+		utils.JSONBadRequest(w, "invalid request body", nil)
 		return
 	}
 	if err := h.validate.Struct(req); err != nil {
-		utils.JSONBadRequest(w, err.Error())
+		utils.JSONBadRequest(w, err.Error(), nil)
 		return
 	}
 
@@ -85,11 +94,11 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password" validate:"required"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.JSONBadRequest(w, "invalid request body")
+		utils.JSONBadRequest(w, "invalid request body", nil)
 		return
 	}
 	if err := h.validate.Struct(req); err != nil {
-		utils.JSONBadRequest(w, err.Error())
+		utils.JSONBadRequest(w, err.Error(), nil)
 		return
 	}
 
@@ -102,8 +111,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	utils.JSONSuccess(w, map[string]any{
 		"token": token,
 		"user":  toUserResponse(user),
-	})
+	}, "login successful")
 }
+
+func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	utils.JSONSuccess(w, nil, "Đăng xuất thành công")
+}
+
 
 // VerifyOTP handles POST /api/auth/verify-otp
 func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
@@ -112,11 +126,11 @@ func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		OTPCode string `json:"otp_code" validate:"required,len=6"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.JSONBadRequest(w, "invalid request body")
+		utils.JSONBadRequest(w, "invalid request body", nil)
 		return
 	}
 	if err := h.validate.Struct(req); err != nil {
-		utils.JSONBadRequest(w, err.Error())
+		utils.JSONBadRequest(w, err.Error(), nil)
 		return
 	}
 
@@ -125,7 +139,7 @@ func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.JSONSuccess(w, map[string]string{"message": "account verified successfully"})
+	utils.JSONSuccess(w, nil, "account verified successfully")
 }
 
 // ResendVerification handles POST /api/auth/resend-verification
@@ -134,11 +148,11 @@ func (h *AuthHandler) ResendVerification(w http.ResponseWriter, r *http.Request)
 		Email string `json:"email" validate:"required,email"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.JSONBadRequest(w, "invalid request body")
+		utils.JSONBadRequest(w, "invalid request body", nil)
 		return
 	}
 	if err := h.validate.Struct(req); err != nil {
-		utils.JSONBadRequest(w, err.Error())
+		utils.JSONBadRequest(w, err.Error(), nil)
 		return
 	}
 
@@ -147,7 +161,7 @@ func (h *AuthHandler) ResendVerification(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	utils.JSONSuccess(w, map[string]string{"message": "verification code resent, please check your email"})
+	utils.JSONSuccess(w, nil, "verification code resent, please check your email")
 }
 
 // handleServiceError maps known service errors to appropriate HTTP status codes.
@@ -167,6 +181,7 @@ func (h *AuthHandler) handleServiceError(w http.ResponseWriter, err error) {
 	case errors.Is(err, service.ErrUserNotFound):
 		utils.JSONNotFound(w, err.Error())
 	default:
+		fmt.Fprintf(os.Stderr, "Unexpected auth error: %v\n", err)
 		utils.JSONInternal(w, "an unexpected error occurred")
 	}
 }

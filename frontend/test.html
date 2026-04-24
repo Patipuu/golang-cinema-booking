@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Cinema Booking - FAST TEST</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        --bg-dark: #0a0b10;
+        --bg-card: rgba(20, 22, 32, 0.7);
+        --primary: #6366f1;
+        --secondary: #e11d48;
+        --text-main: #f8fafc;
+        --text-dim: #94a3b8;
+        --glass-border: rgba(255, 255, 255, 0.08);
+      }
+      body {
+        font-family: sans-serif;
+        background-color: var(--bg-dark);
+        color: var(--text-main);
+        padding: 20px;
+      }
+      .panel {
+        background: var(--bg-card);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      .btn {
+        background: var(--primary);
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .badge {
+        background: rgba(99, 102, 241, 0.2);
+        color: var(--primary);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        margin: 5px;
+        display: inline-block;
+      }
+      .seat-grid {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 8px;
+        margin: 20px 0;
+      }
+      .seat {
+        aspect-ratio: 1;
+        background: #1e293b;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        cursor: pointer;
+      }
+      .seat.selected { background: var(--primary); }
+    </style>
+  </head>
+  <body>
+    <div id="root">Loading application...</div>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+      const { useState, useEffect } = React;
+
+      function App() {
+        const [cinemas, setCinemas] = useState([]);
+        const [movies, setMovies] = useState([]);
+        const [selectedCinema, setSelectedCinema] = useState(null);
+        const [selectedShowtime, setSelectedShowtime] = useState(null);
+        const [selectedSeats, setSelectedSeats] = useState([]);
+
+        useEffect(() => {
+          fetch("/api/cinemas").then(r => r.json()).then(data => setCinemas(data.data || []));
+        }, []);
+
+        useEffect(() => {
+          if (selectedCinema) {
+            fetch(`/api/movies?cinema_id=${selectedCinema.id}`).then(r => r.json()).then(data => setMovies(data.data || []));
+          }
+        }, [selectedCinema]);
+
+        const toggleSeat = (id) => {
+          if (selectedSeats.includes(id)) setSelectedSeats(selectedSeats.filter(s => s !== id));
+          else setSelectedSeats([...selectedSeats, id]);
+        };
+
+        return (
+          <div>
+            <h1>Cinema Booking - Fast Test Mode</h1>
+            
+            <div className="panel">
+              <h3>1. Chọn Rạp</h3>
+              {cinemas.map(c => (
+                <button key={c.id} className="btn" style={{marginRight: '10px', background: selectedCinema && selectedCinema.id === c.id ? '#4f46e5' : '#334155'}} onClick={() => setSelectedCinema(c)}>
+                  {c.name}
+                </button>
+              ))}
+            </div>
+
+            {selectedCinema && (
+              <div className="panel">
+                <h3>2. Lịch chiếu tại {selectedCinema.name}</h3>
+                {movies.map(m => (
+                  <div key={m.id} style={{marginBottom: '15px'}}>
+                    <b>{m.title_vi}</b><br/>
+                    {m.showtimes && m.showtimes.map(s => (
+                      <span key={s.id} className="badge" style={{cursor: 'pointer', border: selectedShowtime && selectedShowtime.id === s.id ? '2px solid white' : 'none'}} onClick={() => setSelectedShowtime({...s, movieTitle: m.title_vi})}>
+                        {new Date((s.start_time || s.show_time)).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {selectedShowtime && (
+              <div className="panel">
+                <h3>3. Chọn Ghế: {selectedShowtime.movieTitle}</h3>
+                <div className="seat-grid">
+                  {["A1","A2","A3","A4","A5","A6","A7","A8","B1","B2","B3","B4","B5","B6","B7","B8"].map(id => (
+                    <div key={id} className={"seat " + (selectedSeats.includes(id) ? "selected" : "")} onClick={() => toggleSeat(id)}>
+                      {id}
+                    </div>
+                  ))}
+                </div>
+                <p>Đã chọn: {selectedSeats.join(", ") || "Chưa chọn ghế"}</p>
+                <button className="btn" disabled={selectedSeats.length === 0} onClick={() => alert("Đặt vé thành công!")}>Xác nhận đặt vé</button>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<App />);
+    </script>
+  </body>
+</html>

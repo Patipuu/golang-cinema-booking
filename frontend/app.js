@@ -598,15 +598,114 @@ function SummaryAndPaymentPanel({
   );
 }
 
+function AdminLogin({ onAuthChange }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [status, setStatus] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setStatus(null);
+    try {
+      const data = await apiRequest("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+      const user = data.user || data;
+      if (user && (user.role === 'admin' || user.Role === 'admin')) {
+        onAuthChange(user);
+        window.location.hash = '#/admin';
+      } else {
+        setStatus({ type: "error", message: "Bạn không có quyền truy cập trang quản trị." });
+        onAuthChange(null);
+      }
+    } catch (err) {
+      setStatus({ type: "error", message: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="admin-login-wrapper" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+      <div className="panel" style={{ width: '400px' }}>
+        <div className="panel-header">
+          <div className="panel-title">
+            <span>Đăng nhập Admin</span>
+          </div>
+          <span className="badge">Admin Portal</span>
+        </div>
+        <div className="panel-body">
+          <form onSubmit={handleSubmit}>
+            <div className="field">
+              <label>Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@example.com"
+                required
+              />
+            </div>
+            <div className="spacer" />
+            <div className="field">
+              <label>Mật khẩu</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+              />
+            </div>
+            <div className="spacer" />
+            <button type="submit" className="btn btn-primary" disabled={loading || !email || !password} style={{ width: '100%' }}>
+              {loading ? "Đang xử lý..." : "Đăng nhập"}
+            </button>
+          </form>
+          {status && (
+            <div className="status-bar" style={{ marginTop: '1rem' }}>
+              <span
+                className={
+                  "status-badge " +
+                  (status.type === "success"
+                    ? "status-badge-success"
+                    : "status-badge-error")
+                }
+              >
+                {status.message}
+              </span>
+            </div>
+          )}
+          <div className="spacer" />
+          <div style={{ textAlign: 'center' }}>
+            <a href="#/" style={{ color: 'var(--text-muted)' }}>Quay lại trang chủ</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function App() {
+  const [currentPath, setCurrentPath] = useState(window.location.hash || '#/');
   const [user, setUser] = useState(null);
   const [selectedCinema, setSelectedCinema] = useState(null);
   const [selectedShowtime, setSelectedShowtime] = useState(null);
   const [date, setDate] = useState("");
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [pricePerSeat] = useState(75000); // có thể mapping từ showtime.price nếu backend trả về
-  const [adminMode, setAdminMode] = useState(false);
   const [adminTab, setAdminTab] = useState('dashboard');
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setCurrentPath(window.location.hash || '#/');
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   useEffect(() => {
     // Reset showtime & seats khi đổi rạp hoặc ngày
@@ -619,14 +718,14 @@ function App() {
     setSelectedSeats([]);
   }, [selectedShowtime]);
 
+  // Protect admin route
   useEffect(() => {
-    // Check if user is admin
-    if (user && (user.role === 'admin' || user.Role === 'admin')) {
-      setAdminMode(true);
-    } else {
-      setAdminMode(false);
+    if (currentPath.startsWith('#/admin') && currentPath !== '#/admin/login') {
+      if (!user || (user.role !== 'admin' && user.Role !== 'admin')) {
+        window.location.hash = '#/admin/login';
+      }
     }
-  }, [user]);
+  }, [currentPath, user]);
 
   const renderAdminContent = () => {
     switch (adminTab) {
@@ -643,37 +742,38 @@ function App() {
     }
   };
 
+  if (currentPath === '#/admin/login') {
+    return <AdminLogin onAuthChange={setUser} />;
+  }
+
+  const isAdminRoute = currentPath.startsWith('#/admin');
+
   return (
     <div className="app">
       <header className="app-header">
-        <div className="logo">
+        <div className="logo" onClick={() => window.location.hash = '#/'} style={{cursor: 'pointer'}}>
           <span className="logo-dot" />
           <span>CINEMA BOOKING</span>
         </div>
         <div className="header-actions">
-          {adminMode && (
-            <div className="admin-toggle">
-              <button
-                className={`mode-btn ${!adminMode ? 'active' : ''}`}
-                onClick={() => setAdminMode(false)}
-              >
-                User Mode
+          {isAdminRoute ? (
+            <button className="btn btn-ghost btn-sm" onClick={() => window.location.hash = '#/'}>
+              Về trang đặt vé
+            </button>
+          ) : (
+            user && (user.role === 'admin' || user.Role === 'admin') ? (
+              <button className="btn btn-primary btn-sm" onClick={() => window.location.hash = '#/admin'}>
+                Quản trị hệ thống
               </button>
-              <button
-                className={`mode-btn ${adminMode ? 'active' : ''}`}
-                onClick={() => setAdminMode(true)}
-              >
-                Admin Mode
-              </button>
-            </div>
+            ) : null
           )}
           <span className="hint">
-            {user ? (adminMode ? "Admin Panel 🎭" : "Sẵn sàng đặt vé 🎬") : "Đăng nhập để lưu vé theo tài khoản."}
+            {user ? (isAdminRoute ? "Admin Panel 🎭" : "Sẵn sàng đặt vé 🎬") : "Đăng nhập để lưu vé theo tài khoản."}
           </span>
         </div>
       </header>
       <main className="app-body">
-        {adminMode ? (
+        {isAdminRoute ? (
           <div className="admin-layout">
             <div className="admin-sidebar">
               <div className="admin-nav">

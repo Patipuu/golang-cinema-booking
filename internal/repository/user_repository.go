@@ -17,4 +17,8 @@ type UserRepository interface {
 	SetVerified(ctx context.Context, userID string) error
 	ListAll(ctx context.Context, page domain.Page) ([]domain.User, domain.PageResult, error)
 	UpdateRole(ctx context.Context, userID, role string) error
+	Update(ctx context.Context, user *domain.User) error
+	UpdatePassword(ctx context.Context, userID, newHash string) error
+	FindAll(ctx context.Context, page, limit int, search string) ([]*domain.User, int, error)
+	UpdateStatus(ctx context.Context, userID string, isActive bool) error
 }

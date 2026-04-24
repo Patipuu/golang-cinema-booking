@@ -60,6 +60,7 @@ func main() {
 	catalogRepo := repository.NewCatalogRepository(db)
 	bookingRepo := repository.NewBookingRepository(db)
 	paymentRepo := repository.NewPaymentRepository(db)
+	paymentMethodRepo := repository.NewPaymentMethodRepository(db)
 
 	// 3. Services
 	emailSvc := service.NewEmailService(
@@ -74,7 +75,7 @@ func main() {
 	pricingSvc := service.NewPricingService()
 	bookingSvc := service.NewBookingService(bookingRepo, rdb, pricingSvc, hub)
 	paymentSvc := service.NewPaymentService(
-		paymentRepo, bookingSvc, rdb.GetRDB(),
+		paymentRepo, paymentMethodRepo, bookingRepo, rdb.GetRDB(),
 		cfg.VNPay.PayURL, cfg.VNPay.TmnCode, cfg.VNPay.HashSecret, cfg.VNPay.ReturnURL,
 	)
 

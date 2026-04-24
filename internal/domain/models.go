@@ -12,7 +12,9 @@ type User struct {
 	PasswordHash string    `json:"-"`
 	FullName     string    `json:"full_name"`
 	Phone        *string    `json:"phone"`
+	AvatarURL    string    `json:"avatar_url"`
 	Role         string    `json:"role"` // customer, staff, admin
+	IsActive     bool      `json:"is_active"`
 	IsVerified   bool      `json:"is_verified"`
 	OTPCode      *string    `json:"-"`
 	OTPExpiry    *time.Time `json:"-"`
@@ -209,4 +211,10 @@ type PageResult struct {
 	Page       int `json:"page"`
 	Limit      int `json:"limit"`
 	TotalCount int `json:"total_count"`
+}
+
+// ShowtimeWithMovie is used for API returning showtime with movie info
+type ShowtimeWithMovie struct {
+	Showtime
+	Movie Movie `json:"movie"`
 }

@@ -1,0 +1,381 @@
+{
+	"info": {
+		"_postman_id": "d0e19cf0-e14b-489e-9d2d-2092c2db2146",
+		"name": "Cinema Booking System API",
+		"description": "Collection để test toàn bộ luồng Đặt vé & Thanh toán",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "Đăng nhập (Lấy Token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if(jsonData.data && jsonData.data.token) {",
+									"    pm.environment.set(\"jwt_token\", jsonData.data.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@gmail.com\",\n    \"password\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Dữ liệu rạp phim",
+			"item": [
+				{
+					"name": "Lấy danh sách Phim",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/movies?page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"movies"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Lấy danh sách Suất chiếu",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/showtimes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"showtimes"
+							]
+						}
+					}
+				},
+				{
+					"name": "Xem ghế trống của Suất chiếu",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/seats/showtime/{{showtime_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"seats",
+								"showtime",
+								"{{showtime_id}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Đặt vé (Booking)",
+			"item": [
+				{
+					"name": "Khóa ghế (Hold Seat)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"showtime_id\": \"{{showtime_id}}\",\n    \"seat_id\": \"A1\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/bookings/lock",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"bookings",
+								"lock"
+							]
+						}
+					}
+				},
+				{
+					"name": "Tạo đơn Đặt vé",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if(jsonData.data && jsonData.data.id) {",
+									"    pm.environment.set(\"booking_id\", jsonData.data.id);",
+									"    pm.environment.set(\"total_price\", jsonData.data.total_price);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"showtime_id\": \"{{showtime_id}}\",\n    \"seat_ids\": [\"A1\", \"A2\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/bookings",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"bookings"
+							]
+						}
+					}
+				},
+				{
+					"name": "Xem danh sách vé của tôi",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/bookings/my",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"bookings",
+								"my"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Thanh toán (Payment)",
+			"item": [
+				{
+					"name": "Thanh toán bằng Tiền mặt (CASH)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{$guid}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"booking_id\": \"{{booking_id}}\",\n    \"payment_method\": \"CASH\",\n    \"amount\": {{total_price}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/payment",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payment"
+							]
+						}
+					}
+				},
+				{
+					"name": "Thanh toán bằng VNPay",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{$guid}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"booking_id\": \"{{booking_id}}\",\n    \"payment_method\": \"VNPAY\",\n    \"amount\": {{total_price}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/payment",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payment"
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8081"
+		},
+		{
+			"key": "jwt_token",
+			"value": "your_token_here"
+		},
+		{
+			"key": "showtime_id",
+			"value": "1d457894-bc0a-48b6-babb-855e858c5ce1"
+		},
+		{
+			"key": "booking_id",
+			"value": ""
+		},
+		{
+			"key": "total_price",
+			"value": "100000"
+		}
+	]
+}

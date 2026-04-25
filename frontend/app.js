@@ -603,6 +603,12 @@ async function loadAdminCinemas() {
         <td>${escHtml(c.hotline || '')}</td>
       </tr>
     `).join('');
+    
+    const stCinema = document.getElementById('stCinema');
+    if (stCinema) {
+      stCinema.innerHTML = '<option value="">-- Chọn rạp --</option>' + 
+        list.map(c => `<option value="${c.id}">${escHtml(c.name)}</option>`).join('');
+    }
   } catch (err) {
     document.getElementById('adminCinemaTable').innerHTML = `<tr><td colspan="5" class="empty">${err.message}</td></tr>`;
   }
@@ -627,6 +633,12 @@ async function loadAdminMovies() {
         <td><span class="badge badge-warn">${m.rating_label || '-'}</span></td>
       </tr>
     `).join('');
+    
+    const stMovie = document.getElementById('stMovie');
+    if (stMovie) {
+      stMovie.innerHTML = '<option value="">-- Chọn phim --</option>' + 
+        list.map(m => `<option value="${m.id}">${escHtml(m.title_vi)}</option>`).join('');
+    }
   } catch (err) {
     document.getElementById('adminMovieTable').innerHTML = `<tr><td colspan="6" class="empty">${err.message}</td></tr>`;
   }
@@ -678,6 +690,103 @@ async function createMovie() {
   }
 }
 
+async function loadAdminShowtimes() {
+  try {
+    const list = (await api('GET', '/admin/showtimes')).data || [];
+    const movies = (await api('GET', '/admin/movies')).data || [];
+    const cinemas = (await api('GET', '/admin/cinemas')).data || [];
+    
+    list.sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
+
+    const tbody = document.getElementById('adminShowtimeTable');
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">Chưa có suất chiếu</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = list.map(s => {
+      const m = movies.find(x => x.id === s.movie_id);
+      const c = cinemas.find(x => x.id === s.cinema_id);
+      const start = new Date(s.start_time);
+      const end = new Date(s.end_time);
+      const now = new Date();
+      let statusHtml = '';
+      if (now < start) statusHtml = '<span class="badge badge-info">Sắp diễn ra</span>';
+      else if (now >= start && now <= end) statusHtml = '<span class="badge badge-success">Đang diễn ra</span>';
+      else statusHtml = '<span class="badge badge-muted">Đã kết thúc</span>';
+
+      return `<tr>
+        <td style="font-family:monospace;font-size:.75rem">${shortId(s.id)}</td>
+        <td>
+          <div style="font-weight:600">${escHtml(m?.title_vi || 'Phim đã xóa')}</div>
+          <div style="font-size:.75rem;color:var(--text2)">${escHtml(c?.name || 'Rạp đã xóa')} / ${escHtml(s.room_id)}</div>
+        </td>
+        <td>
+          <div>${start.toLocaleDateString('vi-VN')}</div>
+          <div style="font-weight:600">${start.toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit'})}</div>
+        </td>
+        <td>${statusHtml}</td>
+        <td>${formatCurrency(s.base_price)}</td>
+        <td>
+          <button class="btn btn-outline btn-sm" style="color:red" onclick="deleteShowtime('${s.id}')">Xóa</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch (err) {
+    document.getElementById('adminShowtimeTable').innerHTML = `<tr><td colspan="6" class="empty">${err.message}</td></tr>`;
+  }
+}
+
+async function loadRoomsForShowtime(cinemaId) {
+  const stRoom = document.getElementById('stRoom');
+  if (!cinemaId) {
+    stRoom.innerHTML = '<option value="">Chọn rạp trước...</option>';
+    return;
+  }
+  try {
+    const r = await api('GET', `/admin/rooms?cinema_id=${cinemaId}`);
+    const list = r.data || r || [];
+    stRoom.innerHTML = list.length 
+      ? list.map(rm => `<option value="${rm.id}">${escHtml(rm.name)} (${rm.room_type})</option>`).join('')
+      : '<option value="">Rạp này chưa có phòng</option>';
+  } catch (e) { toast('Lỗi tải phòng: ' + e.message, 'error'); }
+}
+
+async function createShowtime() {
+  const movieId = document.getElementById('stMovie').value;
+  const cinemaId = document.getElementById('stCinema').value;
+  const roomId = document.getElementById('stRoom').value;
+  const price = parseFloat(document.getElementById('stPrice').value);
+  const startTime = document.getElementById('stStart').value;
+  const endTime = document.getElementById('stEnd').value;
+
+  if (!movieId || !roomId || !startTime || !endTime) return toast('Vui lòng điền đủ thông tin', 'error');
+
+  try {
+    await api('POST', '/admin/showtimes', {
+      movie_id: movieId,
+      cinema_id: cinemaId,
+      room_id: roomId,
+      base_price: price,
+      start_time: new Date(startTime).toISOString(),
+      end_time: new Date(endTime).toISOString(),
+      status: 'open'
+    });
+    toast('Tạo suất chiếu thành công!', 'success');
+    document.getElementById('addShowtimeForm').style.display = 'none';
+    loadAdminShowtimes();
+  } catch (e) { toast('Lỗi: ' + e.message, 'error'); }
+}
+
+async function deleteShowtime(id) {
+  if (!confirm('Bạn có chắc chắn muốn xóa suất chiếu này?')) return;
+  try {
+    await api('DELETE', `/admin/showtimes/${id}`);
+    loadAdminShowtimes();
+    toast('Đã xóa suất chiếu', 'success');
+  } catch (e) { toast('Lỗi: ' + e.message, 'error'); }
+}
+
 // ===== EVENT BINDINGS =====
 function init() {
   // Navigation
@@ -687,7 +796,7 @@ function init() {
       showPage(page);
       if (page === 'home') loadCinemas();
       if (page === 'movies') loadMovies();
-      if (page === 'admin') { loadAdminStats(); loadAdminCinemas(); loadAdminMovies(); }
+      if (page === 'admin') { loadAdminStats(); loadAdminCinemas(); loadAdminMovies(); loadAdminShowtimes(); }
       if (page === 'my-bookings') loadMyBookings();
     });
   });
@@ -740,6 +849,28 @@ function init() {
     document.getElementById('addMovieForm').style.display = 'none';
   };
   document.getElementById('btnCreateMovie').onclick = createMovie;
+
+  // Admin - Showtime form
+  const btnShowAddShowtime = document.getElementById('btnShowAddShowtime');
+  if (btnShowAddShowtime) {
+    btnShowAddShowtime.onclick = () => {
+      document.getElementById('addShowtimeForm').style.display = '';
+    };
+  }
+  const btnCancelShowtime = document.getElementById('btnCancelShowtime');
+  if (btnCancelShowtime) {
+    btnCancelShowtime.onclick = () => {
+      document.getElementById('addShowtimeForm').style.display = 'none';
+    };
+  }
+  const btnCreateShowtime = document.getElementById('btnCreateShowtime');
+  if (btnCreateShowtime) {
+    btnCreateShowtime.onclick = createShowtime;
+  }
+  const stCinemaSelect = document.getElementById('stCinema');
+  if (stCinemaSelect) {
+    stCinemaSelect.onchange = (e) => loadRoomsForShowtime(e.target.value);
+  }
 
   // Init
   updateAuthUI();

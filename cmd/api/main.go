@@ -84,7 +84,7 @@ func main() {
 	catalogHandler := handler.NewCatalogHandler(catalogSvc)
 	adminHandler := handler.NewAdminHandler(catalogSvc, authSvc, bookingSvc)
 	bookingHandler := handler.NewBookingHandler(bookingSvc)
-	paymentHandler := handler.NewPaymentHandler(paymentSvc)
+	paymentHandler := handler.NewPaymentHandler(paymentSvc, bookingSvc)
 
 	// 5. Routing
 	r := chi.NewRouter()
@@ -93,6 +93,9 @@ func main() {
 	r.Use(middleware.LoggerMiddleware(logger))
 	r.Use(chimiddleware.Recoverer)
 	r.Use(chimiddleware.Timeout(60 * time.Second))
+
+	isMaintenance := true
+	r.Use(middleware.MaintenanceMiddleware(isMaintenance))
 
 	r.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
 		handler.ServeWs(hub, w, r)
@@ -119,6 +122,8 @@ func main() {
 		r.Get("/showtimes", catalogHandler.ListShowtimes)
 		r.Get("/seats/showtime/{id}", bookingHandler.GetTakenSeats)
 
+		// Callback cho cổng thanh toán
+		r.Get("/payments/callback", paymentHandler.HandleVNPayCallback)
 		// Protected - User
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.AuthMiddleware(cfg.JWT.Secret))
@@ -128,7 +133,7 @@ func main() {
 			r.Get("/bookings/{id}", bookingHandler.GetBooking)
 			r.Get("/bookings/my", bookingHandler.ListMyBookings)
 			r.Delete("/bookings/{id}", bookingHandler.CancelBooking)
-			
+
 			r.Post("/payment", paymentHandler.CreatePayment)
 
 		})
@@ -143,11 +148,10 @@ func main() {
 			r.Delete("/cinemas/{id}", adminHandler.DeleteCinema)
 			r.Get("/rooms", adminHandler.ListRooms)
 
-			
 			r.Get("/movies", adminHandler.ListAllMovies)
 			r.Post("/movies", adminHandler.CreateMovie)
 			r.Put("/movies/{id}", adminHandler.UpdateMovie)
-			
+
 			r.Get("/showtimes", adminHandler.ListAllShowtimes)
 			r.Post("/showtimes", adminHandler.CreateShowtime)
 			r.Put("/showtimes/{id}", adminHandler.UpdateShowtime)

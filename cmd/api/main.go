@@ -94,8 +94,8 @@ func main() {
 	r.Use(chimiddleware.Recoverer)
 	r.Use(chimiddleware.Timeout(60 * time.Second))
 
-	isMaintenance := true
-	r.Use(middleware.MaintenanceMiddleware(isMaintenance))
+	isMaintenance := false
+	r.Get("/", middleware.MaintenanceHandler(isMaintenance))
 
 	r.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
 		handler.ServeWs(hub, w, r)
